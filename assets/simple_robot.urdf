@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<robot name="simple_arm">
+
+  <link name="base_link"/>
+
+  <link name="shoulder_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.3" radius="0.05"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="elbow_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.25" radius="0.04"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="wrist_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.15" radius="0.03"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_link"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0"/>
+  </joint>
+
+  <joint name="elbow_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="elbow_link"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0"/>
+  </joint>
+
+  <joint name="wrist_joint" type="revolute">
+    <parent link="elbow_link"/>
+    <child link="wrist_link"/>
+    <origin xyz="0 0 0.25" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0"/>
+  </joint>
+
+</robot>
