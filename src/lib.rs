@@ -28,4 +28,6 @@ pub struct Joint {
     pub child: String,
     pub transform: Transform,
     pub axis: Position3D,
+    pub limit_lower: f64,
+    pub limit_upper: f64,
 }
