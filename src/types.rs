@@ -57,6 +57,12 @@ pub struct Joint {
     pub limit_upper: f64,
 }
 
+#[derive(Debug)]
+pub struct RobotModel {
+    pub name: String,
+    pub joints: Vec<Joint>,
+}
+
 
 #[cfg(test)]
 mod tests {
