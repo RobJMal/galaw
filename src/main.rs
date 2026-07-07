@@ -70,19 +70,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let axis: Position3D = Position3D { x: axis_x, y: axis_y, z: axis_z };
             
             // Extracting joint limits
-            let limit_lower: f64 = node
-                                    .children()
-                                    .find(|n| n.tag_name().name() == "limit")
-                                    .and_then(|n| n.attribute("lower"))
-                                    .ok_or("missing lower limit")?
-                                    .parse::<f64>()?;
-            let limit_upper: f64 = node
-                                    .children()
-                                    .find(|n| n.tag_name().name() == "limit")
-                                    .and_then(|n| n.attribute("upper"))
-                                    .ok_or("missing upper limit")?
-                                    .parse::<f64>()?;
+            let joint_limit = node
+                                            .children()
+                                            .find(|n| n.tag_name().name() == "limit")
+                                            .ok_or("missing joint limits")?;
 
+            let limit_lower: f64 = joint_limit
+                                    .attribute("lower")
+                                    .ok_or("missing joint limit lower")?
+                                    .parse::<f64>()?;
+            let limit_upper: f64 = joint_limit
+                                    .attribute("upper")
+                                    .ok_or("missing joint limit upper")?
+                                    .parse::<f64>()?;
+            
+            // Creating joint
             let joint: Joint = Joint { name, parent, child, transform, axis, limit_lower, limit_upper };
 
             println!("joint: {:?}", joint);
