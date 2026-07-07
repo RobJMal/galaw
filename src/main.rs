@@ -1,4 +1,3 @@
-use core::f64;
 use std::fs;
 
 use taligalaw::{EulerRPY, Joint, Position3D, Transform};
@@ -31,30 +30,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .children()
                 .find(|n| n.tag_name().name() == "parent")
                 .and_then(|n| n.attribute("link"))
-                .ok_or("missing parent")?
+                .ok_or_else(|| format!("missing parent link for joint {}", name))?
                 .to_string();
             let child: String = node
                 .children()
                 .find(|n| n.tag_name().name() == "child")
                 .and_then(|n| n.attribute("link"))
-                .ok_or("missing child")?
+                .ok_or_else(|| format!("missing child link for joint {}", name))?
                 .to_string();
 
             // Extracting joint XYZ and RPY
             let joint_origin = node
                                                 .children()
                                                 .find(|n| n.tag_name().name() == "origin")
-                                                .ok_or("missing origin")?;
+                                                .ok_or_else(|| format!("missing origin for joint {}", name))?;
             
             let xyz_str: &str = joint_origin
                                 .attribute("xyz")
-                                .ok_or("missing XYZ")?;
+                                .ok_or_else(|| format!("missing xyz for joint {}", name))?;
             let (x, y, z) = parse_vec3_str(xyz_str)?;
             let xyz: Position3D = Position3D { x, y, z };
                                                 
             let rpy_str = joint_origin
                                         .attribute("rpy")
-                                        .ok_or("missing RPY")?;
+                                        .ok_or_else(|| format!("missing rpy for joint {}", name))?;
             let (roll, pitch, yaw) = parse_vec3_str(rpy_str)?;
             let rpy: EulerRPY = EulerRPY { roll, pitch, yaw };
 
@@ -65,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .children()
                 .find(|n| n.tag_name().name() == "axis")
                 .and_then(|n| n.attribute("xyz"))
-                .ok_or("missing xyz value for axis")?;
+                .ok_or_else(|| format!("missing axis xyz value for joint {}", name))?;
             let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
             let axis: Position3D = Position3D { x: axis_x, y: axis_y, z: axis_z };
             
@@ -73,15 +72,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let joint_limit = node
                                             .children()
                                             .find(|n| n.tag_name().name() == "limit")
-                                            .ok_or("missing joint limits")?;
+                                            .ok_or_else(|| format!("missing joint limits for joint {}", name))?;
 
             let limit_lower: f64 = joint_limit
                                     .attribute("lower")
-                                    .ok_or("missing joint limit lower")?
+                                    .ok_or_else(|| format!("missing joint limit lower for joint {}", name))?
                                     .parse::<f64>()?;
             let limit_upper: f64 = joint_limit
                                     .attribute("upper")
-                                    .ok_or("missing joint limit upper")?
+                                    .ok_or_else(|| format!("missing joint limit upper for joint {}", name))?
                                     .parse::<f64>()?;
             
             // Creating joint
