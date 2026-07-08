@@ -4,7 +4,7 @@ pub mod utils;
 use std::fs;
 
 use utils::parse_vec3_str;
-use types::{EulerRPY, Position3D, Transform, Joint, RobotModel};
+use types::{EulerRPY, Position3D, Transform, Link, Joint, RobotModel};
 
 
 pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Error>> {
@@ -16,10 +16,17 @@ pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Erro
         .attribute("name")
         .ok_or("missing robot name")?
         .to_string();
+    let mut links: Vec<Link> = Vec::new();
     let mut joints: Vec<Joint> = Vec::new();
 
     for node in doc.descendants() {
-        if node.tag_name().name() == "joint" {
+        if node.tag_name().name() == "link" {
+            let link_name: String = node
+                                .attribute("name")
+                                .ok_or("link missing name attribute")?
+                                .to_string();
+            links.push(Link { name: link_name });
+        } else if node.tag_name().name() == "joint" {
             let name: String = node
                 .attribute("name")
                 .ok_or("joint missing name attribute")?
@@ -90,6 +97,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Erro
 
     Ok(RobotModel { 
         name: robot_name, 
+        links: links,
         joints: joints,
     })
 }

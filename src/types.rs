@@ -47,6 +47,11 @@ pub struct Transform {
 }
 
 #[derive(Debug)]
+pub struct Link {
+    pub name: String,
+}
+
+#[derive(Debug)]
 pub struct Joint {
     pub name: String,
     pub parent: String,
@@ -60,6 +65,7 @@ pub struct Joint {
 #[derive(Debug)]
 pub struct RobotModel {
     pub name: String,
+    pub links: Vec<Link>,
     pub joints: Vec<Joint>,
 }
 
