@@ -156,10 +156,10 @@ mod tests {
             let quat_01: Quaternion = Quaternion { x: 0.5, y: 0.5, z: 0.5, w: 0.5 };
             let result: Quaternion = Quaternion::identity().multiply(&quat_01);
 
-            assert!((result.x - quat_01.x).abs() < 1e-10);
-            assert!((result.y - quat_01.y).abs() < 1e-10);
-            assert!((result.z - quat_01.z).abs() < 1e-10);
-            assert!((result.w - quat_01.w).abs() < 1e-10);
+            assert!((result.x - quat_01.x).abs() < TEST_TOLERANCE);
+            assert!((result.y - quat_01.y).abs() < TEST_TOLERANCE);
+            assert!((result.z - quat_01.z).abs() < TEST_TOLERANCE);
+            assert!((result.w - quat_01.w).abs() < TEST_TOLERANCE);
         }
 
         #[test]
@@ -174,10 +174,10 @@ mod tests {
             };
             let q180z: Quaternion = q90z.multiply(&q90z);
 
-            assert!(q180z.x.abs() < 1e-10);
-            assert!(q180z.y.abs() < 1e-10);
-            assert!((q180z.z - 1.0).abs() < 1e-10);
-            assert!(q180z.w.abs() < 1e-10);
+            assert!(q180z.x.abs() < TEST_TOLERANCE);
+            assert!(q180z.y.abs() < TEST_TOLERANCE);
+            assert!((q180z.z - 1.0).abs() < TEST_TOLERANCE);
+            assert!(q180z.w.abs() < TEST_TOLERANCE);
         }
 
         #[test]
@@ -190,7 +190,7 @@ mod tests {
                 q = q.normalize();
 
                 let magnitude = q.x.powi(2) + q.y.powi(2) + q.z.powi(2) + q.w.powi(2);
-                assert!((magnitude - 1.0).abs() < 1e-10);
+                assert!((magnitude - 1.0).abs() < TEST_TOLERANCE);
             }
         }
 
@@ -206,12 +206,12 @@ mod tests {
             let q1_sq_norm = q1.x.powi(2) + q1.y.powi(2) + q1.z.powi(2) + q1.w.powi(2);
 
             // Propery 01: Output is a real number, imaginary vector parts cancel out
-            assert!(q2.x.abs() < 1e-10, "X component of Quaternion didn't cancel out");
-            assert!(q2.y.abs() < 1e-10, "Y component of Quaternion didn't cancel out");
-            assert!(q2.z.abs() < 1e-10, "Z component of Quaternion didn't cancel out");
+            assert!(q2.x.abs() < TEST_TOLERANCE, "X component of Quaternion didn't cancel out");
+            assert!(q2.y.abs() < TEST_TOLERANCE, "Y component of Quaternion didn't cancel out");
+            assert!(q2.z.abs() < TEST_TOLERANCE, "Z component of Quaternion didn't cancel out");
 
             // Property 02: Real part is equal to the squared norm
-            assert!((q2.w - q1_sq_norm).abs() < 1e-10, "W component of Quaternion doesn't equal squred norm");
+            assert!((q2.w - q1_sq_norm).abs() < TEST_TOLERANCE, "W component of Quaternion doesn't equal squred norm");
         }
 
         #[test]
