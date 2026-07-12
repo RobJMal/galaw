@@ -23,6 +23,11 @@ impl Quaternion {
         }
     }
 
+    pub fn conj(&self) -> Quaternion {
+        /* Returns conjugate of quaternion */
+        Quaternion { x: -self.x, y: -self.y, z: -self.z, w: self.w }
+    }
+
     pub fn normalize(&self) -> Quaternion {
         let magnitude = f64::sqrt(self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2));
 
@@ -166,13 +171,33 @@ mod tests {
             // Using small incremental rotation
             let mut q = Quaternion { x: 0.001, y: 0.0, z: 0.0, w: 0.9999995 };
 
-            for i in 0..1000 {
+            for _ in 0..1_000_000 {
                 q = q.multiply(&q);
                 q = q.normalize();
 
                 let magnitude = q.x.powi(2) + q.y.powi(2) + q.z.powi(2) + q.w.powi(2);
                 assert!((magnitude - 1.0).abs() < 1e-10);
             }
+        }
+
+        #[test]
+        fn test_conjugate() {
+            /* 
+            Given that q* is the conjugate of q,
+            Assert that qq* = ||q||^2 (squared norm)
+            */
+            let q1 = Quaternion { x: 0.1, y: 0.2, z: 0.3, w: 0.4 };
+            let q2 = q1.multiply(&q1.conj());
+            
+            let q1_sq_norm = q1.x.powi(2) + q1.y.powi(2) + q1.z.powi(2) + q1.w.powi(2);
+
+            // Propery 01: Output is a real number, imaginary vector parts cancel out
+            assert!(q2.x.abs() < 1e-10, "X component of Quaternion didn't cancel out");
+            assert!(q2.y.abs() < 1e-10, "Y component of Quaternion didn't cancel out");
+            assert!(q2.z.abs() < 1e-10, "Z component of Quaternion didn't cancel out");
+
+            // Property 02: Real part is equal to the squared norm
+            assert!((q2.w - q1_sq_norm).abs() < 1e-10, "W component of Quaternion doesn't equal squred norm");
         }
     }
 }
