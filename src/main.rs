@@ -1,8 +1,8 @@
 use taligalaw::load_urdf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let robot_model =  load_urdf("assets/simple_robot.urdf")?;
-    
+    let robot_model = load_urdf("assets/simple_robot.urdf")?;
+
     println!("robot name: {:?}", robot_model.name);
     println!("number of links: {:?}", robot_model.links.len());
     println!("number of joints: {:?}", robot_model.joints.len());
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Joint: {:?}", joint.name);
     }
 
-    let joint_cmds= [0.0, 0.0, 0.0];
+    let joint_cmds = [0.0, 0.0, 0.0];
     match robot_model.compute_fk(&joint_cmds) {
         Ok(links) => println!("links: {:?}", links),
         Err(e) => eprintln!("Error: {}", e),
