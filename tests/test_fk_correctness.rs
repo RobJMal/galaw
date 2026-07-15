@@ -68,7 +68,7 @@ fn assert_tg_fk_matches_k(
     tg_model: &RobotModel,
     k_chain: &k::Chain<f64>,
     joint_cmd: &[f64],
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> TestResult {
     eprintln!("[input] joint_cmd = {:?}", joint_cmd);
 
     let tg_result = tg_model.compute_fk(joint_cmd)?;
@@ -98,14 +98,14 @@ fn setup_kinematic_models() -> (RobotModel, k::Chain<f64>) {
 }
 
 #[test]
-fn test_zero_cmd() -> Result<(), Box<dyn std::error::Error>> {
+fn test_zero_cmd() -> TestResult {
     let (tg_model, k_chain) = setup_kinematic_models();
     let joint_cmd = [0.0, 0.0];
     assert_tg_fk_matches_k(&tg_model, &k_chain, &joint_cmd)
 }
 
 #[test]
-fn test_random_joint_cmds() -> Result<(), Box<dyn std::error::Error>> {
+fn test_random_joint_cmds() -> TestResult {
     let (tg_model, k_chain) = setup_kinematic_models();
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
 
