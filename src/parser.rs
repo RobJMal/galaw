@@ -1,8 +1,7 @@
 use std::fs;
 
+use crate::types::{EulerRPY, Joint, Link, Position3D, RobotModel, Transform};
 use crate::utils::parse_vec3_str;
-use crate::types::{EulerRPY, Position3D, Transform, Link, Joint, RobotModel};
-
 
 pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Error>> {
     let content: String = fs::read_to_string(urdf_path)?;
@@ -19,9 +18,9 @@ pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Erro
     for node in doc.descendants() {
         if node.tag_name().name() == "link" {
             let link_name: String = node
-                                .attribute("name")
-                                .ok_or("link missing name attribute")?
-                                .to_string();
+                .attribute("name")
+                .ok_or("link missing name attribute")?
+                .to_string();
             links.push(Link { name: link_name });
         } else if node.tag_name().name() == "joint" {
             let name: String = node
@@ -43,57 +42,71 @@ pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Erro
 
             // Extracting joint XYZ and RPY
             let joint_origin = node
-                                                .children()
-                                                .find(|n| n.tag_name().name() == "origin")
-                                                .ok_or_else(|| format!("missing origin for joint {}", name))?;
-            
+                .children()
+                .find(|n| n.tag_name().name() == "origin")
+                .ok_or_else(|| format!("missing origin for joint {}", name))?;
+
             let xyz_str: &str = joint_origin
-                                .attribute("xyz")
-                                .ok_or_else(|| format!("missing xyz for joint {}", name))?;
+                .attribute("xyz")
+                .ok_or_else(|| format!("missing xyz for joint {}", name))?;
             let (x, y, z) = parse_vec3_str(xyz_str)?;
             let xyz: Position3D = Position3D { x, y, z };
-                                                
+
             let rpy_str = joint_origin
-                                        .attribute("rpy")
-                                        .ok_or_else(|| format!("missing rpy for joint {}", name))?;
+                .attribute("rpy")
+                .ok_or_else(|| format!("missing rpy for joint {}", name))?;
             let (roll, pitch, yaw) = parse_vec3_str(rpy_str)?;
             let rpy: EulerRPY = EulerRPY { roll, pitch, yaw };
 
-            let transform: Transform = Transform { position: xyz, orientation: rpy.to_quat() };
-            
-            // Extracting axis angles 
+            let transform: Transform = Transform {
+                position: xyz,
+                orientation: rpy.to_quat(),
+            };
+
+            // Extracting axis angles
             let axis_str: &str = node
                 .children()
                 .find(|n| n.tag_name().name() == "axis")
                 .and_then(|n| n.attribute("xyz"))
                 .ok_or_else(|| format!("missing axis xyz value for joint {}", name))?;
             let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
-            let axis: Position3D = Position3D { x: axis_x, y: axis_y, z: axis_z };
-            
+            let axis: Position3D = Position3D {
+                x: axis_x,
+                y: axis_y,
+                z: axis_z,
+            };
+
             // Extracting joint limits
             let joint_limit = node
-                                            .children()
-                                            .find(|n| n.tag_name().name() == "limit")
-                                            .ok_or_else(|| format!("missing joint limits for joint {}", name))?;
+                .children()
+                .find(|n| n.tag_name().name() == "limit")
+                .ok_or_else(|| format!("missing joint limits for joint {}", name))?;
 
             let limit_lower: f64 = joint_limit
-                                    .attribute("lower")
-                                    .ok_or_else(|| format!("missing joint limit lower for joint {}", name))?
-                                    .parse::<f64>()?;
+                .attribute("lower")
+                .ok_or_else(|| format!("missing joint limit lower for joint {}", name))?
+                .parse::<f64>()?;
             let limit_upper: f64 = joint_limit
-                                    .attribute("upper")
-                                    .ok_or_else(|| format!("missing joint limit upper for joint {}", name))?
-                                    .parse::<f64>()?;
-            
-            // Creating joint
-            let joint: Joint = Joint { name, parent, child, transform, axis, limit_lower, limit_upper };
-            joints.push(joint);
+                .attribute("upper")
+                .ok_or_else(|| format!("missing joint limit upper for joint {}", name))?
+                .parse::<f64>()?;
 
+            // Creating joint
+            let joint: Joint = Joint {
+                name,
+                parent,
+                child,
+                transform,
+                axis,
+                limit_lower,
+                limit_upper,
+            };
+            joints.push(joint);
         }
     }
 
-    Ok(RobotModel { 
-        name: robot_name, 
+    Ok(RobotModel {
+        name: robot_name,
         links: links,
         joints: joints,
     })

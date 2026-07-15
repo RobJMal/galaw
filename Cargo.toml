@@ -4,4 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+derive_more = {version="2.1.1", features=["add"]}
+k = "0.32.0"
 roxmltree = "0.20.0"
+
+[dev-dependencies]
+rand = "0.10.2"
+rand_chacha = "0.10.0"
+
