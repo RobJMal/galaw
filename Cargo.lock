@@ -86,6 +86,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "galaw"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "k",
+ "rand",
+ "rand_chacha",
+ "roxmltree",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -430,17 +441,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "taligalaw"
-version = "0.1.0"
-dependencies = [
- "derive_more",
- "k",
- "rand",
- "rand_chacha",
- "roxmltree",
 ]
 
 [[package]]

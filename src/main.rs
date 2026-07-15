@@ -1,4 +1,4 @@
-use taligalaw::load_urdf;
+use galaw::load_urdf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let robot_model = load_urdf("assets/simple_robot.urdf")?;
@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test commands
     let joint_cmds = [0.0, 0.0];
 
-    // Demo with taligalaw compute_fk
+    // Demo with galaw compute_fk
     match robot_model.compute_fk(&joint_cmds) {
         Ok(links) => {
             for link in robot_model.links.iter() {
