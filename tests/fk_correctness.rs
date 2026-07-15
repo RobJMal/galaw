@@ -16,6 +16,7 @@ type TestResult = Result<(), Box<dyn std::error::Error>>;
 // CONSTANTS
 const TEST_TOLERANCE: f64 = 1e-10;
 const RNG_SEED: u64 = 42;
+const NUM_POSES: usize = 128;   // Number of random robot poses to test out
 
 // HELPERS
 fn assert_close(a: f64, b: f64) {
@@ -89,26 +90,26 @@ fn assert_galaw_fk_matches_k(
 }
 
 /// Because k_chain is stateful, cannot have it easily parallized and need to instantiate it for each test
-fn setup_kinematic_models() -> (RobotModel, k::Chain<f64>) {
-    let urdf_path = "assets/simple_robot.urdf";
+fn setup_kinematic_models(urdf_path: &str) -> (RobotModel, k::Chain<f64>) {
     let galaw_robot_model = load_urdf(urdf_path).unwrap();
     let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
     (galaw_robot_model, k_chain)
 }
 
-#[test]
-fn test_zero_cmd() -> TestResult {
-    let (galaw_model, k_chain) = setup_kinematic_models();
-    let joint_cmd = [0.0, 0.0];
-    assert_galaw_fk_matches_k(&galaw_model, &k_chain, &joint_cmd)
-}
+/// Runs the full correctness check (zero pose + random poses) for one URDF.
+/// The joint count is read from the model, so this works for any robot.
+fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
+    eprintln!("[urdf] {urdf_path}");
+    let (galaw_model, k_chain) = setup_kinematic_models(urdf_path);
+    let n_joints = galaw_model.joints.len();
 
-#[test]
-fn test_random_joint_cmds() -> TestResult {
-    let (galaw_model, k_chain) = setup_kinematic_models();
+    // Zero pose: a vector of zeros sized to this robot (not hardcoded to 2).
+    let zero_cmd = vec![0.0; n_joints];
+    assert_galaw_fk_matches_k(&galaw_model, &k_chain, &zero_cmd)?;
+
+    // Random poses within each joint's limits (deterministic via the seed).
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
-
-    for _ in 0..128 {
+    for _ in 0..NUM_POSES {
         let joint_cmds: Vec<f64> = galaw_model
             .joints
             .iter()
@@ -118,4 +119,24 @@ fn test_random_joint_cmds() -> TestResult {
     }
 
     Ok(())
+}
+
+/// Generates one `#[test]` per URDF. Each robot becomes its own named test, so
+/// `cargo test` shows exactly which robot ran and which one failed. To cover a
+/// new robot, add a single `name => "path"` line below.
+macro_rules! fk_correctness_tests {
+    ($($name:ident => $path:expr),* $(,)?) => {
+        $(
+            #[test]
+            fn $name() -> TestResult {
+                check_fk_for_urdf($path)
+            }
+        )*
+    };
+}
+
+fk_correctness_tests! {
+    simple_robot     => "assets/simple_robot.urdf",
+    simple_arm_6dof  => "assets/simple_arm_6dof.urdf",
+    simple_arm_10dof => "assets/simple_arm_10dof.urdf",
 }

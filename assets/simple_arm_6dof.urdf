@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<!--
+  Synthetic 6-DOF serial arm for benchmarking.
+  Conforms to galaw's parser: every joint is `revolute` and has
+  origin(xyz+rpy), axis, and limit(lower+upper). Links are listed in
+  kinematic-chain order (base first), which galaw's compute_fk assumes.
+  Axes alternate to keep FK non-trivial (not a degenerate single-axis chain).
+-->
+<robot name="simple_arm_6dof">
+
+  <material name="grey">
+    <color rgba="0.4 0.4 0.4 1.0"/>
+  </material>
+
+  <!-- ===== LINKS (base first, then one per joint) ===== -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.15" length="0.1"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <link name="link_1">
+    <visual>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.06" length="0.3"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <link name="link_2">
+    <visual>
+      <origin xyz="0 0 0.2" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.055" length="0.4"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <link name="link_3">
+    <visual>
+      <origin xyz="0 0 0.2" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.05" length="0.4"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <link name="link_4">
+    <visual>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.045" length="0.3"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <link name="link_5">
+    <visual>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="0.2"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <link name="link_6">
+    <visual>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.1"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <!-- ===== JOINTS (joint_i connects link_{i-1} -> link_i) ===== -->
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.9" upper="2.9" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint_2" type="revolute">
+    <parent link="link_1"/>
+    <child link="link_2"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.0" upper="2.0" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint_3" type="revolute">
+    <parent link="link_2"/>
+    <child link="link_3"/>
+    <origin xyz="0 0 0.4" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.5" upper="2.5" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint_4" type="revolute">
+    <parent link="link_3"/>
+    <child link="link_4"/>
+    <origin xyz="0 0 0.4" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.9" upper="2.9" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint_5" type="revolute">
+    <parent link="link_4"/>
+    <child link="link_5"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.0" upper="2.0" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint_6" type="revolute">
+    <parent link="link_5"/>
+    <child link="link_6"/>
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.9" upper="2.9" effort="100.0" velocity="1.0"/>
+  </joint>
+
+</robot>
