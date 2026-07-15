@@ -51,6 +51,20 @@ per call. For per-call cost, read the `thrpt:` line — it already divides out v
 `Throughput::Elements` — or divide `time` by `N_POSES`. Always check what `N_POSES`
 is set to before interpreting a `time` figure.
 
+The `thrpt:` value is a **rate** (calls per second); invert it for time-per-call.
+One `elem` = one FK call. Remember the SI prefixes: `Kelem/s = 1e3`, `Melem/s = 1e6`.
+
+```
+ns_per_call = 1e9 / (elem_per_second)
+```
+
+Examples from a run:
+- `854.60 Kelem/s` → `1e9 / 854_600`   ≈ **1170 ns/call**
+- `2.4145 Melem/s` → `1e9 / 2_414_500` ≈ **414 ns/call**
+
+Note `thrpt` and `time` move in opposite directions: the *highest* throughput bound
+corresponds to the *lowest* (fastest) time bound, so don't pair "upper with upper".
+
 ## Foundational (not competitors)
 
 - **urdf-rs** — URDF parser under `k` — [GitHub](https://github.com/openrr/urdf-rs) · [crates.io](https://crates.io/crates/urdf-rs)
