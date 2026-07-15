@@ -1,6 +1,14 @@
-use taligalaw::{load_urdf, types::{self, Position3D, Quaternion}};
+// Third-party
+use rand::{Rng, RngExt, SeedableRng};
+use rand_chacha::ChaCha8Rng;
+
+// Custom 
+use taligalaw::{load_urdf, types::{Position3D, Quaternion}};
+
 
 const TEST_TOLERANCE: f64 = 1e-10;
+const RNG_SEED: u64 = 42;
+
 
 fn assert_close(a: f64, b: f64) {
     assert!((a - b).abs() < TEST_TOLERANCE, "expected {b}, got {a} OR not within {TEST_TOLERANCE}");
@@ -29,6 +37,9 @@ fn to_quaternion(q: k::nalgebra::Quaternion<f64>) -> Quaternion {
 }
 
 fn assert_tg_fk_matches_k(joint_cmd: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
+    eprintln!("[input] joint_cmd = {:?}", joint_cmd);
+
+    // URDF
     let urdf_file_path: String = String::from("assets/simple_robot.urdf");
 
     // Robot models, with k being the ground truth
@@ -58,22 +69,16 @@ fn test_zero_cmd() -> Result<(), Box<dyn std::error::Error>> {
     assert_tg_fk_matches_k(&[0.0, 0.0])
 }
 
-#[test]
-fn test_shoulder_joint_cmd() -> Result<(), Box<dyn std::error::Error>> {
-    let joint_cmd_01: [f64; 2] = [std::f64::consts::FRAC_PI_4, 0.0];
-    let joint_cmd_02: [f64; 2] = [-std::f64::consts::FRAC_PI_4, 0.0];
-    assert_tg_fk_matches_k(&joint_cmd_01);
-    assert_tg_fk_matches_k(&joint_cmd_02)
-}
 
 #[test]
-fn test_elbow_joint_cmd() -> Result<(), Box<dyn  std::error::Error>> {
-    let joint_cmd_01: [f64; 2] = [0.0, std::f64::consts::FRAC_PI_4];
-    let joint_cmd_02: [f64; 2] = [0.0, -std::f64::consts::FRAC_PI_4];
-    assert_tg_fk_matches_k(&joint_cmd_01);
-    assert_tg_fk_matches_k(&joint_cmd_02)
-}
+fn test_random_joint_cmds () -> Result<(), Box<dyn  std::error::Error>> {
+    let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
+    for _ in 0..128 {
+        let joint_cmds: Vec<f64> = (0..2).map(|_| rng.random_range(-1.5..1.5)).collect();
+        assert_tg_fk_matches_k(&joint_cmds)?;
+    }
 
-// Test both rotations
+    Ok(())
+}
 
 // Test at joint limit
