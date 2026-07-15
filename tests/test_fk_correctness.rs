@@ -5,7 +5,7 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use taligalaw::{
+use galaw::{
     load_urdf,
     types::{Position3D, Quaternion, RobotModel, Transform},
 };
