@@ -1,3 +1,5 @@
+/// Tests the correctness of the implmeented forward kinematics function
+/// with Rust's k library
 // Third-party
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -5,12 +7,17 @@ use rand_chacha::ChaCha8Rng;
 // Custom
 use taligalaw::{
     load_urdf,
-    types::{Position3D, Quaternion, RobotModel},
+    types::{Position3D, Quaternion, RobotModel, Transform},
 };
 
+// TYPES
+type TestResult = Result<(), Box<dyn std::error::Error>>;
+
+// CONSTANTS
 const TEST_TOLERANCE: f64 = 1e-10;
 const RNG_SEED: u64 = 42;
 
+// HELPERS
 fn assert_close(a: f64, b: f64) {
     assert!(
         (a - b).abs() < TEST_TOLERANCE,
@@ -28,6 +35,14 @@ fn assert_position3d_close(a: &Position3D, b: &Position3D) {
     assert_close(a.x, b.x);
     assert_close(a.y, b.y);
     assert_close(a.z, b.z);
+}
+
+fn assert_transform_close(tg_transform: &Transform, k_iso: &k::nalgebra::Isometry3<f64>) {
+    assert_position3d_close(&tg_transform.position, &to_position3d(&k_iso.translation));
+    assert_orientation_close(
+        &tg_transform.orientation,
+        &to_quaternion(*k_iso.rotation.quaternion()),
+    );
 }
 
 /// Converts to Position3D
@@ -68,11 +83,7 @@ fn assert_tg_fk_matches_k(
             .world_transform()
             .ok_or("invalid result")?;
 
-        assert_position3d_close(&tg_link.position, &to_position3d(&k_link.translation));
-        assert_orientation_close(
-            &tg_link.orientation,
-            &to_quaternion(*k_link.rotation.quaternion()),
-        );
+        assert_transform_close(&tg_result[link], &k_link);
     }
 
     Ok(())
@@ -109,5 +120,3 @@ fn test_random_joint_cmds() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-// Test at joint limit
