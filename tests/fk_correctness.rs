@@ -3,7 +3,7 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom 
-use taligalaw::{load_urdf, types::{Position3D, Quaternion}};
+use taligalaw::{load_urdf, types::{Position3D, Quaternion, RobotModel}};
 
 
 const TEST_TOLERANCE: f64 = 1e-10;
@@ -36,21 +36,14 @@ fn to_quaternion(q: k::nalgebra::Quaternion<f64>) -> Quaternion {
     Quaternion { x: q.i, y: q.j, z: q.k, w: q.w }
 }
 
-fn assert_tg_fk_matches_k(joint_cmd: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
+fn assert_tg_fk_matches_k(tg_model: &RobotModel, k_chain: &k::Chain<f64>, joint_cmd: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("[input] joint_cmd = {:?}", joint_cmd);
 
-    // URDF
-    let urdf_file_path: String = String::from("assets/simple_robot.urdf");
-
-    // Robot models, with k being the ground truth
-    let tg_robot_model = load_urdf(&urdf_file_path).unwrap();
-    let k_chain = k::Chain::<f64>::from_urdf_file(&urdf_file_path).unwrap(); 
-
-    let tg_result = tg_robot_model.compute_fk(joint_cmd)?;
+    let tg_result = tg_model.compute_fk(joint_cmd)?;
     k_chain.set_joint_positions(joint_cmd)?;
     k_chain.update_transforms();
 
-    for link in tg_robot_model.links.iter() {
+    for link in tg_model.links.iter() {
         let tg_link = &tg_result[link];
         let k_link = k_chain
             .find_link(&link.name).unwrap()
@@ -64,23 +57,34 @@ fn assert_tg_fk_matches_k(joint_cmd: &[f64]) -> Result<(), Box<dyn std::error::E
 }
 
 
+/// Because k_chain is stateful, cannot have it easily parallized and need to instantiate it for each test
+fn setup_kinematic_models() -> (RobotModel, k::Chain<f64>) {
+    let urdf_path = "assets/simple_robot.urdf";
+    let tg_robot_model = load_urdf(urdf_path).unwrap();
+    let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
+    (tg_robot_model, k_chain)
+}
+
+
 #[test]
 fn test_zero_cmd() -> Result<(), Box<dyn std::error::Error>> {
-    assert_tg_fk_matches_k(&[0.0, 0.0])
+    let (tg_model, k_chain) = setup_kinematic_models();
+    let joint_cmd = [0.0, 0.0];
+    assert_tg_fk_matches_k(&tg_model, &k_chain, &joint_cmd)
 }
 
 
 #[test]
 fn test_random_joint_cmds () -> Result<(), Box<dyn  std::error::Error>> {
-    let model = load_urdf("assets/simple_robot.urdf")?;
+    let (tg_model, k_chain) = setup_kinematic_models();
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
 
     for _ in 0..128 {
-        let joint_cmds: Vec<f64> = model.joints
+        let joint_cmds: Vec<f64> = tg_model.joints
             .iter()
             .map(|j| rng.random_range(j.limit_lower..j.limit_upper))
             .collect();
-        assert_tg_fk_matches_k(&joint_cmds)?;
+        assert_tg_fk_matches_k(&tg_model, &k_chain, &joint_cmds)?;
     }
 
     Ok(())
