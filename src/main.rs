@@ -15,9 +15,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Joint: {:?}", joint.name);
     }
 
-    let joint_cmds = [0.0, 0.0, 0.0];
+    let joint_cmds = [0.0, 0.0];
     match robot_model.compute_fk(&joint_cmds) {
-        Ok(links) => println!("links: {:?}", links),
+        Ok(links) => for link in robot_model.links.iter() {
+            println!("{:?}, {:?}", link, links[link])
+        },
         Err(e) => eprintln!("Error: {}", e),
     };
 
