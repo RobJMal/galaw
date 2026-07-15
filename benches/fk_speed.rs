@@ -13,8 +13,8 @@ const N_POSES: usize = 100;    // Random poses per robot
 // Robot embodiments to test
 const URDFS: &[&str] = &[
     "assets/simple_robot.urdf",
-    "assets/arm_6dof.urdf",
-    "assets/arm_10dof.urdf",
+    "assets/simple_arm_6dof.urdf",
+    "assets/simple_arm_10dof.urdf",
 ];
 
 
