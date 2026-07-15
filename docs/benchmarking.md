@@ -43,6 +43,14 @@ FFI boundary, smaller binaries, simpler cross-compilation and deployment.
 - [ ] **Identical robot + identical joint configurations.**
 - [ ] **State single-query vs. batched** explicitly — pinocchio's edge is partly SIMD/batch.
 
+## Reading the results
+
+The `fk_speed` bench loops `N_POSES` FK calls per timed iteration. So Criterion's
+`time:` line (and the mean in the HTML report) is per **batch of `N_POSES`**, not
+per call. For per-call cost, read the `thrpt:` line — it already divides out via
+`Throughput::Elements` — or divide `time` by `N_POSES`. Always check what `N_POSES`
+is set to before interpreting a `time` figure.
+
 ## Foundational (not competitors)
 
 - **urdf-rs** — URDF parser under `k` — [GitHub](https://github.com/openrr/urdf-rs) · [crates.io](https://crates.io/crates/urdf-rs)
