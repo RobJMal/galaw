@@ -8,6 +8,10 @@ use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
 use crate::types::{Joint, Link, GalawModel};
 use crate::utils::parse_vec3_str;
 
+/// Parses a URDF file into a `GalawModel`.
+/// 
+/// After XML parsing, it resolves the joint order via Breadth-First Search (BFS) 
+/// from the root so `compute_fk` can trust indices instead of file order.
 pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Error>> {
     let content: String = fs::read_to_string(urdf_path)?;
     let doc = roxmltree::Document::parse(&content)?;
@@ -125,6 +129,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Erro
         }
     };
 
+    // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
     let mut queue: VecDeque<usize> = VecDeque::from([root_index]);
     while let Some(parent_idx) = queue.pop_front() {
