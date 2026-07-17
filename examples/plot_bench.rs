@@ -35,6 +35,7 @@ const ROBOTS: &[(&str, &str, u32)] = &[
     ("fk_simple_arm", "simple_arm", 2),
     ("fk_simple_arm_6dof", "simple_arm_6dof", 6),
     ("fk_simple_arm_10dof", "simple_arm_10dof", 10),
+    ("fk_simple_arm_20dof", "simple_arm_20dof", 20),
 ];
 
 const IMPLS: [&str; 2] = ["galaw", "k"];

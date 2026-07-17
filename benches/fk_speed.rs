@@ -14,6 +14,7 @@ const URDFS: &[&str] = &[
     "assets/simple_robot.urdf",
     "assets/simple_arm_6dof.urdf",
     "assets/simple_arm_10dof.urdf",
+    "assets/simple_arm_20dof.urdf",
 ];
 
 /// Collects host/OS/CPU/memory info into a printable block, so benchmark

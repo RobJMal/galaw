@@ -116,4 +116,5 @@ fk_correctness_tests! {
     simple_robot     => "assets/simple_robot.urdf",
     simple_arm_6dof  => "assets/simple_arm_6dof.urdf",
     simple_arm_10dof => "assets/simple_arm_10dof.urdf",
+    simple_arm_20dof => "assets/simple_arm_20dof.urdf",
 }
