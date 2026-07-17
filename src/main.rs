@@ -1,18 +1,18 @@
 use galaw::load_urdf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let robot_model = load_urdf("assets/simple_robot.urdf")?;
+    let galaw_model = load_urdf("assets/simple_robot.urdf")?;
 
     // Information about the robot
-    println!("robot name: {:?}", robot_model.name);
-    println!("number of links: {:?}", robot_model.links.len());
-    println!("number of joints: {:?}", robot_model.joints.len());
+    println!("robot name: {:?}", galaw_model.name);
+    println!("number of links: {:?}", galaw_model.links.len());
+    println!("number of joints: {:?}", galaw_model.joints.len());
 
-    for link in robot_model.links.iter() {
+    for link in galaw_model.links.iter() {
         println!("Link: {:?}", link.name);
     }
 
-    for joint in robot_model.joints.iter() {
+    for joint in galaw_model.joints.iter() {
         println!("Joint: {:?}", joint.name);
     }
 
@@ -20,9 +20,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let joint_cmds = [0.0, 0.0];
 
     // Demo with galaw compute_fk
-    match robot_model.compute_fk(&joint_cmds) {
+    match galaw_model.compute_fk(&joint_cmds) {
         Ok(links) => {
-            for (i, link) in robot_model.links.iter().enumerate() {
+            for (i, link) in galaw_model.links.iter().enumerate() {
                 println!("{:?}, {:?}", link, links[i])
             }
         }
