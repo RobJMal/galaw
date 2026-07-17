@@ -157,3 +157,34 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Erro
         joint_name_to_idx: joint_name_to_idx,
     })
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn joint_resolution_is_independent_of_file_order() {
+        let original = load_urdf("assets/simple_robot.urdf").unwrap();
+        let flipped = load_urdf("assets/simple_robot_flipped.urdf").unwrap();
+
+        // Resolve a joint's parent/child *link names* (not raw indices —
+        // those are expected to differ between the two files, since the
+        // links are declared in a different order in each).
+        fn parent_child_names(model: &GalawModel, joint_name: &str) -> (String, String) {
+            let joint = model.joints.iter().find(|j| j.name == joint_name).unwrap();
+            (
+                model.links[joint.parent_link_idx].name.clone(),
+                model.links[joint.child_link_idx].name.clone(),
+            )
+        }
+
+        for joint_name in ["shoulder_joint", "elbow_joint"] {
+            assert_eq!(
+                parent_child_names(&original, joint_name),
+                parent_child_names(&flipped, joint_name),
+                "joint {joint_name} resolved to a different parent/child link depending on file order"
+            );
+        }
+    }
+}
