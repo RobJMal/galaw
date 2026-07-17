@@ -1,12 +1,10 @@
-use std::collections::HashMap;
-
-use crate::types::{Link, Position3D, Quaternion, RobotModel, Transform};
+use crate::types::{Position3D, Quaternion, RobotModel, Transform};
 
 impl RobotModel {
     pub fn compute_fk(
         &self,
         angles: &[f64],
-    ) -> Result<HashMap<Link, Transform>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<Transform>, Box<dyn std::error::Error>> {
         /* Computes forward kinematics of a model */
         if angles.len() != self.joints.len() {
             return Err(format!(
@@ -17,7 +15,7 @@ impl RobotModel {
             .into());
         }
 
-        let mut links: HashMap<Link, Transform> = HashMap::new();
+        let mut links: Vec<Transform> = Vec::new();
         let base_link_transform: Transform = Transform {
             position: Position3D {
                 x: 0.0,
@@ -26,7 +24,7 @@ impl RobotModel {
             },
             orientation: Quaternion::identity(),
         };
-        links.insert(self.links[0].clone(), base_link_transform);
+        links.push(base_link_transform);
 
         for (i, joint) in self.joints.iter().enumerate() {
             // Extracting info about the joint command
@@ -48,7 +46,8 @@ impl RobotModel {
 
             let quat_local: Quaternion = joint.transform.orientation.multiply(&quat_joint);
 
-            let link_prev_quat = links[&self.links[i]].orientation;
+            // let link_prev_quat = links[&self.links[i]].orientation;
+            let link_prev_quat = links[i].orientation;
             let link_n_quat = link_prev_quat.multiply(&quat_local);
 
             let quat_joint_translation = Quaternion {
@@ -65,15 +64,9 @@ impl RobotModel {
                 y: rot_transform.y,
                 z: rot_transform.z,
             };
-            let link_n_position = links[&self.links[i]].position + rot_position;
+            let link_n_position = links[i].position + rot_position;
 
-            links.insert(
-                self.links[i + 1].clone(),
-                Transform {
-                    position: link_n_position,
-                    orientation: link_n_quat,
-                },
-            );
+            links.push(Transform { position: link_n_position, orientation: link_n_quat });
         }
 
         Ok(links)

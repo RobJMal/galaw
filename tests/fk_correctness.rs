@@ -76,14 +76,14 @@ fn assert_galaw_fk_matches_k(
     k_chain.set_joint_positions(joint_cmd)?;
     k_chain.update_transforms();
 
-    for link in galaw_model.links.iter() {
+    for (i, link) in galaw_model.links.iter().enumerate() {
         let k_link = k_chain
             .find_link(&link.name)
             .unwrap()
             .world_transform()
             .ok_or("invalid result")?;
 
-        assert_transform_close(&galaw_result[link], &k_link);
+        assert_transform_close(&galaw_result[i], &k_link);
     }
 
     Ok(())

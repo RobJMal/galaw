@@ -22,8 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demo with galaw compute_fk
     match robot_model.compute_fk(&joint_cmds) {
         Ok(links) => {
-            for link in robot_model.links.iter() {
-                println!("{:?}, {:?}", link, links[link])
+            for (i, link) in robot_model.links.iter().enumerate() {
+                println!("{:?}, {:?}", link, links[i])
             }
         }
         Err(e) => eprintln!("Error: {}", e),

@@ -174,7 +174,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Latency: ns/call, CI bounds used directly.
     let latency = build_chart(
-        "FK latency scaling: galaw vs. k (95% CI)",
+        "FK latency scaling (95% CI)",
         "ns per call (lower is better)",
         |s| (s.mean, s.lo, s.hi),
         |x| x.round(),
@@ -186,7 +186,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Throughput: M calls/sec = 1e9 / ns / 1e6. Decreasing in ns, so lo/hi swap.
     let mcps = |ns: f64| 1e9 / ns / 1e6;
     let throughput = build_chart(
-        "FK throughput: galaw vs. k (95% CI)",
+        "FK throughput (95% CI)",
         "M calls/sec (higher is better)",
         move |s| (mcps(s.mean), mcps(s.hi), mcps(s.lo)),
         |x| (x * 100.0).round() / 100.0,
