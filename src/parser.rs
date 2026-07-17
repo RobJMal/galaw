@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::{clone, fs};
+use std::{fs};
 
 // Third-party
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
