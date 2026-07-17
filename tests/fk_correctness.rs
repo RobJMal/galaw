@@ -1,3 +1,5 @@
+use k::{Isometry3, Translation3, UnitQuaternion};
+use nalgebra::Quaternion;
 /// Tests the correctness of the implmeented forward kinematics function
 /// with Rust's k library
 // Third-party
@@ -7,7 +9,7 @@ use rand_chacha::ChaCha8Rng;
 // Custom
 use galaw::{
     load_urdf,
-    types::{Position3D, Quaternion, RobotModel, Transform},
+    types::{RobotModel},
 };
 
 // TYPES
@@ -27,42 +29,23 @@ fn assert_close(a: f64, b: f64) {
 }
 
 /// Need to do this test because quaternions double-cover rotations (q=-q are same rotation)
-fn assert_orientation_close(a: &Quaternion, b: &Quaternion) {
-    let dot_prod = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>) {
+    let dot_prod = a.i * b.i + a.j * b.j + a.k * b.k + a.w * b.w;
     assert_close(dot_prod.abs(), 1.0);
 }
 
-fn assert_position3d_close(a: &Position3D, b: &Position3D) {
+fn assert_position3d_close(a: &Translation3<f64>, b: &Translation3<f64>) {
     assert_close(a.x, b.x);
     assert_close(a.y, b.y);
     assert_close(a.z, b.z);
 }
 
-fn assert_transform_close(galaw_transform: &Transform, k_iso: &k::nalgebra::Isometry3<f64>) {
-    assert_position3d_close(&galaw_transform.position, &to_position3d(&k_iso.translation));
+fn assert_transform_close(galaw_transform: &Isometry3<f64>, k_iso: &k::nalgebra::Isometry3<f64>) {
+    assert_position3d_close(&galaw_transform.translation, &k_iso.translation);
     assert_orientation_close(
-        &galaw_transform.orientation,
-        &to_quaternion(*k_iso.rotation.quaternion()),
+        &galaw_transform.rotation,
+        &k_iso.rotation,
     );
-}
-
-/// Converts to Position3D
-fn to_position3d(t: &k::nalgebra::Translation3<f64>) -> Position3D {
-    Position3D {
-        x: t.x,
-        y: t.y,
-        z: t.z,
-    }
-}
-
-/// Converts to Quaternion
-fn to_quaternion(q: k::nalgebra::Quaternion<f64>) -> Quaternion {
-    Quaternion {
-        x: q.i,
-        y: q.j,
-        z: q.k,
-        w: q.w,
-    }
 }
 
 fn assert_galaw_fk_matches_k(

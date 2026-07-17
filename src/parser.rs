@@ -1,7 +1,12 @@
 use std::fs;
 
-use crate::types::{EulerRPY, Joint, Link, Position3D, RobotModel, Transform};
+// Third-party
+use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
+
+// Custom
+use crate::types::{Joint, Link, RobotModel};
 use crate::utils::parse_vec3_str;
+
 
 pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Error>> {
     let content: String = fs::read_to_string(urdf_path)?;
@@ -50,18 +55,15 @@ pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Erro
                 .attribute("xyz")
                 .ok_or_else(|| format!("missing xyz for joint {}", name))?;
             let (x, y, z) = parse_vec3_str(xyz_str)?;
-            let xyz: Position3D = Position3D { x, y, z };
+            let xyz = Vector3::new(x, y, z);
 
             let rpy_str = joint_origin
                 .attribute("rpy")
                 .ok_or_else(|| format!("missing rpy for joint {}", name))?;
             let (roll, pitch, yaw) = parse_vec3_str(rpy_str)?;
-            let rpy: EulerRPY = EulerRPY { roll, pitch, yaw };
+            let rotation = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
 
-            let transform: Transform = Transform {
-                position: xyz,
-                orientation: rpy.to_quat(),
-            };
+            let transform = Isometry3::from_parts(Translation3::from(xyz), rotation);
 
             // Extracting axis angles
             let axis_str: &str = node
@@ -70,11 +72,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<RobotModel, Box<dyn std::error::Erro
                 .and_then(|n| n.attribute("xyz"))
                 .ok_or_else(|| format!("missing axis xyz value for joint {}", name))?;
             let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
-            let axis: Position3D = Position3D {
-                x: axis_x,
-                y: axis_y,
-                z: axis_z,
-            };
+            let axis = Unit::new_normalize(Vector3::new(axis_x, axis_y, axis_z));
 
             // Extracting joint limits
             let joint_limit = node
