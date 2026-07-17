@@ -17,15 +17,15 @@ impl GalawModel {
             .into());
         }
 
-        let mut links: Vec<Isometry3<f64>> = Vec::with_capacity(self.joints.len() + 1);
-        links.push(Isometry3::identity());
+        let mut links: Vec<Isometry3<f64>> = vec![Isometry3::identity(); self.links.len()];
 
-        for (i, joint) in self.joints.iter().enumerate() {
+        for joint in &self.joints {
             // Extracting info about the joint command
-            let joint_rotation = UnitQuaternion::from_axis_angle(&joint.axis, joint_cmds[i]);
+            let joint_rotation =
+                UnitQuaternion::from_axis_angle(&joint.axis, joint_cmds[joint.cmd_idx]);
             let joint_local =
                 joint.transform * Isometry3::from_parts(Translation3::identity(), joint_rotation);
-            links.push(links[i] * joint_local);
+            links[joint.child_link_idx] = links[joint.parent_link_idx] * joint_local;
         }
 
         Ok(links)
