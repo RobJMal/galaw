@@ -5,7 +5,7 @@ use std::fs;
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
 
 // Custom
-use crate::types::{GalawModel, Joint, Link};
+use crate::types::{GalawModel, Joint, JointType, Link};
 use crate::utils::parse_vec3_str;
 
 /// Parses <link> tag into a `Link`
@@ -23,6 +23,11 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
         .attribute("name")
         .ok_or("joint missing name attribute")?
         .to_string();
+    let joint_type: JointType = node
+        .attribute("type")
+        .ok_or_else(|| format!("joint {} missing type attribute", name))?
+        .parse()
+        .map_err(|e| format!("joint {}: {}", name, e))?;
     let parent: String = node
         .children()
         .find(|n| n.tag_name().name() == "parent")
@@ -83,6 +88,7 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
     // Creating joint
     let joint: Joint = Joint {
         name,
+        joint_type,
         parent,
         parent_link_idx: 0, // Dummy as it will be handled in next lines
         child,

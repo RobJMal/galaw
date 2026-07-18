@@ -7,9 +7,33 @@ pub struct Link {
     pub name: String,
 }
 
+/// Represents joint types found in URDFs
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JointType {
+    Revolute,
+    Prismatic,
+    Fixed,
+    Continuous,
+}
+
+impl std::str::FromStr for JointType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "revolute" => Ok(JointType::Revolute),
+            "prismatic" => Ok(JointType::Prismatic),
+            "fixed" => Ok(JointType::Fixed),
+            "continuous" => Ok(JointType::Continuous),
+            other => Err(format!("unknown joint type: {other}")),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Joint {
     pub name: String,
+    pub joint_type: JointType,
     pub parent: String,
     pub parent_link_idx: usize,
     pub child: String,
