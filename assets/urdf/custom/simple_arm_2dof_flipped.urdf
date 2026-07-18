@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <!--
-  Same robot as simple_robot.urdf (base_link -> upper_arm -> forearm,
+  Same robot as simple_arm_2dof.urdf (base_link -> upper_arm -> forearm,
   via shoulder_joint and elbow_joint), but with links and joints
   declared in reverse order. Used to test that load_urdf's parent/child
   index resolution is independent of file order, not just lucky.
 -->
-<robot name="simple_arm">
+<robot name="simple_arm_2dof_flipped">
 
   <material name="black">
     <color rgba="0.0 0.0 0.0 1.0"/>

@@ -112,7 +112,7 @@ macro_rules! fk_correctness_tests {
 }
 
 fk_correctness_tests! {
-    simple_robot     => "assets/urdf/custom/simple_robot.urdf",
+    simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_6dof  => "assets/urdf/custom/simple_arm_6dof.urdf",
     simple_arm_10dof => "assets/urdf/custom/simple_arm_10dof.urdf",
     simple_arm_20dof => "assets/urdf/custom/simple_arm_20dof.urdf",

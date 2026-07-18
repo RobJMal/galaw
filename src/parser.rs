@@ -195,8 +195,8 @@ mod tests {
     #[test]
     fn link_lookup_is_self_consistent() {
         for path in [
-            "assets/urdf/custom/simple_robot.urdf",
-            "assets/urdf/custom/simple_robot_flipped.urdf",
+            "assets/urdf/custom/simple_arm_2dof.urdf",
+            "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
         ] {
             let model = load_urdf(path).unwrap();
             for link in &model.links {
@@ -216,8 +216,8 @@ mod tests {
     /// parent/child link names must match regardless.
     #[test]
     fn joint_resolution_is_independent_of_file_order() {
-        let original = load_urdf("assets/urdf/custom/simple_robot.urdf").unwrap();
-        let flipped = load_urdf("assets/urdf/custom/simple_robot_flipped.urdf").unwrap();
+        let original = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf").unwrap();
+        let flipped = load_urdf("assets/urdf/custom/simple_arm_2dof_flipped.urdf").unwrap();
 
         // Resolve a joint's parent/child *link names* (not raw indices —
         // those are expected to differ between the two files, since the

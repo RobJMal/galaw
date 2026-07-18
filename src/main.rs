@@ -1,7 +1,7 @@
 use galaw::load_urdf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let galaw_model = load_urdf("assets/urdf/custom/simple_robot.urdf")?;
+    let galaw_model = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
 
     // Information about the robot
     println!("robot name: {:?}", galaw_model.name);
