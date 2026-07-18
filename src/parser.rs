@@ -8,6 +8,41 @@ use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
 use crate::types::{GalawModel, Joint, JointType, Link};
 use crate::utils::parse_vec3_str;
 
+// ----- HELPER METHODS -----
+/// Parses the axis information from tag 
+fn read_axis(node: roxmltree::Node<'_, '_>, joint_name: &str) -> Result<Unit<Vector3<f64>>, Box<dyn std::error::Error>> {
+    // Extracting axis angles
+    let axis_str: &str = node
+        .children()
+        .find(|n| n.tag_name().name() == "axis")
+        .and_then(|n| n.attribute("xyz"))
+        .ok_or_else(|| format!("missing axis xyz value for joint {}", joint_name))?;
+    let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
+
+    Ok(Unit::new_normalize(Vector3::new(axis_x, axis_y, axis_z)))
+}
+
+/// Parses the joint limit information
+/// 
+/// Returns (limit_lower, limit_upper)
+fn read_joint_limits(node: roxmltree::Node<'_, '_>, joint_name: &str) -> Result<(f64, f64), Box<dyn std::error::Error>> {
+    let joint_limit = node
+        .children()
+        .find(|n| n.tag_name().name() == "limit")
+        .ok_or_else(|| format!("missing joint limits for joint {}", joint_name))?;
+
+    let limit_lower: f64 = joint_limit
+        .attribute("lower")
+        .ok_or_else(|| format!("missing joint limit lower for joint {}", joint_name))?
+        .parse::<f64>()?;
+    let limit_upper: f64 = joint_limit
+        .attribute("upper")
+        .ok_or_else(|| format!("missing joint limit upper for joint {}", joint_name))?
+        .parse::<f64>()?;
+
+    Ok((limit_lower, limit_upper))
+}
+
 /// Parses <link> tag into a `Link`
 fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, Box<dyn std::error::Error>> {
     let link_name: String = node
@@ -62,49 +97,37 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
     let transform = Isometry3::from_parts(Translation3::from(xyz), rotation);
 
     // Extracting axis angles
-    let axis_str: &str = node
-        .children()
-        .find(|n| n.tag_name().name() == "axis")
-        .and_then(|n| n.attribute("xyz"))
-        .ok_or_else(|| format!("missing axis xyz value for joint {}", name))?;
-    let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
-    let axis = Unit::new_normalize(Vector3::new(axis_x, axis_y, axis_z));
-
     let (rot_axis, lin_axis) = match joint_type {
-        JointType::Prismatic => (None, Some(axis)),
-        JointType::Revolute => (Some(axis), None),
+        JointType::Prismatic => (None, Some(read_axis(node, &name)?)),
+        JointType::Revolute => (Some(read_axis(node, &name)?), None),
+        JointType::Fixed => (None, None),
         _ => (None, None),
     };
 
     // Extracting joint limits
-    let joint_limit = node
-        .children()
-        .find(|n| n.tag_name().name() == "limit")
-        .ok_or_else(|| format!("missing joint limits for joint {}", name))?;
-
-    let limit_lower: f64 = joint_limit
-        .attribute("lower")
-        .ok_or_else(|| format!("missing joint limit lower for joint {}", name))?
-        .parse::<f64>()?;
-    let limit_upper: f64 = joint_limit
-        .attribute("upper")
-        .ok_or_else(|| format!("missing joint limit upper for joint {}", name))?
-        .parse::<f64>()?;
+    let (limit_lower, limit_upper) = match joint_type {
+        JointType::Revolute | JointType::Prismatic => {
+            let (lower, upper) = read_joint_limits(node, &name)?;
+            (Some(lower), Some(upper))
+        }
+        JointType::Fixed => (None, None),
+        _ => (None, None),
+    };
 
     // Creating joint
     let joint: Joint = Joint {
         name,
         joint_type,
         parent,
-        parent_link_idx: 0, // Dummy as it will be handled in next lines
+        parent_link_idx: 0, // Resolved in resolve_joint_order
         child,
-        child_link_idx: 0, // Dummy as it will be handled in next lines
+        child_link_idx: 0,  // Resolved in resolve_joint_order
         transform,
         lin_axis: lin_axis,
         rot_axis: rot_axis,
-        limit_lower,
-        limit_upper,
-        cmd_idx: 0, // Resolved later
+        limit_lower: limit_lower,
+        limit_upper: limit_upper,
+        cmd_idx: None,      // Resolved in resolve_joint_order
     };
 
     Ok(joint)
@@ -153,6 +176,7 @@ fn resolve_joint_order(
     // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
     let mut queue: VecDeque<usize> = VecDeque::from([root_index]);
+    let mut acutated_joint_counter = 0;
     while let Some(parent_idx) = queue.pop_front() {
         for j in joints
             .iter()
@@ -162,6 +186,13 @@ fn resolve_joint_order(
             let mut resolved = j.clone();
             resolved.parent_link_idx = parent_idx;
             resolved.child_link_idx = child_idx;
+            resolved.cmd_idx = if j.joint_type == JointType::Fixed {
+                None
+            } else {
+                let idx = acutated_joint_counter;
+                acutated_joint_counter += 1;
+                Some(idx)
+            };
             ordered_joints.push(resolved);
             queue.push_back(child_idx);
         }
@@ -181,7 +212,7 @@ fn resolve_joint_order(
 
     let joint_name_to_idx: HashMap<String, usize> = ordered_joints
         .iter()
-        .map(|j| (j.name.clone(), j.cmd_idx))
+        .filter_map(|j| j.cmd_idx.map(|idx |(j.name.clone(), idx)))
         .collect();
 
     Ok((ordered_joints, link_name_to_idx, joint_name_to_idx))
@@ -208,8 +239,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Erro
             let link = parse_link(node)?;
             links.push(link);
         } else if node.tag_name().name() == "joint" {
-            let mut joint = parse_joint(node)?;
-            joint.cmd_idx = joints.len();
+            let joint = parse_joint(node)?;
             joints.push(joint);
         }
     }
@@ -217,12 +247,15 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Erro
     let (ordered_joints, link_name_to_idx, joint_name_to_idx) =
         resolve_joint_order(&links, &joints)?;
 
+    let num_actuated_joints = ordered_joints.iter().filter(|j| j.cmd_idx.is_some()).count();
+
     Ok(GalawModel {
         name: robot_name,
         links: links,
         link_name_to_idx: link_name_to_idx,
         joints: ordered_joints,
         joint_name_to_idx: joint_name_to_idx,
+        num_actuated_joints: num_actuated_joints,
     })
 }
 

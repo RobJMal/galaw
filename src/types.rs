@@ -41,9 +41,9 @@ pub struct Joint {
     pub transform: Isometry3<f64>,
     pub lin_axis: Option<Unit<Vector3<f64>>>,   // Option since Unit doesn't allow zero-vector
     pub rot_axis: Option<Unit<Vector3<f64>>>,   // Option since Unit doesn't allow zero-vector
-    pub limit_lower: f64,
-    pub limit_upper: f64,
-    pub cmd_idx: usize,
+    pub limit_lower: Option<f64>,
+    pub limit_upper: Option<f64>,
+    pub cmd_idx: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -53,6 +53,7 @@ pub struct GalawModel {
     pub joints: Vec<Joint>,
     pub link_name_to_idx: HashMap<String, usize>,
     pub joint_name_to_idx: HashMap<String, usize>,
+    pub num_actuated_joints: usize,
 }
 
 impl GalawModel {

@@ -8,7 +8,7 @@ impl GalawModel {
         &self,
         joint_cmds: &[f64],
     ) -> Result<Vec<Isometry3<f64>>, Box<dyn std::error::Error>> {
-        if joint_cmds.len() != self.joints.len() {
+        if joint_cmds.len() != self.num_actuated_joints {
             return Err(format!(
                 "expected {} joint_cmds, got {}",
                 self.joints.len(),
@@ -20,7 +20,7 @@ impl GalawModel {
         let mut links: Vec<Isometry3<f64>> = vec![Isometry3::identity(); self.links.len()];
 
         for joint in &self.joints {
-            let cmd = joint_cmds[joint.cmd_idx];
+            let cmd = joint.cmd_idx.map(|idx| joint_cmds[idx]).unwrap_or(0.0);
             
             // Extracting rotation and translation components
             let rotation = match joint.rot_axis {

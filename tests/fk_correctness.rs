@@ -77,7 +77,7 @@ fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
 fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
     eprintln!("[urdf] {urdf_path}");
     let (galaw_model, k_chain) = setup_kinematic_models(urdf_path);
-    let n_joints = galaw_model.joints.len();
+    let n_joints = galaw_model.num_actuated_joints;
 
     // Zero pose: a vector of zeros sized to this robot (not hardcoded to 2).
     let zero_cmd = vec![0.0; n_joints];
@@ -89,7 +89,11 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
         let joint_cmds: Vec<f64> = galaw_model
             .joints
             .iter()
-            .map(|j| rng.random_range(j.limit_lower..j.limit_upper))
+            .filter(|j| j.cmd_idx.is_some())
+            .map(|j| match (j.limit_lower, j.limit_upper) {
+                (Some(lower), Some(upper)) => rng.random_range(lower..upper),
+                _ => rng.random_range(0.0..0.0),
+            })
             .collect();
         assert_galaw_fk_matches_k(&galaw_model, &k_chain, &joint_cmds)?;
     }
@@ -113,8 +117,11 @@ macro_rules! fk_correctness_tests {
 
 fk_correctness_tests! {
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
-    simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
+    simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",   // Tests revolute and prismatic
     simple_arm_6dof  => "assets/urdf/custom/simple_arm_6dof.urdf",
     simple_arm_10dof => "assets/urdf/custom/simple_arm_10dof.urdf",
     simple_arm_20dof => "assets/urdf/custom/simple_arm_20dof.urdf",
+
+    // Third-party robots
+    flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",  // Tests revolute and fixed
 }
