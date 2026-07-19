@@ -7,11 +7,12 @@
 This repository incorporates assets and robot descriptions from various open-source projects. Each asset is used in compliance with its original license:
 
 * **Enlight-L (Flexiv)** – Derived from [flexiv_description](https://github.com/flexivrobotics/flexiv_description). Licensed under the **Apache License 2.0** (see `LICENSE` in the `Flexiv_Enlight-L` directory or the original notice for details). *Note: Modified locally to update mesh resource paths.*
+  * *Local Changes:* Repackaged URDF and meshes into a flat `Enlight-L/` directory; modified mesh resource paths to be relative to `meshes/`.
 * **ANYmal D (ANYbotics)** – Derived from the [anymal_d_simple_description](https://github.com/ANYbotics/anymal_d_simple_description?tab=BSD-3-Clause-1-ov-file) project. Licensed under the **BSD 3-Clause License**. 
-  * *Local Changes:* Modified package paths for visual and collision mesh resources.
+  * *Local Changes:* Repackaged URDF and meshes into a flat `ANYmal-D/` directory; modified mesh resource paths to be relative to `meshes/`.
   * *License Copy:* Located at `urdf/anybotics/LICENSE.anybotics`
 * **Wuji Hand (Wuji Technology)** – Derived from the [wuji-description](https://github.com/wuji-technology/wuji-description) project. Licensed under the **MIT License**.
-  * *Local Changes:* Modified package paths for visual and collision mesh resources.
+  * *Local Changes:* Repackaged URDF and meshes into a flat `Wuji-Hand-v1_right/` directory; modified mesh resource paths to be relative to `meshes/`.
   * *License Copy:* Located at `urdf/wuji/LICENSE.wuji`
 * **Stretch 4 (Hello Robot)** – Derived from the [stretch4_urdf](https://github.com/hello-robot/stretch4_urdf) project. Licensed under the **Clear BSD License**.
   * *Local Changes:* Repackaged URDF and meshes into a flat `Stretch4/` directory; modified mesh resource paths to be relative to `meshes/`.
