@@ -20,19 +20,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let link_name: String = format!("link_{}", joint.child);
         let parent_var: String = format!("link_{}", joint.parent);
 
+        // Using Unit::new_unchecked since already normalized in parser.rs
         let rotation: String = match joint.rot_axis {
             Some(axis) => {
                 let vec = axis.into_inner();
-                let axis_vec_str: String = format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
-                format!("UnitQuaternion::from_axis_angle(&{}, &joint_cmds[{}])", axis_vec_str, joint.cmd_idx.unwrap()).to_string()
+                let axis_vec_str: String = format!("Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?}))", vec.x, vec.y, vec.z);
+                format!("UnitQuaternion::from_axis_angle(&{}, joint_cmds[{}])", axis_vec_str, joint.cmd_idx.unwrap()).to_string()
             }
             None => "UnitQuaternion::identity()".to_string(),
         };
         let translation: String = match joint.lin_axis {
             Some(axis) => {
                 let vec = axis.into_inner();
-                let axis_vec_str: String = format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
-                format!("Translation3::from({} * &joint_cmds[{}]),", axis_vec_str, joint.cmd_idx.unwrap()).to_string()
+                let axis_vec_str: String = format!("Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?}))", vec.x, vec.y, vec.z);
+                format!("Translation3::from({} * joint_cmds[{}])", axis_vec_str, joint.cmd_idx.unwrap()).to_string()
             }
             None => "Translation3::identity()".to_string(),
         };
@@ -42,12 +43,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let joint_transform_r_str: String = format!("UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))", joint_transform_r.w, joint_transform_r.i, joint_transform_r.j, joint_transform_r.k).to_string();
 
         let joint_transform: String = format!(
-            "Isometry3::from_parts({}, {}))", joint_transform_t_str, joint_transform_r_str 
+            "Isometry3::from_parts({}, {})", joint_transform_t_str, joint_transform_r_str 
         );
 
         let joint_local: String = format!("{}*Isometry3::from_parts({}, {})", joint_transform, translation, rotation).to_string();
 
-        let code_line: String = format!("let {} = {} * {}", link_name, parent_var, joint_local);
+        let code_line: String = format!("let {} = {} * {};", link_name, parent_var, joint_local);
         println!("{}", code_line);
         println!();
     }
