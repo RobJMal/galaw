@@ -21,7 +21,8 @@ use std::path::PathBuf;
 // Third-party
 use charming::component::{Axis, Grid, Legend, Title};
 use charming::element::{
-    AreaStyle, AxisType, ItemStyle, Label, LabelPosition, LineStyle, NameLocation,
+    AreaStyle, AxisLabel, AxisType, ItemStyle, Label, LabelPosition, LineStyle, NameLocation,
+    TextStyle,
 };
 use charming::series::Line;
 use charming::{Chart, ImageFormat, ImageRenderer};
@@ -46,6 +47,7 @@ struct Stat {
 }
 
 struct RobotInfo {
+    name: String,   // matches galaw_model.name, for the x-axis label
     group: String,
     bench_id: u32,  // matches galaw_model.joints.len()
     dof: u32,       // matches galaw_model.num_actuated_joints
@@ -59,6 +61,7 @@ fn manifest_dir() -> PathBuf {
 fn robot_info(urdf_path: &str) -> Result<RobotInfo, Box<dyn Error>> {
     let model = load_urdf(urdf_path)?;
     Ok(RobotInfo {
+        name: model.name.clone(),
         group: format!("fk_{}", model.name),
         bench_id: model.joints.len() as u32,
         dof: model.num_actuated_joints as u32,
@@ -109,21 +112,37 @@ fn build_chart(
     to_vals: impl Fn(&Stat) -> (f64, f64, f64),
     round: impl Fn(f64) -> f64,
 ) -> Result<Chart, Box<dyn Error>> {
-    let dof_labels: Vec<String> = robots.iter().map(|r| r.dof.to_string()).collect();
+    // "robot_name\n[total_joints/actuated_joints]" — e.g. "Enlight-L\n[9/7]".
+    let dof_labels: Vec<String> = robots
+        .iter()
+        .map(|r| format!("{}\n[{}/{}]", r.name, r.bench_id, r.dof))
+        .collect();
 
     let mut chart = Chart::new()
         .background_color("#ffffff")
-        .title(Title::new().text(title).left("center"))
+        .title(Title::new().text(title).left("center").text_style(TextStyle::new().font_size(26.0)))
         // Only the mean lines get a legend entry; the band series are unnamed.
-        .legend(Legend::new().top("bottom").data(IMPLS.to_vec()))
-        // Bottom margin for tick labels + axis name + legend.
-        .grid(Grid::new().bottom(60).contain_label(true))
+        .legend(
+            Legend::new()
+                .top("bottom")
+                .text_style(TextStyle::new().font_size(15.0))
+                .data(IMPLS.to_vec()),
+        )
+        // Bottom margin for tick labels + axis name + legend — larger than
+        // before since the tick labels are two lines tall and bigger font now.
+        .grid(Grid::new().bottom(140).contain_label(true))
         .x_axis(
             Axis::new()
                 .type_(AxisType::Category)
-                .name("Degrees of freedom (joints)")
+                .name("Robot [total joints / actuated joints]")
                 .name_location(NameLocation::Middle) // centered under the axis, not clipped at the end
-                .name_gap(32.0)
+                .name_gap(70.0) // clears the two-line tick labels above it
+                .name_text_style(TextStyle::new().font_size(15.0))
+                // interval(0.0) forces every category to render — ECharts'
+                // default "auto" interval was silently hiding most of these
+                // (only 4 of 8 robots were showing up) because it judged
+                // them too crowded to fit; font_size makes them readable.
+                .axis_label(AxisLabel::new().font_size(14.0).interval(0.0))
                 .data(dof_labels),
         )
         .y_axis(
@@ -131,7 +150,9 @@ fn build_chart(
                 .type_(AxisType::Value)
                 .name(y_name)
                 .name_location(NameLocation::Middle) // centered & auto-rotated along the axis
-                .name_gap(50.0) // clears the tick numbers
+                .name_gap(60.0) // clears the tick numbers
+                .name_text_style(TextStyle::new().font_size(15.0))
+                .axis_label(AxisLabel::new().font_size(14.0))
                 .min(0.0), // zero baseline; ECharts auto-picks a clean max
         );
 
@@ -187,6 +208,7 @@ fn build_chart(
                         .show(true)
                         .position(label_pos) // galaw above its line, k below
                         .distance(label_distance) // gap between the point and the box
+                        .font_size(14.0)
                         .color(color) // text in the line's color
                         .background_color("#ffffff") // white box fill
                         .border_color(color) // box outline in the line's color
@@ -211,9 +233,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let out = manifest_dir().join("docs/bench");
     fs::create_dir_all(&out)?;
-    // Taller than the original 560 — more vertical pixels between close-together
-    // data points gives their labels more room to sit apart without overlapping.
-    let mut renderer = ImageRenderer::new(1000, 760);
+    // Wider (room for 8 two-line category labels at readable size, without
+    // ECharts skipping any) and taller (room between close-together points
+    // and bigger text overall) than the original 900x560.
+    let mut renderer = ImageRenderer::new(1600, 900);
 
     // Latency: ns/call, CI bounds used directly.
     let latency = build_chart(
