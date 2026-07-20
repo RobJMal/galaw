@@ -1,4 +1,4 @@
-use std::{env::args};
+use std::env::{args};
 
 // Custom
 use galaw::load_urdf;
@@ -12,11 +12,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let galaw_model = load_urdf(urdf_path)?;
 
+    // Modules/libraries that are imported
     let import_code: String = format!(
         "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
     );
     println!("{}", import_code);
 
+    // Function header code
     let fn_header_code: String = format!(
         "pub fn compute_fk(joint_cmds: &[f64; {}]) -> [Isometry3<f64>; {}] {{",
         galaw_model.num_actuated_joints,
@@ -27,11 +29,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let base_link_var_code: String = format!("let link_base_link = Isometry3::identity();");
     println!("{}", base_link_var_code);
 
-    let result_var_code: String = format!("let result: Vec<Isometry3<f64>> = vec![{}, {}]", "Isometry3::identity();".to_string(), galaw_model.links.len()).to_string();
-    println!("{}", result_var_code);
+    // Keeps track of the generated variables
+    let mut link_vars_by_idx: Vec<Option<String>> = vec![None; galaw_model.links.len()];
+    let root_link_idx = galaw_model.get_link_idx("base_link").ok_or("no base_link_found")?;
+    link_vars_by_idx[root_link_idx] = Some("link_base_link".to_string());
 
     for joint in galaw_model.joints.iter() {
-        let link_name: String = format!("link_{}", joint.child);
+        let link_name_var: String = format!("link_{}", joint.child);
         let parent_var: String = format!("link_{}", joint.parent);
 
         // Using Unit::new_unchecked since already normalized in parser.rs
@@ -62,12 +66,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let joint_local: String = format!("{}*Isometry3::from_parts({}, {})", joint_transform, translation, rotation).to_string();
 
-        let code_line: String = format!("let {} = {} * {};", link_name, parent_var, joint_local);
+        let code_line: String = format!("let {} = {} * {};", link_name_var, parent_var, joint_local);
+        link_vars_by_idx[joint.child_link_idx] = Some(link_name_var.clone());
         println!("{}", code_line);
         println!();
     }
 
-    let fn_return_code: String = format!("result");
+    // Putting the link_vars in order in the return array
+    let mut ordered_link_vars: Vec<String> = Vec::new();
+    for i in 0..galaw_model.links.len() {  
+        let var_name = link_vars_by_idx[i].clone().unwrap();
+        ordered_link_vars.push(var_name);
+    }
+    let fn_return_code: String = format!("[{}]", ordered_link_vars.join(", "));
     println!("{}", fn_return_code);
 
     let fn_closer_code: String = format!("}}").to_string();
