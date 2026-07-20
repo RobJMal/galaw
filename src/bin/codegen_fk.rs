@@ -1,4 +1,4 @@
-use std::env::{args};
+use std::{env::args};
 
 // Custom
 use galaw::load_urdf;
@@ -29,13 +29,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     codegen_output.push(fn_header_code);
 
-    let base_link_var_code: String = format!("let link_base_link = Isometry3::identity();");
-    codegen_output.push(base_link_var_code);
+    // Programmatically find the root link (has no parents based on joints)
+    let child_indices: std::collections::HashSet<usize> =
+        galaw_model.joints.iter().map(|j| j.child_link_idx).collect();
+    let root_link_idx = (0..galaw_model.links.len())
+        .find(|idx| !child_indices.contains(idx))
+        .ok_or("could not find root link (no link without a parent joint)")?;
+    let root_link_var: String = format!("link_{}", galaw_model.links[root_link_idx].name);
+    let root_link_var_code: String = format!("let {} = Isometry3::identity();", root_link_var);
+    codegen_output.push(root_link_var_code);
 
     // Keeps track of the generated variables
     let mut link_vars_by_idx: Vec<Option<String>> = vec![None; galaw_model.links.len()];
-    let root_link_idx = galaw_model.get_link_idx("base_link").ok_or("no base_link_found")?;
-    link_vars_by_idx[root_link_idx] = Some("link_base_link".to_string());
+    link_vars_by_idx[root_link_idx] = Some(root_link_var.clone());
 
     for joint in galaw_model.joints.iter() {
         let link_name_var: String = format!("link_{}", joint.child);
