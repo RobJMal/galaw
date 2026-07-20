@@ -105,9 +105,8 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
     // Extracting axis angles
     let (rot_axis, lin_axis) = match joint_type {
         JointType::Prismatic => (None, Some(read_axis(node, &name)?)),
-        JointType::Revolute => (Some(read_axis(node, &name)?), None),
+        JointType::Revolute | JointType::Continuous => (Some(read_axis(node, &name)?), None),
         JointType::Fixed => (None, None),
-        _ => (None, None),
     };
 
     // Extracting joint limits
@@ -116,8 +115,9 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
             let (lower, upper) = read_joint_limits(node, &name)?;
             (Some(lower), Some(upper))
         }
+        // Set to 2*PI since continous and no limits (arbitrarily set)
+        JointType::Continuous => (Some(2.0 * -std::f64::consts::PI), Some(2.0 * std::f64::consts::PI)),
         JointType::Fixed => (None, None),
-        _ => (None, None),
     };
 
     // Creating joint
