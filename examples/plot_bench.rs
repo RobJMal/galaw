@@ -34,10 +34,11 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 /// per iteration, so dividing by this converts to per single FK call.
 const N_POSES: f64 = 100.0;
 
-const IMPLS: [&str; 2] = ["galaw", "k"];
+const IMPLS: [&str; 3] = ["galaw", "galaw-generated", "k"];
 
-/// Wong (2011) colorblind-safe pair, in series order: galaw=blue, k=orange.
-const COLORS: [&str; 2] = ["#0072B2", "#E69F00"];
+/// Wong (2011) colorblind-safe triple, in series order: galaw=blue,
+/// galaw-generated=bluish green, k=orange.
+const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
 
 /// Mean and 95% CI bounds for a single benchmark, in ns per FK call.
 struct Stat {
@@ -160,13 +161,21 @@ fn build_chart(
         )
         .y_axis(
             Axis::new()
-                .type_(AxisType::Value)
+                // Log, not linear: values span ~100x (e.g. 67ns to 7946ns), so
+                // on a linear axis the close-together galaw/galaw-generated
+                // points for small/fast robots were only a few pixels apart -
+                // not enough room for their value labels to avoid colliding.
+                // Log scale gives every *ratio* equal visual space regardless
+                // of magnitude, which is what was actually missing (a log
+                // axis can't include zero, so there's no .min(0.0) here -
+                // ECharts auto-fits the range to the data instead).
+                .type_(AxisType::Log)
+                .log_base(10.0)
                 .name(y_name)
                 .name_location(NameLocation::Middle) // centered & auto-rotated along the axis
                 .name_gap(70.0) // clears the tick numbers
                 .name_text_style(TextStyle::new().font_size(20.0))
-                .axis_label(AxisLabel::new().font_size(17.0))
-                .min(0.0), // zero baseline; ECharts auto-picks a clean max
+                .axis_label(AxisLabel::new().font_size(17.0)),
         );
 
     for (_, (&impl_, &color)) in IMPLS.iter().zip(COLORS.iter()).enumerate() {
