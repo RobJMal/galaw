@@ -157,43 +157,33 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
     Ok(())
 }
 
-/// Generates one `#[test]` per robot with codegen'd FK — same pattern as
-/// `fk_correctness_tests!` above (one macro-generated test per robot), but
-/// comparing generated vs. dynamic instead of dynamic vs. `k`. To cover a new
-/// robot, add a `name => path, compute_fk_path` line once
-/// `scripts/codegen_all_urdfs.sh` has generated code for it (the module name
-/// in the path comes from that script's sanitized output filename).
+/// Generates one `#[test]` per robot with codegen'd FK, via the shared
+/// `for_each_generated_robot!` registry (src/generated/registry.rs, built by
+/// scripts/codegen_all_urdfs.sh) instead of a hand-maintained list — the same
+/// registry benches/fk_speed.rs uses for its own, differently-shaped purpose.
 ///
-/// Note: the second field has to be the *full* path all the way to
-/// `compute_fk`, not just the module - a `path` fragment captured by
-/// macro_rules can't have `::compute_fk` appended to it later inside the
-/// macro body (it's already a sealed AST node by that point, so
-/// `$module::compute_fk` fails to parse).
-macro_rules! fk_codegen_correctness_tests {
-    ($($name:ident => $path:expr, $compute_fk:path),* $(,)?) => {
-        $(
+/// Each robot is wrapped in its own `mod $module` rather than one flat
+/// `#[test] fn codegen_$module`, because a `path`/`ident` fragment already
+/// captured by macro_rules can't be pasted together into a brand-new
+/// identifier without a helper crate (e.g. `paste`) — nesting in a module
+/// sidesteps that using only what's already in scope. The tradeoff:
+/// `cargo test` now shows e.g. `simple_arm_6dof::matches_dynamic` instead of
+/// a single flat `codegen_simple_arm_6dof`, and the per-robot "tests revolute
+/// and fixed"-style comments that used to live on the old hand-written list
+/// are gone (the registry only carries a path + module name, not comments).
+macro_rules! codegen_correctness_test {
+    ($module:ident, $path:expr, $compute_fk:path) => {
+        mod $module {
+            use super::*;
+
             #[test]
-            fn $name() -> TestResult {
+            fn matches_dynamic() -> TestResult {
                 check_generated_matches_dynamic($path, $compute_fk)
             }
-        )*
+        }
     };
 }
-
-fk_codegen_correctness_tests! {
-    codegen_simple_arm_2dof => "assets/urdf/custom/simple_arm_2dof.urdf", galaw::generated::simple_arm_2dof::compute_fk,
-    codegen_simple_arm_2dof_flipped => "assets/urdf/custom/simple_arm_2dof_flipped.urdf", galaw::generated::simple_arm_2dof_flipped::compute_fk,
-    codegen_simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf", galaw::generated::simple_arm_3dof_rrp::compute_fk,   // Tests revolute and prismatic
-    codegen_simple_arm_6dof => "assets/urdf/custom/simple_arm_6dof.urdf", galaw::generated::simple_arm_6dof::compute_fk,
-    codegen_simple_arm_10dof => "assets/urdf/custom/simple_arm_10dof.urdf", galaw::generated::simple_arm_10dof::compute_fk,
-    codegen_simple_arm_20dof => "assets/urdf/custom/simple_arm_20dof.urdf", galaw::generated::simple_arm_20dof::compute_fk,
-
-    // Third-party robots
-    codegen_flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf", galaw::generated::enlight_l::compute_fk,  // Tests revolute and fixed
-    codegen_anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf", galaw::generated::anymal_d::compute_fk,     // Tests revolute and fixed
-    codegen_wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf", galaw::generated::wuji_hand_v1_right::compute_fk,  // Tests revolute and fixed
-    codegen_stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf", galaw::generated::stretch4::compute_fk,     // Tests continous, prismiatic, revolute, fixed
-}
+galaw::for_each_generated_robot!(codegen_correctness_test);
 
 /// Generates one `#[test]` per URDF. Each robot becomes its own named test, so
 /// `cargo test` shows exactly which robot ran and which one failed. To cover a
