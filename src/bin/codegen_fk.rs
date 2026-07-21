@@ -1,8 +1,28 @@
 use std::env::args;
 
 // Custom
-use galaw::{load_urdf, types::GalawModel};
+use galaw::{load_urdf, types::{GalawModel, Joint}};
 
+
+// ----- HELPER METHODS -----
+/// Removes unecessary multiplication for fixed joints.
+/// 
+/// Even if the rotation and translation components are identity,
+/// they still consume compute. This can be removed.
+fn optimize_joint_local_code(
+    joint: &Joint,
+    joint_transform: &String,
+    translation: &String,
+    rotation: &String,
+) -> String {
+    let is_fixed_joint = joint.rot_axis.is_none() && joint.lin_axis.is_none();
+
+    if is_fixed_joint {
+        joint_transform.to_string()
+    } else {
+        format!("{}*Isometry3::from_parts({}, {})", joint_transform, translation, rotation)
+    }
+}
 
 /// Generates forward kinematics function code.
 fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -106,11 +126,7 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
             joint_transform_t_str, joint_transform_r_str
         );
 
-        let joint_local: String = format!(
-            "{}*Isometry3::from_parts({}, {})",
-            joint_transform, translation, rotation
-        )
-        .to_string();
+        let joint_local: String = optimize_joint_local_code(joint, &joint_transform, &translation, &rotation);
 
         let code_line: String =
             format!("let {} = {} * {};", link_name_var, parent_var, joint_local);
