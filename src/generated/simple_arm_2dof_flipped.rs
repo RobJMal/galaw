@@ -3,7 +3,7 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 pub fn compute_fk(joint_cmds: &[f64; 2]) -> [Isometry3<f64>; 3] {
 let link_base_link = Isometry3::identity();
-let link_upper_arm = link_base_link * Isometry3::from_parts(Translation3::new(0.0, 0.0, 0.1), UnitQuaternion::from_quaternion(Quaternion::new(1.0, 0.0, 0.0, 0.0)))*Isometry3::from_parts(Translation3::identity(), UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new(0.0, 0.0, 1.0)), joint_cmds[0]));
-let link_forearm = link_upper_arm * Isometry3::from_parts(Translation3::new(0.0, 0.0, 0.9), UnitQuaternion::from_quaternion(Quaternion::new(1.0, 0.0, 0.0, 0.0)))*Isometry3::from_parts(Translation3::identity(), UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new(0.0, 1.0, 0.0)), joint_cmds[1]));
+let link_upper_arm = link_base_link * Isometry3::from_parts(Translation3::new(0.0, 0.0, 0.1), UnitQuaternion::from_quaternion(Quaternion::new(1.0, 0.0, 0.0, 0.0)))*UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new(0.0, 0.0, 1.0)), joint_cmds[0]);
+let link_forearm = link_upper_arm * Isometry3::from_parts(Translation3::new(0.0, 0.0, 0.9), UnitQuaternion::from_quaternion(Quaternion::new(1.0, 0.0, 0.0, 0.0)))*UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new(0.0, 1.0, 0.0)), joint_cmds[1]);
 [link_forearm, link_upper_arm, link_base_link]
 }

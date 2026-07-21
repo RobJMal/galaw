@@ -1,4 +1,4 @@
-use std::env::args;
+use std::{env::args};
 
 // Custom
 use galaw::{load_urdf, types::{GalawModel, Joint}};
@@ -16,10 +16,19 @@ fn optimize_joint_local_code(
     rotation: &String,
 ) -> String {
     let is_fixed_joint = joint.rot_axis.is_none() && joint.lin_axis.is_none();
+    let is_revolute_continuous_joint = joint.rot_axis.is_some() && joint.lin_axis.is_none();
+    let is_prismatic_joint = joint.rot_axis.is_none() && joint.lin_axis.is_some();
 
     if is_fixed_joint {
         joint_transform.to_string()
+    } else if is_revolute_continuous_joint {
+        // translation is always identity here -> Isometry x UnitQuaternion
+        format!("{}*{}", joint_transform, rotation)
+    } else if is_prismatic_joint {
+        // rotation is always identity -> Isometry x Translation
+        format!("{}*{}", joint_transform, translation)
     } else {
+        // Fallback in event joint model never sets both axes
         format!("{}*Isometry3::from_parts({}, {})", joint_transform, translation, rotation)
     }
 }
