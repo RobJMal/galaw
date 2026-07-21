@@ -1,16 +1,11 @@
 use std::env::args;
 
 // Custom
-use galaw::load_urdf;
+use galaw::{load_urdf, types::GalawModel};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = args().collect();
 
-    let urdf_path = &args[1];
-    let out_path = &args[2];
-
-    let galaw_model = load_urdf(urdf_path)?;
-
+/// Generates forward kinematics function code.
+fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     // Stores output of generated code
     let mut codegen_output: Vec<String> = Vec::new();
 
@@ -135,6 +130,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let fn_closer_code: String = format!("}}").to_string();
     codegen_output.push(fn_closer_code);
 
+    Ok(codegen_output)
+}
+
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = args().collect();
+
+    let urdf_path = &args[1];
+    let out_path = &args[2];
+    let galaw_model = load_urdf(urdf_path)?;
+
+    let codegen_output = generate_fk_fn_code(urdf_path, &galaw_model)?;
     let codegen: String = codegen_output.join("\n");
 
     // Creating directory if it's missing
