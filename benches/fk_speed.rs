@@ -2,12 +2,12 @@ use std::fs;
 use std::hint::black_box; // Prevents compiler from optimizing away code since we're benchmarking ("be pessimistic")
 
 // Third-Party
-use sysinfo::System;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
+use sysinfo::System;
 
 // Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
@@ -15,7 +15,6 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 // ----- CONSTANTS -----
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100; // Random poses per robot
-
 
 /// Collects host/OS/CPU/memory info into a printable block, so benchmark
 /// numbers can be reproduced on (or compared against) other machines.
@@ -148,7 +147,12 @@ fn bench_fk(c: &mut Criterion) {
         macro_rules! bench_if_matches {
             ($module:ident, $path:expr, $compute_fk:path) => {
                 if urdf_path == $path {
-                    bench_generated(&mut group, galaw_model.joints.len(), &joint_cmds, $compute_fk);
+                    bench_generated(
+                        &mut group,
+                        galaw_model.joints.len(),
+                        &joint_cmds,
+                        $compute_fk,
+                    );
                     generated_bench_registered = true;
                 }
             };

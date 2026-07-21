@@ -1,8 +1,7 @@
-use std::{env::args};
+use std::env::args;
 
 // Custom
 use galaw::load_urdf;
-
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = args().collect();
@@ -43,8 +42,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     codegen_output.push(fn_header_code);
 
     // Programmatically find the root link (has no parents based on joints)
-    let child_indices: std::collections::HashSet<usize> =
-        galaw_model.joints.iter().map(|j| j.child_link_idx).collect();
+    let child_indices: std::collections::HashSet<usize> = galaw_model
+        .joints
+        .iter()
+        .map(|j| j.child_link_idx)
+        .collect();
     let root_link_idx = (0..galaw_model.links.len())
         .find(|idx| !child_indices.contains(idx))
         .ok_or("could not find root link (no link without a parent joint)")?;
@@ -64,38 +66,66 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rotation: String = match joint.rot_axis {
             Some(axis) => {
                 let vec = axis.into_inner();
-                let axis_vec_str: String = format!("Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?}))", vec.x, vec.y, vec.z);
-                format!("UnitQuaternion::from_axis_angle(&{}, joint_cmds[{}])", axis_vec_str, joint.cmd_idx.unwrap()).to_string()
+                let axis_vec_str: String = format!(
+                    "Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?}))",
+                    vec.x, vec.y, vec.z
+                );
+                format!(
+                    "UnitQuaternion::from_axis_angle(&{}, joint_cmds[{}])",
+                    axis_vec_str,
+                    joint.cmd_idx.unwrap()
+                )
+                .to_string()
             }
             None => "UnitQuaternion::identity()".to_string(),
         };
         let translation: String = match joint.lin_axis {
             Some(axis) => {
                 let vec = axis.into_inner();
-                let axis_vec_str: String = format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
-                format!("Translation3::from({} * joint_cmds[{}])", axis_vec_str, joint.cmd_idx.unwrap()).to_string()
+                let axis_vec_str: String =
+                    format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
+                format!(
+                    "Translation3::from({} * joint_cmds[{}])",
+                    axis_vec_str,
+                    joint.cmd_idx.unwrap()
+                )
+                .to_string()
             }
             None => "Translation3::identity()".to_string(),
         };
         let joint_transform_t = &joint.transform.translation;
-        let joint_transform_t_str: String = format!("Translation3::new({:?}, {:?}, {:?})", joint_transform_t.x, joint_transform_t.y, joint_transform_t.z).to_string();
+        let joint_transform_t_str: String = format!(
+            "Translation3::new({:?}, {:?}, {:?})",
+            joint_transform_t.x, joint_transform_t.y, joint_transform_t.z
+        )
+        .to_string();
         let joint_transform_r = &joint.transform.rotation;
-        let joint_transform_r_str: String = format!("UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))", joint_transform_r.w, joint_transform_r.i, joint_transform_r.j, joint_transform_r.k).to_string();
+        let joint_transform_r_str: String = format!(
+            "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
+            joint_transform_r.w, joint_transform_r.i, joint_transform_r.j, joint_transform_r.k
+        )
+        .to_string();
 
         let joint_transform: String = format!(
-            "Isometry3::from_parts({}, {})", joint_transform_t_str, joint_transform_r_str 
+            "Isometry3::from_parts({}, {})",
+            joint_transform_t_str, joint_transform_r_str
         );
 
-        let joint_local: String = format!("{}*Isometry3::from_parts({}, {})", joint_transform, translation, rotation).to_string();
+        let joint_local: String = format!(
+            "{}*Isometry3::from_parts({}, {})",
+            joint_transform, translation, rotation
+        )
+        .to_string();
 
-        let code_line: String = format!("let {} = {} * {};", link_name_var, parent_var, joint_local);
+        let code_line: String =
+            format!("let {} = {} * {};", link_name_var, parent_var, joint_local);
         link_vars_by_idx[joint.child_link_idx] = Some(link_name_var.clone());
         codegen_output.push(code_line);
     }
 
     // Putting the link_vars in order in the return array
     let mut ordered_link_vars: Vec<String> = Vec::new();
-    for i in 0..galaw_model.links.len() {  
+    for i in 0..galaw_model.links.len() {
         let var_name = link_vars_by_idx[i].clone().unwrap();
         ordered_link_vars.push(var_name);
     }

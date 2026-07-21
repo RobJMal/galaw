@@ -58,10 +58,10 @@ struct Stat {
 }
 
 struct RobotInfo {
-    name: String,   // matches galaw_model.name, for the x-axis label
+    name: String, // matches galaw_model.name, for the x-axis label
     group: String,
-    bench_id: u32,  // matches galaw_model.joints.len()
-    dof: u32,       // matches galaw_model.num_actuated_joints
+    bench_id: u32, // matches galaw_model.joints.len()
+    dof: u32,      // matches galaw_model.num_actuated_joints
 }
 
 // ----- HELPER METHODS -----
@@ -220,7 +220,14 @@ fn build_chart(
         let mut sorted_means = means.clone();
         sorted_means.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let typical = sorted_means[sorted_means.len() / 2];
-        all_series.push(SeriesData { impl_, color, means, los, heights, typical });
+        all_series.push(SeriesData {
+            impl_,
+            color,
+            means,
+            los,
+            heights,
+            typical,
+        });
     }
 
     // Rank series by typical value, ascending, and stagger each one's label
@@ -237,14 +244,26 @@ fn build_chart(
     // from its neighbors below, not into them — regardless of how many
     // series there are or what order IMPLS happens to list them in.
     let mut rank_order: Vec<usize> = (0..all_series.len()).collect();
-    rank_order.sort_by(|&a, &b| all_series[a].typical.partial_cmp(&all_series[b].typical).unwrap());
+    rank_order.sort_by(|&a, &b| {
+        all_series[a]
+            .typical
+            .partial_cmp(&all_series[b].typical)
+            .unwrap()
+    });
     let mut stagger_rank = vec![0usize; all_series.len()];
     for (rank, &series_idx) in rank_order.iter().enumerate() {
         stagger_rank[series_idx] = rank;
     }
 
     for (i, series) in all_series.into_iter().enumerate() {
-        let SeriesData { impl_, color, means, los, heights, .. } = series;
+        let SeriesData {
+            impl_,
+            color,
+            means,
+            los,
+            heights,
+            ..
+        } = series;
         let label_pos = LabelPosition::Top;
         let label_distance = 8.0 + stagger_rank[i] as f64 * LABEL_STAGGER_PX;
 

@@ -116,7 +116,10 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
             (Some(lower), Some(upper))
         }
         // Set to 2*PI since continous and no limits (arbitrarily set)
-        JointType::Continuous => (Some(2.0 * -std::f64::consts::PI), Some(2.0 * std::f64::consts::PI)),
+        JointType::Continuous => (
+            Some(2.0 * -std::f64::consts::PI),
+            Some(2.0 * std::f64::consts::PI),
+        ),
         JointType::Fixed => (None, None),
     };
 
@@ -139,8 +142,8 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
     Ok(joint)
 }
 
-/// Visits the different nodes in DFS 
-fn dfs_visit (
+/// Visits the different nodes in DFS
+fn dfs_visit(
     link_idx: usize,
     joints: &[Joint],
     link_lookup: &HashMap<&str, usize>,
@@ -168,7 +171,14 @@ fn dfs_visit (
         };
         ordered_joints.push(resolved);
 
-        dfs_visit(child_link_idx, joints, link_lookup, children_by_link, ordered_joints, cmd_counter);
+        dfs_visit(
+            child_link_idx,
+            joints,
+            link_lookup,
+            children_by_link,
+            ordered_joints,
+            cmd_counter,
+        );
     }
 }
 
@@ -195,11 +205,13 @@ fn resolve_joint_order(
         .map(|(i, l)| (l.name.as_str(), i))
         .collect();
 
-
     let mut children_by_link: HashMap<usize, Vec<usize>> = HashMap::new();
     for (joint_idx, j) in joints.iter().enumerate() {
         let parent_idx = link_lookup[j.parent.as_str()];
-        children_by_link.entry(parent_idx).or_default().push(joint_idx);
+        children_by_link
+            .entry(parent_idx)
+            .or_default()
+            .push(joint_idx);
     }
     // Find the root
     let child_names: HashSet<&str> = joints.iter().map(|j| j.child.as_str()).collect();
@@ -228,7 +240,14 @@ fn resolve_joint_order(
     // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
     let mut acutated_joint_counter = 0;
-    dfs_visit(root_idx, joints, &link_lookup, &children_by_link, &mut ordered_joints, &mut acutated_joint_counter);
+    dfs_visit(
+        root_idx,
+        joints,
+        &link_lookup,
+        &children_by_link,
+        &mut ordered_joints,
+        &mut acutated_joint_counter,
+    );
 
     if ordered_joints.len() != joints.len() {
         return Err(
