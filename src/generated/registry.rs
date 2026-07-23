@@ -9,55 +9,15 @@
 #[macro_export]
 macro_rules! for_each_generated_robot {
     ($cb:ident) => {
-        $cb!(
-            simple_arm_10dof,
-            "assets/urdf/custom/simple_arm_10dof.urdf",
-            $crate::generated::simple_arm_10dof::compute_fk
-        );
-        $cb!(
-            simple_arm_20dof,
-            "assets/urdf/custom/simple_arm_20dof.urdf",
-            $crate::generated::simple_arm_20dof::compute_fk
-        );
-        $cb!(
-            simple_arm_2dof_flipped,
-            "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
-            $crate::generated::simple_arm_2dof_flipped::compute_fk
-        );
-        $cb!(
-            simple_arm_2dof,
-            "assets/urdf/custom/simple_arm_2dof.urdf",
-            $crate::generated::simple_arm_2dof::compute_fk
-        );
-        $cb!(
-            simple_arm_3dof_rrp,
-            "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
-            $crate::generated::simple_arm_3dof_rrp::compute_fk
-        );
-        $cb!(
-            simple_arm_6dof,
-            "assets/urdf/custom/simple_arm_6dof.urdf",
-            $crate::generated::simple_arm_6dof::compute_fk
-        );
-        $cb!(
-            anymal_d,
-            "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
-            $crate::generated::anymal_d::compute_fk
-        );
-        $cb!(
-            enlight_l,
-            "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
-            $crate::generated::enlight_l::compute_fk
-        );
-        $cb!(
-            stretch4,
-            "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",
-            $crate::generated::stretch4::compute_fk
-        );
-        $cb!(
-            wuji_hand_v1_right,
-            "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",
-            $crate::generated::wuji_hand_v1_right::compute_fk
-        );
+        $cb!(simple_arm_10dof, "assets/urdf/custom/simple_arm_10dof.urdf", $crate::generated::simple_arm_10dof::compute_fk);
+        $cb!(simple_arm_20dof, "assets/urdf/custom/simple_arm_20dof.urdf", $crate::generated::simple_arm_20dof::compute_fk);
+        $cb!(simple_arm_2dof_flipped, "assets/urdf/custom/simple_arm_2dof_flipped.urdf", $crate::generated::simple_arm_2dof_flipped::compute_fk);
+        $cb!(simple_arm_2dof, "assets/urdf/custom/simple_arm_2dof.urdf", $crate::generated::simple_arm_2dof::compute_fk);
+        $cb!(simple_arm_3dof_rrp, "assets/urdf/custom/simple-arm_3dof_rrp.urdf", $crate::generated::simple_arm_3dof_rrp::compute_fk);
+        $cb!(simple_arm_6dof, "assets/urdf/custom/simple_arm_6dof.urdf", $crate::generated::simple_arm_6dof::compute_fk);
+        $cb!(anymal_d, "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf", $crate::generated::anymal_d::compute_fk);
+        $cb!(enlight_l, "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf", $crate::generated::enlight_l::compute_fk);
+        $cb!(stretch4, "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf", $crate::generated::stretch4::compute_fk);
+        $cb!(wuji_hand_v1_right, "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf", $crate::generated::wuji_hand_v1_right::compute_fk);
     };
 }

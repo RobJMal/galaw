@@ -1,16 +1,71 @@
 use std::env::args;
 
+// Third-party
+use nalgebra::{Translation3, UnitQuaternion, Vector3};
+
 // Custom
-use galaw::load_urdf;
+use galaw::{load_urdf, types::GalawModel};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = args().collect();
+// ----- HELPER METHODS -----
+/// Simplify the fixed origin transform.
+///
+/// Skip the quaternion multiply when rotation component is identity.
+/// Skip the vector rotation and addition when translation component
+/// is zero.
+fn optimize_joint_transform_code(
+    joint_transform_t: &Translation3<f64>,
+    joint_transform_r: &UnitQuaternion<f64>,
+    joint_transform_t_str: &str,
+    joint_transform_r_str: &str,
+) -> Option<String> {
+    let t_is_zero =
+        joint_transform_t.x == 0.0 && joint_transform_t.y == 0.0 && joint_transform_t.z == 0.0;
+    let r_is_identity = joint_transform_r.w == 1.0
+        && joint_transform_r.i == 0.0
+        && joint_transform_r.j == 0.0
+        && joint_transform_r.k == 0.0;
 
-    let urdf_path = &args[1];
-    let out_path = &args[2];
+    match (t_is_zero, r_is_identity) {
+        (true, true) => None,
+        (false, true) => Some(joint_transform_t_str.to_string()),
+        (true, false) => Some(joint_transform_r_str.to_string()),
+        (false, false) => Some(format!(
+            "Isometry3::from_parts({}, {})",
+            joint_transform_t_str, joint_transform_r_str
+        )),
+    }
+}
 
-    let galaw_model = load_urdf(urdf_path)?;
+// Bypasses axis-vector multiply when rotation axis is signed basis vector.
+fn optimize_axis_angle_rotation_code(vec: &Vector3<f64>, cmd_idx: usize) -> String {
+    let aligned = match (vec.x, vec.y, vec.z) {
+        (x, 0.0, 0.0) if x == 1.0 || x == -1.0 => Some((0, x)),
+        (0.0, y, 0.0) if y == 1.0 || y == -1.0 => Some((1, y)),
+        (0.0, 0.0, z) if z == 1.0 || z == -1.0 => Some((2, z)),
+        _ => None,
+    };
 
+    match aligned {
+        Some((slot, sign)) => {
+            let mut components = ["0.0", "0.0", "0.0"];
+            components[slot] = if sign > 0.0 { "s" } else { "-s" };
+            format!(
+                "{{ let (s, c) = (joint_cmds[{}] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, {}, {}, {})) }}",
+                cmd_idx, components[0], components[1], components[2]
+            )
+        }
+        None => format!(
+            "UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?})), joint_cmds[{}])",
+            vec.x, vec.y, vec.z, cmd_idx
+        ),
+    }
+}
+
+/// Generates forward kinematics function code.
+fn generate_fk_fn_code(
+    urdf_path: &String,
+    galaw_model: &GalawModel,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     // Stores output of generated code
     let mut codegen_output: Vec<String> = Vec::new();
 
@@ -22,16 +77,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     codegen_output.push(header_comment);
 
     // Modules/libraries that are imported
+    let attribute_import_code: String = "#[allow(unused_imports)]".to_string();
+    codegen_output.push(attribute_import_code);
     let import_code: String = format!(
         "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
     );
     codegen_output.push(import_code);
 
-    // Local variables are named directly after URDF link names, which aren't
-    // guaranteed to be lower case snake_case (e.g. ANYmal-D's "LF_HAA_drive") - silence
-    // the resulting lint rather than rewriting names URDF authors chose.
-    let allow_non_snake_case_code: String = "#[allow(non_snake_case)]".to_string();
-    codegen_output.push(allow_non_snake_case_code);
+    // URDFs don't have perfect casing, which can conflict with Rust. Want
+    // to silence it.
+    let lint_attribute_code: String = "#[allow(non_snake_case)]".to_string();
+    codegen_output.push(lint_attribute_code);
+
+    // Marking function with inline for additional optimization
+    let inline_attribute_code: String = "#[inline]".to_string();
+    codegen_output.push(inline_attribute_code);
 
     // Function header code
     let fn_header_code: String = format!(
@@ -65,17 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Using Unit::new_unchecked since already normalized in parser.rs
         let rotation: String = match joint.rot_axis {
             Some(axis) => {
-                let vec = axis.into_inner();
-                let axis_vec_str: String = format!(
-                    "Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?}))",
-                    vec.x, vec.y, vec.z
-                );
-                format!(
-                    "UnitQuaternion::from_axis_angle(&{}, joint_cmds[{}])",
-                    axis_vec_str,
-                    joint.cmd_idx.unwrap()
-                )
-                .to_string()
+                optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap())
             }
             None => "UnitQuaternion::identity()".to_string(),
         };
@@ -106,19 +156,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .to_string();
 
-        let joint_transform: String = format!(
-            "Isometry3::from_parts({}, {})",
-            joint_transform_t_str, joint_transform_r_str
-        );
+        let mut factors: Vec<String> = vec![parent_var];
+        if let Some(jt) = optimize_joint_transform_code(
+            joint_transform_t,
+            joint_transform_r,
+            &joint_transform_t_str,
+            &joint_transform_r_str,
+        ) {
+            factors.push(jt);
+        }
 
-        let joint_local: String = format!(
-            "{}*Isometry3::from_parts({}, {})",
-            joint_transform, translation, rotation
-        )
-        .to_string();
+        let is_fixed_joint = joint.rot_axis.is_none() && joint.lin_axis.is_none();
+        let is_revolute_continous_joint = joint.rot_axis.is_some() && joint.lin_axis.is_none();
+        let is_prismatic_joint = joint.lin_axis.is_some() && joint.rot_axis.is_none();
 
-        let code_line: String =
-            format!("let {} = {} * {};", link_name_var, parent_var, joint_local);
+        if is_revolute_continous_joint {
+            factors.push(rotation);
+        } else if is_prismatic_joint {
+            factors.push(translation);
+        } else if !is_fixed_joint {
+            factors.push(format!(
+                "Isometry3::from_parts({}, {})",
+                translation, rotation
+            ));
+        }
+
+        let code_line: String = format!("let {} = {};", link_name_var, factors.join(" * "));
         link_vars_by_idx[joint.child_link_idx] = Some(link_name_var.clone());
         codegen_output.push(code_line);
     }
@@ -135,6 +198,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let fn_closer_code: String = format!("}}").to_string();
     codegen_output.push(fn_closer_code);
 
+    Ok(codegen_output)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = args().collect();
+
+    let urdf_path = &args[1];
+    let out_path = &args[2];
+    let galaw_model = load_urdf(urdf_path)?;
+
+    let codegen_output = generate_fk_fn_code(urdf_path, &galaw_model)?;
     let codegen: String = codegen_output.join("\n");
 
     // Creating directory if it's missing
