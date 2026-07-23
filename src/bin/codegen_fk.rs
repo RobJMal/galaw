@@ -1,17 +1,16 @@
-use std::{env::args};
+use std::env::args;
 
 // Third-party
 use nalgebra::{Translation3, UnitQuaternion, Vector3};
 
 // Custom
-use galaw::{load_urdf, types::{GalawModel}};
-
+use galaw::{load_urdf, types::GalawModel};
 
 // ----- HELPER METHODS -----
 /// Simplify the fixed origin transform.
-/// 
-/// Skip the quaternion multiply when rotation component is identity. 
-/// Skip the vector rotation and addition when translation component 
+///
+/// Skip the quaternion multiply when rotation component is identity.
+/// Skip the vector rotation and addition when translation component
 /// is zero.
 fn optimize_joint_transform_code(
     joint_transform_t: &Translation3<f64>,
@@ -19,9 +18,8 @@ fn optimize_joint_transform_code(
     joint_transform_t_str: &str,
     joint_transform_r_str: &str,
 ) -> Option<String> {
-    let t_is_zero = joint_transform_t.x == 0.0 
-        && joint_transform_t.y == 0.0 
-        && joint_transform_t.z == 0.0;
+    let t_is_zero =
+        joint_transform_t.x == 0.0 && joint_transform_t.y == 0.0 && joint_transform_t.z == 0.0;
     let r_is_identity = joint_transform_r.w == 1.0
         && joint_transform_r.i == 0.0
         && joint_transform_r.j == 0.0
@@ -50,7 +48,7 @@ fn optimize_axis_angle_rotation_code(vec: &Vector3<f64>, cmd_idx: usize) -> Stri
     match aligned {
         Some((slot, sign)) => {
             let mut components = ["0.0", "0.0", "0.0"];
-            components[slot] = if sign > 0.0 {"s"} else {"-s"};
+            components[slot] = if sign > 0.0 { "s" } else { "-s" };
             format!(
                 "{{ let (s, c) = (joint_cmds[{}] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, {}, {}, {})) }}",
                 cmd_idx, components[0], components[1], components[2]
@@ -64,7 +62,10 @@ fn optimize_axis_angle_rotation_code(vec: &Vector3<f64>, cmd_idx: usize) -> Stri
 }
 
 /// Generates forward kinematics function code.
-fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+fn generate_fk_fn_code(
+    urdf_path: &String,
+    galaw_model: &GalawModel,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     // Stores output of generated code
     let mut codegen_output: Vec<String> = Vec::new();
 
@@ -84,7 +85,7 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
     codegen_output.push(import_code);
 
     // URDFs don't have perfect casing, which can conflict with Rust. Want
-    // to silence it. 
+    // to silence it.
     let lint_attribute_code: String = "#[allow(non_snake_case)]".to_string();
     codegen_output.push(lint_attribute_code);
 
@@ -123,7 +124,9 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
 
         // Using Unit::new_unchecked since already normalized in parser.rs
         let rotation: String = match joint.rot_axis {
-            Some(axis) => optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap()),
+            Some(axis) => {
+                optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap())
+            }
             None => "UnitQuaternion::identity()".to_string(),
         };
         let translation: String = match joint.lin_axis {
@@ -154,7 +157,12 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
         .to_string();
 
         let mut factors: Vec<String> = vec![parent_var];
-        if let Some(jt) = optimize_joint_transform_code(joint_transform_t, joint_transform_r, &joint_transform_t_str, &joint_transform_r_str) {
+        if let Some(jt) = optimize_joint_transform_code(
+            joint_transform_t,
+            joint_transform_r,
+            &joint_transform_t_str,
+            &joint_transform_r_str,
+        ) {
             factors.push(jt);
         }
 
@@ -167,11 +175,13 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
         } else if is_prismatic_joint {
             factors.push(translation);
         } else if !is_fixed_joint {
-            factors.push(format!("Isometry3::from_parts({}, {})", translation, rotation));
+            factors.push(format!(
+                "Isometry3::from_parts({}, {})",
+                translation, rotation
+            ));
         }
 
-        let code_line: String =
-            format!("let {} = {};", link_name_var, factors.join(" * "));
+        let code_line: String = format!("let {} = {};", link_name_var, factors.join(" * "));
         link_vars_by_idx[joint.child_link_idx] = Some(link_name_var.clone());
         codegen_output.push(code_line);
     }
@@ -190,7 +200,6 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
 
     Ok(codegen_output)
 }
-
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = args().collect();
