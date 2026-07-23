@@ -2,6 +2,7 @@
 #[allow(unused_imports)]
 use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3};
 #[allow(non_snake_case)]
+#[inline]
 pub fn compute_fk(joint_cmds: &[f64; 20]) -> [Isometry3<f64>; 26] {
 let link_right_palm_link = Isometry3::identity();
 let link_right_finger1_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };

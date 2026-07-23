@@ -3,6 +3,10 @@ name = "galaw"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+lto = true
+codegen-units = 1
+
 [lib]
 # Without this, `cargo bench` also builds/runs the lib crate itself as an
 # implicit benchmark target via the plain libtest harness, which doesn't

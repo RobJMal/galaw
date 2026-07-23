@@ -88,6 +88,10 @@ fn generate_fk_fn_code(urdf_path: &String, galaw_model: &GalawModel) -> Result<V
     let lint_attribute_code: String = "#[allow(non_snake_case)]".to_string();
     codegen_output.push(lint_attribute_code);
 
+    // Marking function with inline for additional optimization
+    let inline_attribute_code: String = "#[inline]".to_string();
+    codegen_output.push(inline_attribute_code);
+
     // Function header code
     let fn_header_code: String = format!(
         "pub fn compute_fk(joint_cmds: &[f64; {}]) -> [Isometry3<f64>; {}] {{",

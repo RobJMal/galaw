@@ -2,6 +2,7 @@
 #[allow(unused_imports)]
 use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3};
 #[allow(non_snake_case)]
+#[inline]
 pub fn compute_fk(joint_cmds: &[f64; 13]) -> [Isometry3<f64>; 54] {
 let link_base_footprint = Isometry3::identity();
 let link_base_link = link_base_footprint * Translation3::new(0.0, 0.0, 0.027999995691835);
