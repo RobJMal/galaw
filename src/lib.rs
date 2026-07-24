@@ -1,3 +1,4 @@
+pub mod error;
 pub mod fixtures;
 pub mod generated;
 pub mod kinematics;
