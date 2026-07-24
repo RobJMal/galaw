@@ -3,6 +3,7 @@ use std::fs;
 
 // Third-party
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
+use roxmltree::Node;
 
 // Custom
 use crate::error::{UrdfParseError};
@@ -70,20 +71,28 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
         .attribute("type")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointType(name.clone()))?
         .parse()?;
-    let parent: String = node
+
+    // Extracting parent info
+    let joint_parent: roxmltree::Node<'_, '_> = node
         .children()
         .find(|n| n.tag_name().name() == "parent")
-        .and_then(|n| n.attribute("link"))
+        .ok_or_else(|| UrdfParseError::MissingTagJointParent(name.clone()))?;
+    let parent: String = joint_parent
+        .attribute("link")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointParentLink(name.clone()))?
         .to_string();
-    let child: String = node
+
+    // Extracting child info
+    let joint_child: roxmltree::Node<'_, '_> = node
         .children()
         .find(|n| n.tag_name().name() == "child")
-        .and_then(|n| n.attribute("link"))
+        .ok_or_else(|| UrdfParseError::MissingTagJointChild(name.clone()))?;
+    let child: String = joint_child
+        .attribute("link")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointChildLink(name.clone()))?
         .to_string();
 
-    // Extracting joint XYZ and RPY
+    // Extracting joint XYZ and RPY and constructing transform
     let joint_origin = node
         .children()
         .find(|n| n.tag_name().name() == "origin")

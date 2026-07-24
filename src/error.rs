@@ -37,7 +37,7 @@ pub enum UrdfParseError {
 
     // <child/>
     #[error("missing child tag for joint {0}")]
-    MissingTagChildLink(String),
+    MissingTagJointChild(String),
     #[error("missing child link for joint {0}")]
     MissingAttributeJointChildLink(String),
 
