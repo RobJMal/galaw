@@ -28,6 +28,11 @@ pub enum UrdfParseError {
     MissingAttributeJointName,
     #[error("joint {0} missing type attribute")]
     MissingAttributeJointType(String),
+    #[error("unknown joint type '{found}' for joint {name}")]
+    UnknownJointType {
+        name: String,
+        found: String,
+    },
 
     // <parent/>
     #[error("missing parent tag for joint {0}")]
@@ -60,4 +65,9 @@ pub enum UrdfParseError {
     MissingAttributeJointLimitLower(String),
     #[error("missing joint limit upper attribute for joint {0}")]
     MissingAttributeJointLimitUpper(String),
+    #[error("value is invalid number: {value}")]
+    InvalidNumberFormat {
+        value: String,
+        source: std::num::ParseFloatError,
+    },
 }

@@ -3,7 +3,6 @@ use std::fs;
 
 // Third-party
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
-use roxmltree::Node;
 
 // Custom
 use crate::error::{UrdfParseError};
@@ -40,14 +39,27 @@ fn read_joint_limits(
         .find(|n| n.tag_name().name() == "limit")
         .ok_or_else(|| UrdfParseError::MissingTagJointLimit(joint_name.to_string()))?;
 
-    let limit_lower: f64 = joint_limit
+    // Parsing lower joint limits
+    let limit_lower_str: &str = joint_limit
         .attribute("lower")
-        .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitLower(joint_name.to_string()))?
-        .parse::<f64>()?;
-    let limit_upper: f64 = joint_limit
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitLower(joint_name.to_string()))?;
+    let limit_lower: f64 = limit_lower_str
+        .parse::<f64>()
+        .map_err(|source| UrdfParseError::InvalidNumberFormat { 
+            value: limit_lower_str.to_string(), 
+            source,
+    })?;
+
+    // Parsing upper joint limits
+    let limit_upper_str: &str = joint_limit
         .attribute("upper")
-        .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitUpper(joint_name.to_string()))?
-        .parse::<f64>()?;
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitUpper(joint_name.to_string()))?;
+    let limit_upper: f64 = limit_upper_str
+        .parse::<f64>()
+        .map_err(|source| UrdfParseError::InvalidNumberFormat { 
+            value: limit_upper_str.to_string(), 
+            source,
+    })?;
 
     Ok((limit_lower, limit_upper))
 }
@@ -70,7 +82,8 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
     let joint_type: JointType = node
         .attribute("type")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointType(name.clone()))?
-        .parse()?;
+        .parse()
+        .map_err(|found| UrdfParseError::UnknownJointType { name: name.clone(), found })?;
 
     // Extracting parent info
     let joint_parent: roxmltree::Node<'_, '_> = node
