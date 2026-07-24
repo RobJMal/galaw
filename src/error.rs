@@ -18,6 +18,8 @@ pub enum UrdfParseError {
         #[source]
         source: roxmltree::Error,
     },
+    #[error("expected 3 values, recieved {0} of length {1}")]
+    InvalidVector3Len(String, usize),
     #[error("robot tag missing name attribute")]
     MissingAttributeRobotName,
     #[error("link tag missing name attribute")]
