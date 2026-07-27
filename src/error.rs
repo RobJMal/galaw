@@ -16,9 +16,9 @@ pub enum UrdfParseError {
         #[source]
         source: std::io::Error,
     },
-    #[error("failed to parse XML content: '{xml_content}'")]
+    #[error("failed to parse XML in URDF file '{path}': {source}")]
     XmlParse {
-        xml_content: String,
+        path: String,
         #[source]
         source: roxmltree::Error,
     },

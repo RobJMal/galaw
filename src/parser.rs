@@ -323,7 +323,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
         source: err,
     })?;
     let doc = roxmltree::Document::parse(&content).map_err(|err| UrdfParseError::XmlParse {
-        xml_content: content.to_string(),
+        path: urdf_path.to_string(),
         source: err,
     })?;
 
