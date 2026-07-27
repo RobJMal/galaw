@@ -182,7 +182,11 @@ fn build_chart(
                 // default "auto" interval was silently hiding most of these
                 // (only 4 of 8 robots were showing up) because it judged
                 // them too crowded to fit; font_size makes them readable.
-                .axis_label(AxisLabel::new().font_size(AXIS_TICK_FONT_SIZE).interval(0.0))
+                .axis_label(
+                    AxisLabel::new()
+                        .font_size(AXIS_TICK_FONT_SIZE)
+                        .interval(0.0),
+                )
                 .data(dof_labels),
         )
         .y_axis(
