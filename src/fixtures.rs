@@ -2,11 +2,6 @@
 /// its chart generator (`examples/plot_bench.rs`). Add a robot here once and
 /// both consumers pick it up automatically.
 pub const BENCH_URDFS: &[&str] = &[
-    "assets/urdf/custom/simple_arm_2dof.urdf",
-    "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
-    "assets/urdf/custom/simple_arm_6dof.urdf",
-    "assets/urdf/custom/simple_arm_10dof.urdf",
-    "assets/urdf/custom/simple_arm_20dof.urdf",
     "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
     "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
     "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",

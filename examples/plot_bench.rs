@@ -34,9 +34,9 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 /// per iteration, so dividing by this converts to per single FK call.
 const N_POSES: f64 = 100.0;
 
-const IMPLS: [&str; 3] = ["galaw", "galaw-generated", "k"];
+const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
 
-/// Wong (2011) colorblind-safe triple, in series order: galaw=blue,
+/// Wong (2011) colorblind-safe triple, in series order: galaw-runtime=blue,
 /// galaw-generated=bluish green, k=orange.
 const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
 
@@ -180,7 +180,7 @@ fn build_chart(
         .y_axis(
             Axis::new()
                 // Log, not linear: values span ~100x (e.g. 67ns to 7946ns), so
-                // on a linear axis the close-together galaw/galaw-generated
+                // on a linear axis the close-together galaw-runtime/galaw-generated
                 // points for small/fast robots were only a few pixels apart -
                 // not enough room for their value labels to avoid colliding.
                 // Log scale gives every *ratio* equal visual space regardless
@@ -235,8 +235,8 @@ fn build_chart(
     // above its own point (never below, so none can ever collide with the
     // x-axis tick labels), and a fixed per-series offset that ignores actual
     // value order can backfire badly: earlier, "galaw-generated" (typically
-    // the smallest value) got a *larger* offset than "galaw" purely by
-    // IMPLS position, which pushed its label *up*, into "galaw"'s point and
+    // the smallest value) got a *larger* offset than "galaw-runtime" purely by
+    // IMPLS position, which pushed its label *up*, into "galaw-runtime"'s point and
     // label instead of away from it, whenever the two were close. Ranking by
     // the data itself instead of array position means the smallest-typical
     // series always gets the smallest offset (staying close to its own,
