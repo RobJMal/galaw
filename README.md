@@ -55,6 +55,15 @@ Full runnable version: [`examples/generated_fk.rs`](examples/generated_fk.rs) â€
 
 **Runtime** if you need to support arbitrary URDFs at runtime â€” e.g. a robot chosen by a user, or loaded from a file you don't control at compile time. **Generated** if you know the robot ahead of time and want the fastest possible FK, at the cost of a codegen step and one generated file per robot.
 
+## Benchmarking
+
+FK latency/throughput across both `galaw` APIs and [`k`](https://crates.io/crates/k), scaling with a robot's actuated-joint count (95% CI, log scale):
+
+![FK latency scaling](https://github.com/RobJMal/galaw/raw/main/img/scaling_ns_per_call.png)
+![FK throughput](https://github.com/RobJMal/galaw/raw/main/img/throughput_mcalls.png)
+
+Reproduce with `cargo bench` followed by `cargo run --release --example plot_bench` (see `benches/fk_speed.rs` / `examples/plot_bench.rs`).
+
 ## Attributions
 
 This repository incorporates assets and robot descriptions from various open-source projects. Each asset is used in compliance with its original license:
