@@ -223,6 +223,9 @@ fn dfs_visit(
     Ok(())
 }
 
+/// Resolved joints (in DFS order), link name -> index, and joint name -> cmd_idx.
+type ResolvedJoints = (Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>);
+
 /// Resolves joint order for downstream functions.
 ///
 /// Resolves the joint order via Depth-First Search (DFS) pre-order from the
@@ -235,9 +238,9 @@ fn dfs_visit(
 /// 2. `k::Chain` — this project's own ground-truth for correctness testing —
 ///    numbers its DOFs via DFS pre-order (confirmed by reading its source).
 fn resolve_joint_order(
-    links: &Vec<Link>,
-    joints: &Vec<Joint>,
-) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), ModelTopologyError> {
+    links: &[Link],
+    joints: &[Joint],
+) -> Result<ResolvedJoints, ModelTopologyError> {
     // Enforcing order to ensure indexing is accurate
     let link_lookup: HashMap<&str, usize> = links
         .iter()
