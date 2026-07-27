@@ -2,6 +2,13 @@
 name = "galaw"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
+description = "Kinematics library for robotics, with a runtime API and an ahead-of-time code-generated API"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/RobJMal/galaw"
+readme = "README.md"
+keywords = ["robotics", "kinematics", "urdf", "forward-kinematics"]
+categories = ["science::robotics"]
 
 [profile.release]
 lto = true
@@ -32,11 +39,6 @@ k = "0.32.0"
 # Same reasoning as [lib] above: cargo bench also runs every binary target's
 # implicit test/bench harness by default. Declaring them explicitly (still at
 # their auto-discovered paths) is the only way to override that per-binary.
-[[bin]]
-name = "galaw"
-path = "src/main.rs"
-bench = false
-
 [[bin]]
 name = "codegen_fk"
 path = "src/bin/codegen_fk.rs"
