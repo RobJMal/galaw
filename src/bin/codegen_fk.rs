@@ -83,7 +83,9 @@ fn generate_fk_fn_code(
     // reorders it every time this file gets regenerated.
     let rustfmt_skip_import_code: String = "#[rustfmt::skip]".to_string();
     codegen_output.push(rustfmt_skip_import_code);
-    let import_code: String = "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};".to_string();
+    let import_code: String =
+        "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
+            .to_string();
     codegen_output.push(import_code);
 
     // Doc comment on the generated function itself, since `generated/` is
