@@ -1,4 +1,8 @@
-use galaw::{error::GalawError, load_urdf, types::GalawModel};
+use galaw::{
+    load_urdf,
+    error::GalawError,  
+    types::GalawModel
+};
 
 fn main() -> Result<(), GalawError> {
     let model: GalawModel = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
