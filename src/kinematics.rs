@@ -1,6 +1,6 @@
 use nalgebra::{Isometry3, Translation3, UnitQuaternion};
 
-use crate::types::GalawModel;
+use crate::{error::KinematicsError, types::GalawModel};
 
 impl GalawModel {
     /// Computes forward kinematics of a model
@@ -9,12 +9,7 @@ impl GalawModel {
         joint_cmds: &[f64],
     ) -> Result<Vec<Isometry3<f64>>, Box<dyn std::error::Error>> {
         if joint_cmds.len() != self.num_actuated_joints {
-            return Err(format!(
-                "expected {} joint_cmds, got {}",
-                self.joints.len(),
-                joint_cmds.len()
-            )
-            .into());
+            return Err(KinematicsError::JointCmdLengthMismatch { num_actuated: self.num_actuated_joints, num_input: joint_cmds.len() }.into());
         }
 
         let mut links: Vec<Isometry3<f64>> = vec![Isometry3::identity(); self.links.len()];

@@ -4,6 +4,8 @@ pub enum GalawError {
     Parse(#[from] UrdfParseError),
     #[error(transparent)]
     ModelTopology(#[from] ModelTopologyError),
+    #[error(transparent)]
+    Kinematics(#[from] KinematicsError),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -87,4 +89,13 @@ pub enum ModelTopologyError {
     DisconnectedJoints(Vec<String>),
     #[error("link has a cyclic connection: {0}")]
     CyclicLink(String),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum KinematicsError {
+    #[error("expected {num_actuated} joint cmds, recieved {num_input}")]
+    JointCmdLengthMismatch {
+        num_actuated: usize,
+        num_input: usize,
+    }
 }
