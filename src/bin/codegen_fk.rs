@@ -76,6 +76,10 @@ fn generate_fk_fn_code(
     );
     codegen_output.push(header_comment);
 
+    // Stable-guaranteed alternative to rustfmt.toml's `ignore` (unstable,
+    // nightly-only) — skips formatting for this whole generated file.
+    codegen_output.push("#![rustfmt::skip]".to_string());
+
     // Modules/libraries that are imported
     let attribute_import_code: String = "#[allow(unused_imports)]".to_string();
     codegen_output.push(attribute_import_code);

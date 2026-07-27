@@ -1,5 +1,0 @@
-ignore = [
-    # Output generated automatically, not intended to
-    # be maintained manually.
-    "src/generated/**",
-]
