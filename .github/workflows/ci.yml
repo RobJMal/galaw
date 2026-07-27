@@ -10,22 +10,29 @@ env:
 
 jobs:
   test:
-    name: test (${{ matrix.rust }})
+    name: test (stable)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # stable catches real regressions; the pinned MSRV (matches
-        # rust-version in Cargo.toml) catches accidental use of a newer
-        # Rust feature than the crate actually promises to support.
-        rust: [stable, "1.85"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-targets
+
+  msrv:
+    name: msrv (1.85, library only)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: "1.85"
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-targets
+      # --lib only: rust-version promises "this builds as a dependency,"
+      # which only ever resolves [dependencies], never [dev-dependencies].
+      # criterion/charming/sysinfo (dev-only, used for benches/chart
+      # generation) have newer MSRVs of their own; that's irrelevant to
+      # what a consumer needs to build galaw itself.
+      - run: cargo check --lib
 
   fmt:
     name: fmt
