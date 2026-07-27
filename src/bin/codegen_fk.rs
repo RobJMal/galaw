@@ -79,10 +79,29 @@ fn generate_fk_fn_code(
     // Modules/libraries that are imported
     let attribute_import_code: String = "#[allow(unused_imports)]".to_string();
     codegen_output.push(attribute_import_code);
+    // Also skip formatting on the import itself, otherwise cargo fmt
+    // reorders it every time this file gets regenerated.
+    let rustfmt_skip_import_code: String = "#[rustfmt::skip]".to_string();
+    codegen_output.push(rustfmt_skip_import_code);
     let import_code: String = format!(
         "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
     );
     codegen_output.push(import_code);
+
+    // Doc comment on the generated function itself, since `generated/` is
+    // exempt from #[warn(missing_docs)] (nothing hand-written to document)
+    // but the function is still real public API consumers call directly.
+    codegen_output.push(format!(
+        "/// Computes forward kinematics for the robot described by `{}`.",
+        urdf_path
+    ));
+    codegen_output.push("///".to_string());
+    codegen_output.push(format!(
+        "/// Generated ahead of time by `codegen_fk`, fixed to this robot's shape: \
+         takes {} actuated joint commands, returns {} link poses.",
+        galaw_model.num_actuated_joints,
+        galaw_model.links.len(),
+    ));
 
     // URDFs don't have perfect casing, which can conflict with Rust. Want
     // to silence it.
@@ -92,6 +111,11 @@ fn generate_fk_fn_code(
     // Marking function with inline for additional optimization
     let inline_attribute_code: String = "#[inline]".to_string();
     codegen_output.push(inline_attribute_code);
+
+    // Ensures that `cargo fmt` doesn't affect codegen'd files. Not
+    // needed since these are not manually maintained.
+    let rustfmt_skip_code: String = "#[rustfmt::skip]".to_string();
+    codegen_output.push(rustfmt_skip_code);
 
     // Function header code
     let fn_header_code: String = format!(
