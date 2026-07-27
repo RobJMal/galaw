@@ -5,7 +5,7 @@ use std::fs;
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
 
 // Custom
-use crate::error::{ModelTopologyError, UrdfParseError};
+use crate::error::{GalawError, ModelTopologyError, UrdfParseError};
 use crate::types::{GalawModel, Joint, JointType, Link};
 use crate::utils::parse_vec3_str;
 
@@ -14,7 +14,7 @@ use crate::utils::parse_vec3_str;
 fn read_axis(
     node: roxmltree::Node<'_, '_>,
     joint_name: &str,
-) -> Result<Unit<Vector3<f64>>, Box<dyn std::error::Error>> {
+) -> Result<Unit<Vector3<f64>>, UrdfParseError> {
     // Extracting axis angles
     let axis_str: &str = node
         .children()
@@ -32,7 +32,7 @@ fn read_axis(
 fn read_joint_limits(
     node: roxmltree::Node<'_, '_>,
     joint_name: &str,
-) -> Result<(f64, f64), Box<dyn std::error::Error>> {
+) -> Result<(f64, f64), UrdfParseError> {
     let joint_limit = node
         .children()
         .find(|n| n.tag_name().name() == "limit")
@@ -66,7 +66,7 @@ fn read_joint_limits(
 }
 
 /// Parses <link> tag into a `Link`
-fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, Box<dyn std::error::Error>> {
+fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, UrdfParseError> {
     let link_name: String = node
         .attribute("name")
         .ok_or(UrdfParseError::MissingAttributeLinkName)?
@@ -75,7 +75,7 @@ fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, Box<dyn std::error:
 }
 
 /// Parses <joint> tag into a `Joint`
-fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::error::Error>> {
+fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
     let name: String = node
         .attribute("name")
         .ok_or(UrdfParseError::MissingAttributeJointName)?
@@ -170,6 +170,10 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
 }
 
 /// Visits the different nodes in DFS
+/// 
+/// If there is a link that has been revisited, it returns 
+/// the index of the link as an error to hint about cycles
+/// in kinematic model.
 fn dfs_visit(
     link_idx: usize,
     joints: &[Joint],
@@ -233,7 +237,7 @@ fn dfs_visit(
 fn resolve_joint_order(
     links: &Vec<Link>,
     joints: &Vec<Joint>,
-) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), Box<dyn std::error::Error>>
+) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), ModelTopologyError>
 {
     // Enforcing order to ensure indexing is accurate
     let link_lookup: HashMap<&str, usize> = links
@@ -314,7 +318,7 @@ fn resolve_joint_order(
 ///
 /// After XML parsing, it resolves the joint order via Breadth-First Search (BFS)
 /// from the root so `compute_fk` can trust indices instead of file order.
-pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Error>> {
+pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
     let content: String = fs::read_to_string(urdf_path).map_err(|err| UrdfParseError::Io {
         path: urdf_path.to_string(),
         source: err,
