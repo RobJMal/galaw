@@ -1,7 +1,9 @@
 #[derive(Debug, thiserror::Error)]
 pub enum GalawError {
     #[error(transparent)]
-    Parse(#[from] UrdfParseError)
+    Parse(#[from] UrdfParseError),
+    #[error(transparent)]
+    ModelTopology(#[from] ModelTopologyError),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -72,4 +74,15 @@ pub enum UrdfParseError {
         value: String,
         source: std::num::ParseFloatError,
     },
+}
+
+
+#[derive(Debug, thiserror::Error)]
+pub enum ModelTopologyError {
+    #[error("no root link found. Every link has a parent (maybe a cycle in URDF).")]
+    MissingRootLink,
+    #[error("multiple root-like links found (URDF may be disconnected): {0:?}")]
+    MultipleRootLinks(Vec<String>),
+    #[error("joint is unreachable from root (disconnected or cyclic)")]
+    DisconnectedOrCyclicJoints,
 }

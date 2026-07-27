@@ -5,7 +5,7 @@ use std::fs;
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
 
 // Custom
-use crate::error::{UrdfParseError};
+use crate::error::{ModelTopologyError, UrdfParseError};
 use crate::types::{GalawModel, Joint, JointType, Link};
 use crate::utils::parse_vec3_str;
 
@@ -246,17 +246,13 @@ fn resolve_joint_order(
         .collect();
     let root_idx = match root_candidates.as_slice() {
         [single] => *single,
-        [] => return Err("no root link found - every link has a parent (cycle in URDF?)".into()),
+        [] => return Err(ModelTopologyError::MissingRootLink.into()),
         _ => {
-            let names: Vec<&str> = root_candidates
+            let names: Vec<String> = root_candidates
                 .iter()
-                .map(|&i| links[i].name.as_str())
+                .map(|&i| links[i].name.clone())
                 .collect();
-            return Err(format!(
-                "multiple root-like links with no parent: {:?} - URDF may be disconnected",
-                names
-            )
-            .into());
+            return Err(ModelTopologyError::MultipleRootLinks(names).into());
         }
     };
 
@@ -273,9 +269,7 @@ fn resolve_joint_order(
     );
 
     if ordered_joints.len() != joints.len() {
-        return Err(
-            "some joints are unreachable from root link (disconnected or cyclic URDF)".into(),
-        );
+        return Err(ModelTopologyError::DisconnectedOrCyclicJoints.into());
     }
 
     let link_name_to_idx: HashMap<String, usize> = links
