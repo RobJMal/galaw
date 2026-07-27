@@ -6,6 +6,7 @@
 /// module_name is included so callers that need a fresh identifier per
 /// robot (e.g. to name a #[test] fn or a wrapping mod) have one to work
 /// with, without pasting new identifiers together themselves.
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! for_each_generated_robot {
     ($cb:ident) => {

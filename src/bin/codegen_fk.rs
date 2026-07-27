@@ -79,6 +79,10 @@ fn generate_fk_fn_code(
     // Modules/libraries that are imported
     let attribute_import_code: String = "#[allow(unused_imports)]".to_string();
     codegen_output.push(attribute_import_code);
+    // Also skip formatting on the import itself, otherwise cargo fmt
+    // reorders it every time this file gets regenerated.
+    let rustfmt_skip_import_code: String = "#[rustfmt::skip]".to_string();
+    codegen_output.push(rustfmt_skip_import_code);
     let import_code: String = format!(
         "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
     );
