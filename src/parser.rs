@@ -9,7 +9,6 @@ use crate::error::{ModelTopologyError, UrdfParseError};
 use crate::types::{GalawModel, Joint, JointType, Link};
 use crate::utils::parse_vec3_str;
 
-
 // ----- HELPER METHODS -----
 /// Parses the axis information from tag
 fn read_axis(
@@ -43,23 +42,25 @@ fn read_joint_limits(
     let limit_lower_str: &str = joint_limit
         .attribute("lower")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitLower(joint_name.to_string()))?;
-    let limit_lower: f64 = limit_lower_str
-        .parse::<f64>()
-        .map_err(|source| UrdfParseError::InvalidNumberFormat { 
-            value: limit_lower_str.to_string(), 
-            source,
-    })?;
+    let limit_lower: f64 =
+        limit_lower_str
+            .parse::<f64>()
+            .map_err(|source| UrdfParseError::InvalidNumberFormat {
+                value: limit_lower_str.to_string(),
+                source,
+            })?;
 
     // Parsing upper joint limits
     let limit_upper_str: &str = joint_limit
         .attribute("upper")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitUpper(joint_name.to_string()))?;
-    let limit_upper: f64 = limit_upper_str
-        .parse::<f64>()
-        .map_err(|source| UrdfParseError::InvalidNumberFormat { 
-            value: limit_upper_str.to_string(), 
-            source,
-    })?;
+    let limit_upper: f64 =
+        limit_upper_str
+            .parse::<f64>()
+            .map_err(|source| UrdfParseError::InvalidNumberFormat {
+                value: limit_upper_str.to_string(),
+                source,
+            })?;
 
     Ok((limit_lower, limit_upper))
 }
@@ -83,7 +84,10 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
         .attribute("type")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointType(name.clone()))?
         .parse()
-        .map_err(|found| UrdfParseError::UnknownJointType { name: name.clone(), found })?;
+        .map_err(|found| UrdfParseError::UnknownJointType {
+            name: name.clone(),
+            found,
+        })?;
 
     // Extracting parent info
     let joint_parent: roxmltree::Node<'_, '_> = node
@@ -180,7 +184,7 @@ fn dfs_visit(
         return Err(link_idx);
     }
 
-    // Retrive the link's children 
+    // Retrive the link's children
     let Some(child_joint_indices) = children_by_link.get(&link_idx) else {
         return Ok(());
     };
@@ -277,14 +281,12 @@ fn resolve_joint_order(
         &children_by_link,
         &mut ordered_joints,
         &mut acutated_joint_counter,
-        &mut visited
-    ).map_err(|err| ModelTopologyError::CyclicLink(links[err].name.clone()))?;
+        &mut visited,
+    )
+    .map_err(|err| ModelTopologyError::CyclicLink(links[err].name.clone()))?;
 
     // Find the disconnected joints
-    let visited_joints: HashSet<&str> = ordered_joints
-        .iter()
-        .map(|j| j.name.as_str())
-        .collect();
+    let visited_joints: HashSet<&str> = ordered_joints.iter().map(|j| j.name.as_str()).collect();
     let disconnected_joints: Vec<String> = joints
         .iter()
         .filter(|j| !visited_joints.contains(j.name.as_str()))
@@ -313,10 +315,14 @@ fn resolve_joint_order(
 /// After XML parsing, it resolves the joint order via Breadth-First Search (BFS)
 /// from the root so `compute_fk` can trust indices instead of file order.
 pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Error>> {
-    let content: String = fs::read_to_string(urdf_path)
-        .map_err(|err| UrdfParseError::Io { path: urdf_path.to_string(), source: err })?;
-    let doc = roxmltree::Document::parse(&content)
-        .map_err(|err| UrdfParseError::XmlParse { xml_content: content.to_string(), source: err })?;
+    let content: String = fs::read_to_string(urdf_path).map_err(|err| UrdfParseError::Io {
+        path: urdf_path.to_string(),
+        source: err,
+    })?;
+    let doc = roxmltree::Document::parse(&content).map_err(|err| UrdfParseError::XmlParse {
+        xml_content: content.to_string(),
+        source: err,
+    })?;
 
     let robot_name: String = doc
         .root_element()

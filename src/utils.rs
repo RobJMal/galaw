@@ -7,7 +7,10 @@ pub fn parse_vec3_str(input_str: &str) -> Result<(f64, f64, f64), Box<dyn std::e
         .split_whitespace()
         .map(|n| {
             n.parse::<f64>()
-                .map_err(|source| UrdfParseError::InvalidNumberFormat { value: n.to_string(), source })
+                .map_err(|source| UrdfParseError::InvalidNumberFormat {
+                    value: n.to_string(),
+                    source,
+                })
         })
         .collect::<Result<Vec<f64>, _>>()?;
 

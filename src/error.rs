@@ -35,10 +35,7 @@ pub enum UrdfParseError {
     #[error("joint {0} missing type attribute")]
     MissingAttributeJointType(String),
     #[error("unknown joint type '{found}' for joint {name}")]
-    UnknownJointType {
-        name: String,
-        found: String,
-    },
+    UnknownJointType { name: String, found: String },
 
     // <parent/>
     #[error("missing parent tag for joint {0}")]
@@ -78,7 +75,6 @@ pub enum UrdfParseError {
     },
 }
 
-
 #[derive(Debug, thiserror::Error)]
 pub enum ModelTopologyError {
     #[error("no root link found. Every link has a parent (maybe a cycle in URDF).")]
@@ -97,5 +93,5 @@ pub enum KinematicsError {
     JointCmdLengthMismatch {
         num_actuated: usize,
         num_input: usize,
-    }
+    },
 }
