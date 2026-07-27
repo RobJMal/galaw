@@ -84,6 +84,21 @@ fn generate_fk_fn_code(
     );
     codegen_output.push(import_code);
 
+    // Doc comment on the generated function itself, since `generated/` is
+    // exempt from #[warn(missing_docs)] (nothing hand-written to document)
+    // but the function is still real public API consumers call directly.
+    codegen_output.push(format!(
+        "/// Computes forward kinematics for the robot described by `{}`.",
+        urdf_path
+    ));
+    codegen_output.push("///".to_string());
+    codegen_output.push(format!(
+        "/// Generated ahead of time by `codegen_fk`, fixed to this robot's shape: \
+         takes {} actuated joint commands, returns {} link poses.",
+        galaw_model.num_actuated_joints,
+        galaw_model.links.len(),
+    ));
+
     // URDFs don't have perfect casing, which can conflict with Rust. Want
     // to silence it.
     let lint_attribute_code: String = "#[allow(non_snake_case)]".to_string();

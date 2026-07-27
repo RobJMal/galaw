@@ -19,6 +19,10 @@ pub mod error;
 /// URDF fixtures shared by the benchmark suite and its chart generator.
 pub mod fixtures;
 /// Ahead-of-time generated `compute_fk` implementations, one per robot.
+///
+/// Machine-written by `codegen_fk` (see `scripts/codegen_all_urdfs.sh`) —
+/// exempt from `missing_docs` since files are auto-generated.
+#[allow(missing_docs)]
 pub mod generated;
 /// Forward-kinematics computation.
 pub mod kinematics;
