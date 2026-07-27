@@ -170,8 +170,8 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
 }
 
 /// Visits the different nodes in DFS
-/// 
-/// If there is a link that has been revisited, it returns 
+///
+/// If there is a link that has been revisited, it returns
 /// the index of the link as an error to hint about cycles
 /// in kinematic model.
 fn dfs_visit(
@@ -237,8 +237,7 @@ fn dfs_visit(
 fn resolve_joint_order(
     links: &Vec<Link>,
     joints: &Vec<Joint>,
-) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), ModelTopologyError>
-{
+) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), ModelTopologyError> {
     // Enforcing order to ensure indexing is accurate
     let link_lookup: HashMap<&str, usize> = links
         .iter()
