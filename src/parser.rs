@@ -313,10 +313,20 @@ fn resolve_joint_order(
     Ok((ordered_joints, link_name_to_idx, joint_name_to_idx))
 }
 
-/// Parses a URDF file into a `GalawModel`.
+/// Parses a URDF file into a [`GalawModel`].
 ///
 /// After XML parsing, it resolves the joint order via Breadth-First Search (BFS)
 /// from the root so `compute_fk` can trust indices instead of file order.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> Result<(), galaw::error::GalawError> {
+/// let model = galaw::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+/// assert_eq!(model.name, "simple_arm_2dof");
+/// # Ok(())
+/// # }
+/// ```
 pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
     let content: String = fs::read_to_string(urdf_path).map_err(|err| UrdfParseError::Io {
         path: urdf_path.to_string(),
