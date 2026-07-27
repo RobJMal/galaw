@@ -1,6 +1,59 @@
 # galaw - A fast kinematics library
 *galaw* (pronounced gah-LOW, rhymes with "cow") is the Tagalog word that means movement or motion. 
 
+## Quick Start
+
+`galaw` has two APIs for computing forward kinematics, with different performance/flexibility tradeoffs:
+
+- **Runtime** — parses a URDF at runtime, works with *any* robot.
+- **Generated** — ahead-of-time code generation, fixed to *one* robot at compile time. ~2-14x faster, no parsing or `Result` handling on the hot path.
+
+### Runtime
+
+```rust
+use galaw::{error::GalawError, load_urdf, types::GalawModel};
+
+fn main() -> Result<(), GalawError> {
+    let model: GalawModel = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+
+    // Command each actuated joint by name — never by assumed position.
+    let mut joint_cmds = vec![0.0; model.num_actuated_joints];
+    let shoulder_idx = model.get_joint_idx("shoulder_joint").expect("shoulder_joint exists in URDF");
+    let elbow_idx = model.get_joint_idx("elbow_joint").expect("elbow_joint exists in URDF");
+    joint_cmds[shoulder_idx] = 0.5;
+    joint_cmds[elbow_idx] = -0.3;
+
+    let poses = model.compute_fk(&joint_cmds)?;
+    println!("{:?}", poses);
+    Ok(())
+}
+```
+
+Full runnable version: [`examples/basic_fk.rs`](examples/basic_fk.rs) — `cargo run --example basic_fk`
+
+### Generated
+
+Ahead of time, generate fixed FK code for a specific robot (code for the robots shipped with this repo already exists under `src/generated/` — see `galaw::generated`):
+
+```
+# 1st arg: urdf_path, 2nd arg: out_path
+cargo run --bin codegen_fk -- assets/urdf/custom/simple_arm_2dof.urdf src/generated/simple_arm_2dof.rs
+```
+
+Then call the generated function directly — no `GalawModel`, no `Result`, no parsing at call time:
+
+```rust
+use galaw::generated::simple_arm_2dof;
+
+let joint_cmds: [f64; 2] = [0.5, -0.3];
+let poses = simple_arm_2dof::compute_fk(&joint_cmds);
+```
+
+Full runnable version: [`examples/generated_fk.rs`](examples/generated_fk.rs) — `cargo run --example generated_fk`
+
+### Which one should I use?
+
+**Runtime** if you need to support arbitrary URDFs at runtime — e.g. a robot chosen by a user, or loaded from a file you don't control at compile time. **Generated** if you know the robot ahead of time and want the fastest possible FK, at the cost of a codegen step and one generated file per robot.
 
 ## Attributions
 
