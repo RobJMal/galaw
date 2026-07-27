@@ -417,4 +417,50 @@ mod tests {
             );
         }
     }
+
+    /// Creates graph ROOT -> A -> B -> A. This ensures that dfs_visit
+    /// does not have unbounded recursion error.
+    #[test]
+    fn resolve_joint_order_detects_reachable_cycle() {
+        fn joint(name: &str, parent: &str, child: &str) -> Joint {
+            Joint {
+                name: name.to_string(),
+                joint_type: JointType::Fixed,
+                parent: parent.to_string(),
+                parent_link_idx: 0,
+                child: child.to_string(),
+                child_link_idx: 0,
+                transform: Isometry3::identity(),
+                lin_axis: None,
+                rot_axis: None,
+                limit_lower: None,
+                limit_upper: None,
+                cmd_idx: None,
+            }
+        }
+
+        let links = vec![
+            Link {
+                name: "ROOT".to_string(),
+            },
+            Link {
+                name: "A".to_string(),
+            },
+            Link {
+                name: "B".to_string(),
+            },
+        ];
+        let joints = vec![
+            joint("j1", "ROOT", "A"),
+            joint("j2", "A", "B"),
+            joint("j3", "B", "A"), // closes the cycle back to A
+        ];
+
+        let result = resolve_joint_order(&links, &joints);
+
+        assert!(
+            matches!(&result, Err(ModelTopologyError::CyclicLink(name)) if name == "A"),
+            "expected CyclicLink(\"A\"), got {result:?}"
+        );
+    }
 }
