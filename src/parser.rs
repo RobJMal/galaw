@@ -173,9 +173,16 @@ fn dfs_visit(
     children_by_link: &HashMap<usize, Vec<usize>>,
     ordered_joints: &mut Vec<Joint>,
     cmd_counter: &mut usize,
-) {
+    visited: &mut HashSet<usize>,
+) -> Result<(), usize> {
+    // Checks if we visited before
+    if !visited.insert(link_idx) {
+        return Err(link_idx);
+    }
+
+    // Retrive the link's children 
     let Some(child_joint_indices) = children_by_link.get(&link_idx) else {
-        return;
+        return Ok(());
     };
 
     for &joint_idx in child_joint_indices {
@@ -201,8 +208,11 @@ fn dfs_visit(
             children_by_link,
             ordered_joints,
             cmd_counter,
-        );
+            visited,
+        )?;
     }
+
+    Ok(())
 }
 
 /// Resolves joint order for downstream functions.
@@ -259,6 +269,7 @@ fn resolve_joint_order(
     // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
     let mut acutated_joint_counter = 0;
+    let mut visited: HashSet<usize> = HashSet::new();
     dfs_visit(
         root_idx,
         joints,
@@ -266,10 +277,21 @@ fn resolve_joint_order(
         &children_by_link,
         &mut ordered_joints,
         &mut acutated_joint_counter,
-    );
+        &mut visited
+    ).map_err(|err| ModelTopologyError::CyclicLink(links[err].name.clone()))?;
 
-    if ordered_joints.len() != joints.len() {
-        return Err(ModelTopologyError::DisconnectedOrCyclicJoints.into());
+    // Find the disconnected joints
+    let visited_joints: HashSet<&str> = ordered_joints
+        .iter()
+        .map(|j| j.name.as_str())
+        .collect();
+    let disconnected_joints: Vec<String> = joints
+        .iter()
+        .filter(|j| !visited_joints.contains(j.name.as_str()))
+        .map(|j| j.name.clone())
+        .collect();
+    if !disconnected_joints.is_empty() {
+        return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints).into());
     }
 
     let link_name_to_idx: HashMap<String, usize> = links

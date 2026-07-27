@@ -83,6 +83,8 @@ pub enum ModelTopologyError {
     MissingRootLink,
     #[error("multiple root-like links found (URDF may be disconnected): {0:?}")]
     MultipleRootLinks(Vec<String>),
-    #[error("joint is unreachable from root (disconnected or cyclic)")]
-    DisconnectedOrCyclicJoints,
+    #[error("joint is unreachable from root - URDF may be disconnected: {0:?}")]
+    DisconnectedJoints(Vec<String>),
+    #[error("link has a cyclic connection: {0}")]
+    CyclicLink(String),
 }
