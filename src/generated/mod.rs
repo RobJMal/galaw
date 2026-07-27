@@ -2,17 +2,11 @@
 #[rustfmt::skip]
 pub mod registry;
 #[rustfmt::skip]
-pub mod simple_arm_10dof;
-#[rustfmt::skip]
-pub mod simple_arm_20dof;
-#[rustfmt::skip]
 pub mod simple_arm_2dof_flipped;
 #[rustfmt::skip]
 pub mod simple_arm_2dof;
 #[rustfmt::skip]
 pub mod simple_arm_3dof_rrp;
-#[rustfmt::skip]
-pub mod simple_arm_6dof;
 #[rustfmt::skip]
 pub mod anymal_d;
 #[rustfmt::skip]
