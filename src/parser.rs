@@ -5,6 +5,7 @@ use std::fs;
 use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
 
 // Custom
+use crate::error::{GalawError, ModelTopologyError, UrdfParseError};
 use crate::types::{GalawModel, Joint, JointType, Link};
 use crate::utils::parse_vec3_str;
 
@@ -13,13 +14,13 @@ use crate::utils::parse_vec3_str;
 fn read_axis(
     node: roxmltree::Node<'_, '_>,
     joint_name: &str,
-) -> Result<Unit<Vector3<f64>>, Box<dyn std::error::Error>> {
+) -> Result<Unit<Vector3<f64>>, UrdfParseError> {
     // Extracting axis angles
     let axis_str: &str = node
         .children()
         .find(|n| n.tag_name().name() == "axis")
         .and_then(|n| n.attribute("xyz"))
-        .ok_or_else(|| format!("missing axis xyz value for joint {}", joint_name))?;
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointAxisXyz(joint_name.to_string()))?;
     let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
 
     Ok(Unit::new_normalize(Vector3::new(axis_x, axis_y, axis_z)))
@@ -31,72 +32,98 @@ fn read_axis(
 fn read_joint_limits(
     node: roxmltree::Node<'_, '_>,
     joint_name: &str,
-) -> Result<(f64, f64), Box<dyn std::error::Error>> {
+) -> Result<(f64, f64), UrdfParseError> {
     let joint_limit = node
         .children()
         .find(|n| n.tag_name().name() == "limit")
-        .ok_or_else(|| format!("missing joint limits for joint {}", joint_name))?;
+        .ok_or_else(|| UrdfParseError::MissingTagJointLimit(joint_name.to_string()))?;
 
-    let limit_lower: f64 = joint_limit
+    // Parsing lower joint limits
+    let limit_lower_str: &str = joint_limit
         .attribute("lower")
-        .ok_or_else(|| format!("missing joint limit lower for joint {}", joint_name))?
-        .parse::<f64>()?;
-    let limit_upper: f64 = joint_limit
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitLower(joint_name.to_string()))?;
+    let limit_lower: f64 =
+        limit_lower_str
+            .parse::<f64>()
+            .map_err(|source| UrdfParseError::InvalidNumberFormat {
+                value: limit_lower_str.to_string(),
+                source,
+            })?;
+
+    // Parsing upper joint limits
+    let limit_upper_str: &str = joint_limit
         .attribute("upper")
-        .ok_or_else(|| format!("missing joint limit upper for joint {}", joint_name))?
-        .parse::<f64>()?;
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitUpper(joint_name.to_string()))?;
+    let limit_upper: f64 =
+        limit_upper_str
+            .parse::<f64>()
+            .map_err(|source| UrdfParseError::InvalidNumberFormat {
+                value: limit_upper_str.to_string(),
+                source,
+            })?;
 
     Ok((limit_lower, limit_upper))
 }
 
 /// Parses <link> tag into a `Link`
-fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, Box<dyn std::error::Error>> {
+fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, UrdfParseError> {
     let link_name: String = node
         .attribute("name")
-        .ok_or("link missing name attribute")?
+        .ok_or(UrdfParseError::MissingAttributeLinkName)?
         .to_string();
     Ok(Link { name: link_name })
 }
 
 /// Parses <joint> tag into a `Joint`
-fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::error::Error>> {
+fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
     let name: String = node
         .attribute("name")
-        .ok_or("joint missing name attribute")?
+        .ok_or(UrdfParseError::MissingAttributeJointName)?
         .to_string();
     let joint_type: JointType = node
         .attribute("type")
-        .ok_or_else(|| format!("joint {} missing type attribute", name))?
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointType(name.clone()))?
         .parse()
-        .map_err(|e| format!("joint {}: {}", name, e))?;
-    let parent: String = node
+        .map_err(|found| UrdfParseError::UnknownJointType {
+            name: name.clone(),
+            found,
+        })?;
+
+    // Extracting parent info
+    let joint_parent: roxmltree::Node<'_, '_> = node
         .children()
         .find(|n| n.tag_name().name() == "parent")
-        .and_then(|n| n.attribute("link"))
-        .ok_or_else(|| format!("missing parent link for joint {}", name))?
-        .to_string();
-    let child: String = node
-        .children()
-        .find(|n| n.tag_name().name() == "child")
-        .and_then(|n| n.attribute("link"))
-        .ok_or_else(|| format!("missing child link for joint {}", name))?
+        .ok_or_else(|| UrdfParseError::MissingTagJointParent(name.clone()))?;
+    let parent: String = joint_parent
+        .attribute("link")
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointParentLink(name.clone()))?
         .to_string();
 
-    // Extracting joint XYZ and RPY
+    // Extracting child info
+    let joint_child: roxmltree::Node<'_, '_> = node
+        .children()
+        .find(|n| n.tag_name().name() == "child")
+        .ok_or_else(|| UrdfParseError::MissingTagJointChild(name.clone()))?;
+    let child: String = joint_child
+        .attribute("link")
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointChildLink(name.clone()))?
+        .to_string();
+
+    // Extracting joint XYZ and RPY and constructing transform
     let joint_origin = node
         .children()
         .find(|n| n.tag_name().name() == "origin")
-        .ok_or_else(|| format!("missing origin for joint {}", name))?;
+        .ok_or_else(|| UrdfParseError::MissingTagJointOrigin(name.clone()))?;
 
     let xyz_str: &str = joint_origin
         .attribute("xyz")
-        .ok_or_else(|| format!("missing xyz for joint {}", name))?;
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointOriginXyz(name.clone()))?;
     let (x, y, z) = parse_vec3_str(xyz_str)?;
     let xyz = Vector3::new(x, y, z);
 
     let rpy_str = joint_origin
         .attribute("rpy")
-        .ok_or_else(|| format!("missing rpy for joint {}", name))?;
+        .ok_or_else(|| UrdfParseError::MissingAttributeJointOriginRpy(name.clone()))?;
     let (roll, pitch, yaw) = parse_vec3_str(rpy_str)?;
     let rotation = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
 
@@ -143,6 +170,10 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, Box<dyn std::erro
 }
 
 /// Visits the different nodes in DFS
+///
+/// If there is a link that has been revisited, it returns
+/// the index of the link as an error to hint about cycles
+/// in kinematic model.
 fn dfs_visit(
     link_idx: usize,
     joints: &[Joint],
@@ -150,9 +181,16 @@ fn dfs_visit(
     children_by_link: &HashMap<usize, Vec<usize>>,
     ordered_joints: &mut Vec<Joint>,
     cmd_counter: &mut usize,
-) {
+    visited: &mut HashSet<usize>,
+) -> Result<(), usize> {
+    // Checks if we visited before
+    if !visited.insert(link_idx) {
+        return Err(link_idx);
+    }
+
+    // Retrive the link's children
     let Some(child_joint_indices) = children_by_link.get(&link_idx) else {
-        return;
+        return Ok(());
     };
 
     for &joint_idx in child_joint_indices {
@@ -178,8 +216,11 @@ fn dfs_visit(
             children_by_link,
             ordered_joints,
             cmd_counter,
-        );
+            visited,
+        )?;
     }
+
+    Ok(())
 }
 
 /// Resolves joint order for downstream functions.
@@ -196,8 +237,7 @@ fn dfs_visit(
 fn resolve_joint_order(
     links: &Vec<Link>,
     joints: &Vec<Joint>,
-) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), Box<dyn std::error::Error>>
-{
+) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), ModelTopologyError> {
     // Enforcing order to ensure indexing is accurate
     let link_lookup: HashMap<&str, usize> = links
         .iter()
@@ -223,23 +263,20 @@ fn resolve_joint_order(
         .collect();
     let root_idx = match root_candidates.as_slice() {
         [single] => *single,
-        [] => return Err("no root link found - every link has a parent (cycle in URDF?)".into()),
+        [] => return Err(ModelTopologyError::MissingRootLink.into()),
         _ => {
-            let names: Vec<&str> = root_candidates
+            let names: Vec<String> = root_candidates
                 .iter()
-                .map(|&i| links[i].name.as_str())
+                .map(|&i| links[i].name.clone())
                 .collect();
-            return Err(format!(
-                "multiple root-like links with no parent: {:?} - URDF may be disconnected",
-                names
-            )
-            .into());
+            return Err(ModelTopologyError::MultipleRootLinks(names).into());
         }
     };
 
     // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
     let mut acutated_joint_counter = 0;
+    let mut visited: HashSet<usize> = HashSet::new();
     dfs_visit(
         root_idx,
         joints,
@@ -247,12 +284,19 @@ fn resolve_joint_order(
         &children_by_link,
         &mut ordered_joints,
         &mut acutated_joint_counter,
-    );
+        &mut visited,
+    )
+    .map_err(|err| ModelTopologyError::CyclicLink(links[err].name.clone()))?;
 
-    if ordered_joints.len() != joints.len() {
-        return Err(
-            "some joints are unreachable from root link (disconnected or cyclic URDF)".into(),
-        );
+    // Find the disconnected joints
+    let visited_joints: HashSet<&str> = ordered_joints.iter().map(|j| j.name.as_str()).collect();
+    let disconnected_joints: Vec<String> = joints
+        .iter()
+        .filter(|j| !visited_joints.contains(j.name.as_str()))
+        .map(|j| j.name.clone())
+        .collect();
+    if !disconnected_joints.is_empty() {
+        return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints).into());
     }
 
     let link_name_to_idx: HashMap<String, usize> = links
@@ -273,14 +317,20 @@ fn resolve_joint_order(
 ///
 /// After XML parsing, it resolves the joint order via Breadth-First Search (BFS)
 /// from the root so `compute_fk` can trust indices instead of file order.
-pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, Box<dyn std::error::Error>> {
-    let content: String = fs::read_to_string(urdf_path)?;
-    let doc = roxmltree::Document::parse(&content)?;
+pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
+    let content: String = fs::read_to_string(urdf_path).map_err(|err| UrdfParseError::Io {
+        path: urdf_path.to_string(),
+        source: err,
+    })?;
+    let doc = roxmltree::Document::parse(&content).map_err(|err| UrdfParseError::XmlParse {
+        path: urdf_path.to_string(),
+        source: err,
+    })?;
 
     let robot_name: String = doc
         .root_element()
         .attribute("name")
-        .ok_or("missing robot name")?
+        .ok_or(UrdfParseError::MissingAttributeRobotName)?
         .to_string();
     let mut links: Vec<Link> = Vec::new();
     let mut joints: Vec<Joint> = Vec::new();
@@ -366,5 +416,51 @@ mod tests {
                 "joint {joint_name} resolved to a different parent/child link depending on file order"
             );
         }
+    }
+
+    /// Creates graph ROOT -> A -> B -> A. This ensures that dfs_visit
+    /// does not have unbounded recursion error.
+    #[test]
+    fn resolve_joint_order_detects_reachable_cycle() {
+        fn joint(name: &str, parent: &str, child: &str) -> Joint {
+            Joint {
+                name: name.to_string(),
+                joint_type: JointType::Fixed,
+                parent: parent.to_string(),
+                parent_link_idx: 0,
+                child: child.to_string(),
+                child_link_idx: 0,
+                transform: Isometry3::identity(),
+                lin_axis: None,
+                rot_axis: None,
+                limit_lower: None,
+                limit_upper: None,
+                cmd_idx: None,
+            }
+        }
+
+        let links = vec![
+            Link {
+                name: "ROOT".to_string(),
+            },
+            Link {
+                name: "A".to_string(),
+            },
+            Link {
+                name: "B".to_string(),
+            },
+        ];
+        let joints = vec![
+            joint("j1", "ROOT", "A"),
+            joint("j2", "A", "B"),
+            joint("j3", "B", "A"), // closes the cycle back to A
+        ];
+
+        let result = resolve_joint_order(&links, &joints);
+
+        assert!(
+            matches!(&result, Err(ModelTopologyError::CyclicLink(name)) if name == "A"),
+            "expected CyclicLink(\"A\"), got {result:?}"
+        );
     }
 }

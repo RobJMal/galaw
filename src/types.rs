@@ -25,7 +25,7 @@ impl std::str::FromStr for JointType {
             "prismatic" => Ok(JointType::Prismatic),
             "fixed" => Ok(JointType::Fixed),
             "continuous" => Ok(JointType::Continuous),
-            other => Err(format!("unknown joint type: {other}")),
+            other => Err(other.to_string()),
         }
     }
 }
