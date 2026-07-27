@@ -159,10 +159,10 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
         child,
         child_link_idx: 0, // Resolved in resolve_joint_order
         transform,
-        lin_axis: lin_axis,
-        rot_axis: rot_axis,
-        limit_lower: limit_lower,
-        limit_upper: limit_upper,
+        lin_axis,
+        rot_axis,
+        limit_lower,
+        limit_upper,
         cmd_idx: None, // Resolved in resolve_joint_order
     };
 
@@ -263,13 +263,13 @@ fn resolve_joint_order(
         .collect();
     let root_idx = match root_candidates.as_slice() {
         [single] => *single,
-        [] => return Err(ModelTopologyError::MissingRootLink.into()),
+        [] => return Err(ModelTopologyError::MissingRootLink),
         _ => {
             let names: Vec<String> = root_candidates
                 .iter()
                 .map(|&i| links[i].name.clone())
                 .collect();
-            return Err(ModelTopologyError::MultipleRootLinks(names).into());
+            return Err(ModelTopologyError::MultipleRootLinks(names));
         }
     };
 
@@ -296,7 +296,7 @@ fn resolve_joint_order(
         .map(|j| j.name.clone())
         .collect();
     if !disconnected_joints.is_empty() {
-        return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints).into());
+        return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints));
     }
 
     let link_name_to_idx: HashMap<String, usize> = links
@@ -365,11 +365,11 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
 
     Ok(GalawModel {
         name: robot_name,
-        links: links,
-        link_name_to_idx: link_name_to_idx,
+        links,
+        link_name_to_idx,
         joints: ordered_joints,
-        joint_name_to_idx: joint_name_to_idx,
-        num_actuated_joints: num_actuated_joints,
+        joint_name_to_idx,
+        num_actuated_joints,
     })
 }
 

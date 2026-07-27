@@ -17,7 +17,7 @@ pub fn parse_vec3_str(input_str: &str) -> Result<(f64, f64, f64), UrdfParseError
         .collect::<Result<Vec<f64>, _>>()?;
 
     if vals.len() != 3 {
-        return Err(UrdfParseError::InvalidVector3Len(input_str.to_string(), vals.len()).into());
+        return Err(UrdfParseError::InvalidVector3Len(input_str.to_string(), vals.len()));
     }
 
     Ok((vals[0], vals[1], vals[2]))
