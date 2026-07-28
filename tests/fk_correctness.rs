@@ -1,4 +1,4 @@
-/// Tests the correctness of the implmeented forward kinematics function
+/// Tests the correctness of the implemented forward kinematics function
 /// with Rust's k library
 // Third-party
 use nalgebra::{Isometry3, Translation3, UnitQuaternion};
@@ -73,7 +73,7 @@ fn assert_galaw_fk_matches_k(
     Ok(())
 }
 
-/// Because k_chain is stateful, cannot have it easily parallized and need to instantiate it for each test
+/// Because k_chain is stateful, cannot have it easily parallelized and need to instantiate it for each test
 fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
     let galaw_robot_model = load_urdf(urdf_path).unwrap();
     let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
@@ -207,5 +207,5 @@ fk_correctness_tests! {
     flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",  // Tests revolute and fixed
     anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",     // Tests revolute and fixed
     wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",  // Tests revolute and fixed
-    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",     // Tests continous, prismiatic, revolute, fixed
+    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",     // Tests continuous, prismatic, revolute, fixed
 }

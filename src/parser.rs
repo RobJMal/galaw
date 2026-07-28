@@ -278,7 +278,7 @@ fn resolve_joint_order(
 
     // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
-    let mut acutated_joint_counter = 0;
+    let mut actuated_joint_counter = 0;
     let mut visited: HashSet<usize> = HashSet::new();
     dfs_visit(
         root_idx,
@@ -286,7 +286,7 @@ fn resolve_joint_order(
         &link_lookup,
         &children_by_link,
         &mut ordered_joints,
-        &mut acutated_joint_counter,
+        &mut actuated_joint_counter,
         &mut visited,
     )
     .map_err(|err| ModelTopologyError::CyclicLink(links[err].name.clone()))?;
@@ -318,7 +318,7 @@ fn resolve_joint_order(
 
 /// Parses a URDF file into a [`GalawModel`].
 ///
-/// After XML parsing, it resolves the joint order via Breadth-First Search (BFS)
+/// After XML parsing, it resolves the joint order via Depth-First Search (DFS)
 /// from the root so `compute_fk` can trust indices instead of file order.
 ///
 /// # Examples
