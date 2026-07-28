@@ -21,8 +21,10 @@ pub mod fixtures;
 /// Ahead-of-time generated `compute_fk` implementations, one per robot.
 ///
 /// Machine-written by `codegen_fk` (see `scripts/codegen_all_urdfs.sh`) —
-/// exempt from `missing_docs` since files are auto-generated.
+/// exempt from `missing_docs` and `clippy` since files are auto-generated,
+/// not hand-maintained.
 #[allow(missing_docs)]
+#[allow(clippy::all)]
 pub mod generated;
 /// Forward-kinematics computation.
 pub mod kinematics;

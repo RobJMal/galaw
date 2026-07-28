@@ -83,9 +83,9 @@ fn generate_fk_fn_code(
     // reorders it every time this file gets regenerated.
     let rustfmt_skip_import_code: String = "#[rustfmt::skip]".to_string();
     codegen_output.push(rustfmt_skip_import_code);
-    let import_code: String = format!(
-        "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
-    );
+    let import_code: String =
+        "use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3};"
+            .to_string();
     codegen_output.push(import_code);
 
     // Doc comment on the generated function itself, since `generated/` is
@@ -212,14 +212,13 @@ fn generate_fk_fn_code(
 
     // Putting the link_vars in order in the return array
     let mut ordered_link_vars: Vec<String> = Vec::new();
-    for i in 0..galaw_model.links.len() {
-        let var_name = link_vars_by_idx[i].clone().unwrap();
-        ordered_link_vars.push(var_name);
+    for var in &link_vars_by_idx {
+        ordered_link_vars.push(var.clone().unwrap());
     }
     let fn_return_code: String = format!("[{}]", ordered_link_vars.join(", "));
     codegen_output.push(fn_return_code);
 
-    let fn_closer_code: String = format!("}}").to_string();
+    let fn_closer_code: String = "}".to_string();
     codegen_output.push(fn_closer_code);
 
     Ok(codegen_output)

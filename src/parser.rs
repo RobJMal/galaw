@@ -159,10 +159,10 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
         child,
         child_link_idx: 0, // Resolved in resolve_joint_order
         transform,
-        lin_axis: lin_axis,
-        rot_axis: rot_axis,
-        limit_lower: limit_lower,
-        limit_upper: limit_upper,
+        lin_axis,
+        rot_axis,
+        limit_lower,
+        limit_upper,
         cmd_idx: None, // Resolved in resolve_joint_order
     };
 
@@ -223,6 +223,9 @@ fn dfs_visit(
     Ok(())
 }
 
+/// Resolved joints (in DFS order), link name -> index, and joint name -> cmd_idx.
+type ResolvedJoints = (Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>);
+
 /// Resolves joint order for downstream functions.
 ///
 /// Resolves the joint order via Depth-First Search (DFS) pre-order from the
@@ -235,9 +238,9 @@ fn dfs_visit(
 /// 2. `k::Chain` — this project's own ground-truth for correctness testing —
 ///    numbers its DOFs via DFS pre-order (confirmed by reading its source).
 fn resolve_joint_order(
-    links: &Vec<Link>,
-    joints: &Vec<Joint>,
-) -> Result<(Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>), ModelTopologyError> {
+    links: &[Link],
+    joints: &[Joint],
+) -> Result<ResolvedJoints, ModelTopologyError> {
     // Enforcing order to ensure indexing is accurate
     let link_lookup: HashMap<&str, usize> = links
         .iter()
@@ -263,19 +266,19 @@ fn resolve_joint_order(
         .collect();
     let root_idx = match root_candidates.as_slice() {
         [single] => *single,
-        [] => return Err(ModelTopologyError::MissingRootLink.into()),
+        [] => return Err(ModelTopologyError::MissingRootLink),
         _ => {
             let names: Vec<String> = root_candidates
                 .iter()
                 .map(|&i| links[i].name.clone())
                 .collect();
-            return Err(ModelTopologyError::MultipleRootLinks(names).into());
+            return Err(ModelTopologyError::MultipleRootLinks(names));
         }
     };
 
     // Walk the tree from root, resolving parent/child link indices
     let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
-    let mut acutated_joint_counter = 0;
+    let mut actuated_joint_counter = 0;
     let mut visited: HashSet<usize> = HashSet::new();
     dfs_visit(
         root_idx,
@@ -283,7 +286,7 @@ fn resolve_joint_order(
         &link_lookup,
         &children_by_link,
         &mut ordered_joints,
-        &mut acutated_joint_counter,
+        &mut actuated_joint_counter,
         &mut visited,
     )
     .map_err(|err| ModelTopologyError::CyclicLink(links[err].name.clone()))?;
@@ -296,7 +299,7 @@ fn resolve_joint_order(
         .map(|j| j.name.clone())
         .collect();
     if !disconnected_joints.is_empty() {
-        return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints).into());
+        return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints));
     }
 
     let link_name_to_idx: HashMap<String, usize> = links
@@ -315,7 +318,7 @@ fn resolve_joint_order(
 
 /// Parses a URDF file into a [`GalawModel`].
 ///
-/// After XML parsing, it resolves the joint order via Breadth-First Search (BFS)
+/// After XML parsing, it resolves the joint order via Depth-First Search (DFS)
 /// from the root so `compute_fk` can trust indices instead of file order.
 ///
 /// # Examples
@@ -365,11 +368,11 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
 
     Ok(GalawModel {
         name: robot_name,
-        links: links,
-        link_name_to_idx: link_name_to_idx,
+        links,
+        link_name_to_idx,
         joints: ordered_joints,
-        joint_name_to_idx: joint_name_to_idx,
-        num_actuated_joints: num_actuated_joints,
+        joint_name_to_idx,
+        num_actuated_joints,
     })
 }
 

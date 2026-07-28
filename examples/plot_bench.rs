@@ -34,21 +34,29 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 /// per iteration, so dividing by this converts to per single FK call.
 const N_POSES: f64 = 100.0;
 
-const IMPLS: [&str; 3] = ["galaw", "galaw-generated", "k"];
+const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
 
-/// Wong (2011) colorblind-safe triple, in series order: galaw=blue,
+/// Wong (2011) colorblind-safe triple, in series order: galaw-runtime=blue,
 /// galaw-generated=bluish green, k=orange.
 const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
 
-const LEGEND_FONT_SIZE: f64 = 18.0;
+// ----- FONT SIZES (tweak here — every chart text element is driven off these) -----
+const TITLE_FONT_SIZE: f64 = 38.0;
+const LEGEND_FONT_SIZE: f64 = 20.0;
+/// Shared by both axes' `name` (the "Robot [...]" / "ns per call" labels).
+const AXIS_NAME_FONT_SIZE: f64 = 22.0;
+/// Shared by both axes' tick labels (the numbers/categories along each axis).
+const AXIS_TICK_FONT_SIZE: f64 = 19.0;
 
 /// Approx. rendered height (px) of one data-point label box at LABEL_FONT_SIZE
 /// (text line-height + the label's own padding/border) — used to stagger each
 /// series' label distance from its point by index, so two series' labels can
 /// never collide even if their points land at the same y-pixel. Scales to
 /// however many entries IMPLS has; no per-series manual tuning needed.
-const LABEL_FONT_SIZE: f64 = 17.0;
-const LABEL_STAGGER_PX: f64 = 30.0;
+/// Keep this in sync with LABEL_FONT_SIZE — it's sized for the box height
+/// *at that font size*, not computed from it.
+const LABEL_FONT_SIZE: f64 = 19.0;
+const LABEL_STAGGER_PX: f64 = 16.0;
 
 /// Mean and 95% CI bounds for a single benchmark, in ns per FK call.
 struct Stat {
@@ -135,7 +143,7 @@ fn build_chart(
             Title::new()
                 .text(title)
                 .left("center")
-                .text_style(TextStyle::new().font_size(34.0)),
+                .text_style(TextStyle::new().font_size(TITLE_FONT_SIZE)),
         )
         // Only the mean lines get a legend entry; the band series are unnamed.
         .legend(
@@ -169,18 +177,22 @@ fn build_chart(
                 .name("Robot [total joints / actuated joints]")
                 .name_location(NameLocation::Middle) // centered under the axis, not clipped at the end
                 .name_gap(85.0) // clears the two-line tick labels above it
-                .name_text_style(TextStyle::new().font_size(20.0))
+                .name_text_style(TextStyle::new().font_size(AXIS_NAME_FONT_SIZE))
                 // interval(0.0) forces every category to render — ECharts'
                 // default "auto" interval was silently hiding most of these
                 // (only 4 of 8 robots were showing up) because it judged
                 // them too crowded to fit; font_size makes them readable.
-                .axis_label(AxisLabel::new().font_size(17.0).interval(0.0))
+                .axis_label(
+                    AxisLabel::new()
+                        .font_size(AXIS_TICK_FONT_SIZE)
+                        .interval(0.0),
+                )
                 .data(dof_labels),
         )
         .y_axis(
             Axis::new()
                 // Log, not linear: values span ~100x (e.g. 67ns to 7946ns), so
-                // on a linear axis the close-together galaw/galaw-generated
+                // on a linear axis the close-together galaw-runtime/galaw-generated
                 // points for small/fast robots were only a few pixels apart -
                 // not enough room for their value labels to avoid colliding.
                 // Log scale gives every *ratio* equal visual space regardless
@@ -192,8 +204,8 @@ fn build_chart(
                 .name(y_name)
                 .name_location(NameLocation::Middle) // centered & auto-rotated along the axis
                 .name_gap(70.0) // clears the tick numbers
-                .name_text_style(TextStyle::new().font_size(20.0))
-                .axis_label(AxisLabel::new().font_size(17.0)),
+                .name_text_style(TextStyle::new().font_size(AXIS_NAME_FONT_SIZE))
+                .axis_label(AxisLabel::new().font_size(AXIS_TICK_FONT_SIZE)),
         );
 
     // Gather every series' full data first, in one pass, instead of building
@@ -235,8 +247,8 @@ fn build_chart(
     // above its own point (never below, so none can ever collide with the
     // x-axis tick labels), and a fixed per-series offset that ignores actual
     // value order can backfire badly: earlier, "galaw-generated" (typically
-    // the smallest value) got a *larger* offset than "galaw" purely by
-    // IMPLS position, which pushed its label *up*, into "galaw"'s point and
+    // the smallest value) got a *larger* offset than "galaw-runtime" purely by
+    // IMPLS position, which pushed its label *up*, into "galaw-runtime"'s point and
     // label instead of away from it, whenever the two were close. Ranking by
     // the data itself instead of array position means the smallest-typical
     // series always gets the smallest offset (staying close to its own,
@@ -265,7 +277,7 @@ fn build_chart(
             ..
         } = series;
         let label_pos = LabelPosition::Top;
-        let label_distance = 8.0 + stagger_rank[i] as f64 * LABEL_STAGGER_PX;
+        let label_distance = 4.0 + stagger_rank[i] as f64 * LABEL_STAGGER_PX;
 
         let stack_id = format!("band_{impl_}");
         // Invisible base line lifts the band's baseline to the CI lower bound.

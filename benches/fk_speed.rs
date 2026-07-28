@@ -52,7 +52,7 @@ fn system_specs() -> String {
 }
 
 /// Benchmarks a codegen'd `compute_fk` under the "galaw-generated" id, in the
-/// same `group` as the "galaw"/"k" entries the caller registers alongside it.
+/// same `group` as the "galaw-runtime"/"k" entries the caller registers alongside it.
 /// Generic over N/M since each robot's generated `compute_fk` bakes in a
 /// different array size (`[f64; N] -> [Isometry3<f64>; M]`) - see the same
 /// pattern in tests/fk_correctness.rs's `check_generated_matches_dynamic`.
@@ -121,9 +121,9 @@ fn bench_fk(c: &mut Criterion) {
         let mut group = c.benchmark_group(format!("fk/{}", galaw_model.name));
         group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
 
-        // ----- galaw -----
+        // ----- galaw-runtime -----
         group.bench_with_input(
-            BenchmarkId::new("galaw", galaw_model.joints.len()),
+            BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
                 b.iter(|| {

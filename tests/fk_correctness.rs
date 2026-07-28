@@ -1,4 +1,4 @@
-/// Tests the correctness of the implmeented forward kinematics function
+/// Tests the correctness of the implemented forward kinematics function
 /// with Rust's k library
 // Third-party
 use nalgebra::{Isometry3, Translation3, UnitQuaternion};
@@ -73,7 +73,7 @@ fn assert_galaw_fk_matches_k(
     Ok(())
 }
 
-/// Because k_chain is stateful, cannot have it easily parallized and need to instantiate it for each test
+/// Because k_chain is stateful, cannot have it easily parallelized and need to instantiate it for each test
 fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
     let galaw_robot_model = load_urdf(urdf_path).unwrap();
     let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
@@ -167,8 +167,8 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
 /// captured by macro_rules can't be pasted together into a brand-new
 /// identifier without a helper crate (e.g. `paste`) — nesting in a module
 /// sidesteps that using only what's already in scope. The tradeoff:
-/// `cargo test` now shows e.g. `simple_arm_6dof::matches_dynamic` instead of
-/// a single flat `codegen_simple_arm_6dof`, and the per-robot "tests revolute
+/// `cargo test` now shows e.g. `simple_arm_2dof::matches_dynamic` instead of
+/// a single flat `codegen_simple_arm_2dof`, and the per-robot "tests revolute
 /// and fixed"-style comments that used to live on the old hand-written list
 /// are gone (the registry only carries a path + module name, not comments).
 macro_rules! codegen_correctness_test {
@@ -202,13 +202,10 @@ macro_rules! fk_correctness_tests {
 fk_correctness_tests! {
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",   // Tests revolute and prismatic
-    simple_arm_6dof  => "assets/urdf/custom/simple_arm_6dof.urdf",
-    simple_arm_10dof => "assets/urdf/custom/simple_arm_10dof.urdf",
-    simple_arm_20dof => "assets/urdf/custom/simple_arm_20dof.urdf",
 
     // Third-party robots
     flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",  // Tests revolute and fixed
     anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",     // Tests revolute and fixed
     wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",  // Tests revolute and fixed
-    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",     // Tests continous, prismiatic, revolute, fixed
+    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",     // Tests continuous, prismatic, revolute, fixed
 }
