@@ -1,5 +1,13 @@
-# galaw - A fast kinematics library
-*galaw* (pronounced gah-LOW, rhymes with "cow") is the Tagalog word that means movement or motion. This library is for computing the kinematics of robots. 
+# `galaw` - A Rust-based kinematics library
+*galaw* (pronounced gah-LOW, rhymes with "cow") is the Tagalog word that means movement or motion. This library is for computing kinematics. 
+
+## Features
+
+- **Stateless** — `compute_fk` takes joint commands, returns fresh poses. No mutable state, no setup step, safe to call concurrently.
+- **Code-generated (optional)** — ahead-of-time `compute_fk` per robot, no parsing or `Result` on the hot path.
+- **Correctness-tested** — checked against [`k`](https://crates.io/crates/k) across randomized joint configs within limits.
+- **Named lookups** — command joints/links by name, never by assumed index.
+- **Descriptive errors** — malformed URDFs fail with a specific cause, not a panic.
 
 ## Quick Start
 
