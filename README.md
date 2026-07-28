@@ -4,7 +4,7 @@
 ## Features
 
 - **Stateless** — `compute_fk` takes joint commands, returns fresh poses. No mutable state, no setup step, safe to call concurrently.
-- **Code-generated (optional)** — ahead-of-time `compute_fk` per robot, no parsing or `Result` on the hot path.
+- **Code-generated (optional)** — ahead-of-time `compute_fk` per robot, no parsing or `Result` on the hot path, ~1.6-4.5x faster than runtime.
 - **Correctness-tested** — checked against [`k`](https://crates.io/crates/k) across randomized joint configs within limits.
 - **Named lookups** — command joints/links by name, never by assumed index.
 - **Descriptive errors** — malformed URDFs fail with a specific cause, not a panic.
@@ -14,7 +14,7 @@
 `galaw` has two APIs for computing forward kinematics, with different performance/flexibility tradeoffs:
 
 - **Runtime** — parses a URDF at runtime, works with *any* robot.
-- **Generated** — ahead-of-time code generation, fixed to *one* robot at compile time. ~2-14x faster, no parsing or `Result` handling on the hot path.
+- **Generated** — ahead-of-time code generation, fixed to *one* robot at compile time. ~1.6-4.5x faster, no parsing or `Result` handling on the hot path.
 
 ### Runtime
 
@@ -65,7 +65,9 @@ Full runnable version: [`examples/generated_fk.rs`](examples/generated_fk.rs) �
 
 ## Performance
 
-`galaw` outperforms [`k`](https://crates.io/crates/k) overall. Averaged (geometric mean) across the four benchmarked robots: `galaw-runtime` is **~3.3x** faster than `k`, and `galaw-generated` is **~9.4x** faster than `k`.
+`galaw` outperforms [`k`](https://crates.io/crates/k) overall. Averaged (geometric mean) across the four benchmarked robots: `galaw-runtime` is **~3.3x** faster than `k`, and `galaw-generated` is **~8.9x** faster than `k`.
+
+Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
 
 ![FK latency scaling](img/scaling_ns_per_call.png)
 ![FK throughput](img/throughput_mcalls.png)
