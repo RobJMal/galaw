@@ -84,7 +84,7 @@ fn generate_fk_fn_code(
     let rustfmt_skip_import_code: String = "#[rustfmt::skip]".to_string();
     codegen_output.push(rustfmt_skip_import_code);
     let import_code: String =
-        "use nalgebra::{{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3}};"
+        "use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3};"
             .to_string();
     codegen_output.push(import_code);
 
@@ -218,7 +218,7 @@ fn generate_fk_fn_code(
     let fn_return_code: String = format!("[{}]", ordered_link_vars.join(", "));
     codegen_output.push(fn_return_code);
 
-    let fn_closer_code: String = "}}".to_string();
+    let fn_closer_code: String = "}".to_string();
     codegen_output.push(fn_closer_code);
 
     Ok(codegen_output)
