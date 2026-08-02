@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use nalgebra::{Isometry3, Matrix6xX, Translation3, UnitQuaternion};
 
 use crate::{
@@ -73,6 +75,20 @@ impl GalawModel {
                 requested: target_link_idx, 
             }
             .into());
+        }
+
+        let child_to_joint: HashMap<usize, usize> = self
+            .joints
+            .iter()
+            .enumerate()
+            .map(|(joint_idx, joint)| (joint.child_link_idx, joint_idx))
+            .collect();
+
+        let mut current_link_idx = target_link_idx;
+        while let Some(&joint_idx) = child_to_joint.get(&current_link_idx) {
+            let joint = &self.joints[joint_idx];
+            current_link_idx = joint.parent_link_idx;
+            eprintln!("{}", joint.name)
         }
 
         Ok(Matrix6xX::zeros(self.num_actuated_joints))
