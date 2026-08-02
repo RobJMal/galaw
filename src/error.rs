@@ -146,4 +146,12 @@ pub enum KinematicsError {
         /// Number of joint commands actually given.
         num_input: usize,
     },
+    /// The link index requested is out of range for this model's links.
+    #[error("model has {num_links} lins, request index {requested}")]
+    LinkIdxOutOfBounds {
+        /// Number of links in the model.
+        num_links: usize,
+        /// The out-of-range index that was requested.
+        requested: usize,
+    }
 }

@@ -1,4 +1,4 @@
-use nalgebra::{Isometry3, Translation3, UnitQuaternion};
+use nalgebra::{Isometry3, Matrix6xX, Translation3, UnitQuaternion};
 
 use crate::{
     error::{GalawError, KinematicsError},
@@ -51,5 +51,31 @@ impl GalawModel {
         }
 
         Ok(links)
+    }
+
+    /// Computes Jacobian of a model
+    pub fn compute_jacobian(
+        &self,
+        joint_cmds: &[f64],
+        target_link_idx: usize,
+    )   -> Result<Matrix6xX<f64>, GalawError> {
+        if joint_cmds.len() != self.num_actuated_joints {
+            return Err(KinematicsError::JointCmdLengthMismatch { 
+                num_actuated: self.num_actuated_joints, 
+                num_input: joint_cmds.len() 
+            }
+            .into());
+        }
+
+        if target_link_idx >= self.links.len() {
+            return Err(KinematicsError::LinkIdxOutOfBounds { 
+                num_links: self.links.len(), 
+                requested: target_link_idx, 
+            }
+            .into());
+        }
+
+        Ok(Matrix6xX::zeros(self.num_actuated_joints))
+
     }
 }
