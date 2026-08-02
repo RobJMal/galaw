@@ -1,38 +1,15 @@
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
-use rand::{RngExt, SeedableRng};
+use rand::{SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use k;
 
 // Custom
-use galaw::{load_urdf, types::GalawModel};
+use galaw::{types::GalawModel};
 
-// TYPES
-type TestResult = Result<(), Box<dyn std::error::Error>>;
-
-// CONSTANTS
-const TEST_TOLERANCE: f64 = 1e-10;
-const RNG_SEED: u64 = 42;
-const NUM_POSES: usize = 128; // Number of random robot poses to test out
-
-// HELPERS
-fn assert_close(a: f64, b: f64) {
-    assert!(
-        (a - b).abs() < TEST_TOLERANCE,
-        "expected {b}, got {a} OR not within {TEST_TOLERANCE}"
-    );
-}
-
-/// Sets up the different kinematics model for testing.
-/// 
-/// Mainly done because k_chain is stateful and thus we'll need to 
-/// instantiate it for each test.
-fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
-    let galaw_model = load_urdf(urdf_path).unwrap();
-    let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
-    (galaw_model, k_chain)
-}
+mod common;
+use common::{TestResult, NUM_POSES, RNG_SEED, assert_close, setup_kinematic_models, zero_joint_cmds, random_joint_cmds};
 
 /// Compares galaw's Jacobian against k's for every link in the model at one pose.
 fn asssert_galaw_jacobian_matches_k(
@@ -67,28 +44,12 @@ fn asssert_galaw_jacobian_matches_k(
 fn check_jacobian_for_urdf(urdf_path: &str) -> TestResult {
     let (galaw_model, k_chain) = setup_kinematic_models(urdf_path);
 
-    let zero_joint_cmds: Vec<f64> = galaw_model
-        .joints
-        .iter()
-        .filter(|j| j.cmd_idx.is_some())
-        .map(|j| match (j.limit_lower, j.limit_upper) {
-            (Some(lower), Some(upper)) => 0.0_f64.clamp(lower, upper),
-            _ => 0.0,
-        })
-        .collect();
+    let zero_joint_cmds: Vec<f64> = zero_joint_cmds(&galaw_model);
     asssert_galaw_jacobian_matches_k(&galaw_model, &k_chain, &zero_joint_cmds)?;
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
-        let joint_cmds: Vec<f64> = galaw_model
-            .joints
-            .iter()
-            .filter(|j| j.cmd_idx.is_some())
-            .map(|j| match (j.limit_lower, j.limit_upper) {
-                (Some(lower), Some(upper)) => rng.random_range(lower..upper),
-                _ => rng.random_range(0.0..0.0),
-            })
-            .collect();
+        let joint_cmds: Vec<f64> = random_joint_cmds(&galaw_model, &mut rng);
         asssert_galaw_jacobian_matches_k(&galaw_model, &k_chain, &joint_cmds)?;
     }
 
