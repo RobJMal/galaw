@@ -3,7 +3,7 @@ use nalgebra::Vector6;
 
 #[test]
 fn jacobian_zero_pose_matches_hand_derivation() {
-    let model = crate::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf").unwrap();
+    let model = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf").unwrap();
     let forearm_idx = model.get_link_idx("forearm").unwrap();
     let joint_cmds = [0.0, 0.0];
     let jacobian = model.compute_jacobian(&joint_cmds, forearm_idx).unwrap();
