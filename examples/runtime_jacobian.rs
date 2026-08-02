@@ -11,14 +11,16 @@ fn main() -> Result<(), GalawError> {
     let elbow_idx = model
         .get_joint_idx("elbow_joint")
         .expect("elbow_joint exists in URDF");
-    joint_cmds[shoulder_idx] = 0.5;
-    joint_cmds[elbow_idx] = -0.3;
+    joint_cmds[shoulder_idx] = 0.0;
+    joint_cmds[elbow_idx] = 0.0;
 
     // Run Jacobian computation
     let forearm_idx = model
         .get_link_idx("forearm")
         .expect("forearm link exists in URDF");
-    let jacobian = model.compute_jacobian(&joint_cmds, forearm_idx);
+    let jacobian = model.compute_jacobian(&joint_cmds, forearm_idx)?;
+
+    println!("jacobian:\n{}", jacobian);
 
     Ok(())
 }
