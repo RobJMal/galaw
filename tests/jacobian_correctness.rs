@@ -23,8 +23,10 @@ fn asssert_galaw_jacobian_matches_k(
     k_chain.set_joint_positions(joint_cmds)?;
     k_chain.update_transforms();
 
+    let galaw_jacobian = galaw_model.compute_jacobian(&joint_cmds)?;
+
     for (target_link_idx, link) in galaw_model.links.iter().enumerate() {
-        let galaw_jacobian = galaw_model.compute_jacobian(&joint_cmds, target_link_idx)?;
+        let galaw_link_jacobian = &galaw_jacobian[target_link_idx];
 
         let k_node = k_chain
             .find_link(&link.name)
@@ -37,7 +39,7 @@ fn asssert_galaw_jacobian_matches_k(
                 .get_joint_idx(&k_joint.name)
                 .ok_or("joint missing from galaw model")?;
             for row in 0..6 {
-                assert_close(galaw_jacobian[(row, cmd_idx)], k_jacobian[(row, k_col_idx)]);
+                assert_close(galaw_link_jacobian[(row, cmd_idx)], k_jacobian[(row, k_col_idx)]);
             }
         }
     }

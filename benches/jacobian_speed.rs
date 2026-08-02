@@ -46,10 +46,8 @@ fn bench_jacobian(c: &mut Criterion) {
             |b, cmds| {
                 b.iter(|| {
                     for cmd in cmds {
-                        for link_idx in 0..galaw_model.links.len() {
-                            let out = galaw_model.compute_jacobian(black_box(cmd), link_idx).unwrap();
-                            black_box(out);
-                        }
+                        let out = galaw_model.compute_jacobian(black_box(cmd)).unwrap();
+                        black_box(out);
                     }
                 });
             },

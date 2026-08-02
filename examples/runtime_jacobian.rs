@@ -18,9 +18,9 @@ fn main() -> Result<(), GalawError> {
     let forearm_idx = model
         .get_link_idx("forearm")
         .expect("forearm link exists in URDF");
-    let jacobian = model.compute_jacobian(&joint_cmds, forearm_idx)?;
+    let jacobian = model.compute_jacobian(&joint_cmds)?;
 
-    println!("jacobian:\n{}", jacobian);
+    println!("jacobian:\n{}", jacobian[forearm_idx]);
 
     Ok(())
 }
