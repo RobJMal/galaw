@@ -1,5 +1,5 @@
 // Third-party
-use rand::{RngExt, SeedableRng};
+use rand::RngExt;
 use rand_chacha::ChaCha8Rng;
 
 // Custom
