@@ -153,5 +153,5 @@ pub enum KinematicsError {
         num_links: usize,
         /// The out-of-range index that was requested.
         requested: usize,
-    }
+    },
 }

@@ -9,7 +9,10 @@ use rand_chacha::ChaCha8Rng;
 use galaw::{load_urdf, types::GalawModel};
 
 mod common;
-use common::{TestResult, NUM_POSES, RNG_SEED, assert_close, setup_kinematic_models, zero_joint_cmds, random_joint_cmds};
+use common::{
+    NUM_POSES, RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
+    zero_joint_cmds,
+};
 
 /// Need to do this test because quaternions double-cover rotations (q=-q are same rotation)
 fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>) {

@@ -60,19 +60,19 @@ impl GalawModel {
         &self,
         joint_cmds: &[f64],
         target_link_idx: usize,
-    )   -> Result<Matrix6xX<f64>, GalawError> {
+    ) -> Result<Matrix6xX<f64>, GalawError> {
         if joint_cmds.len() != self.num_actuated_joints {
-            return Err(KinematicsError::JointCmdLengthMismatch { 
-                num_actuated: self.num_actuated_joints, 
-                num_input: joint_cmds.len() 
+            return Err(KinematicsError::JointCmdLengthMismatch {
+                num_actuated: self.num_actuated_joints,
+                num_input: joint_cmds.len(),
             }
             .into());
         }
 
         if target_link_idx >= self.links.len() {
-            return Err(KinematicsError::LinkIdxOutOfBounds { 
-                num_links: self.links.len(), 
-                requested: target_link_idx, 
+            return Err(KinematicsError::LinkIdxOutOfBounds {
+                num_links: self.links.len(),
+                requested: target_link_idx,
             }
             .into());
         }
@@ -91,8 +91,8 @@ impl GalawModel {
         let links = self.compute_fk(joint_cmds)?;
         let link_target_position = links[target_link_idx].translation;
 
-        // Starting from target_link, work backwards into the root and 
-        // identify the joints that affect the Jacobian. 
+        // Starting from target_link, work backwards into the root and
+        // identify the joints that affect the Jacobian.
         let mut current_link_idx = target_link_idx;
         while let Some(&joint_idx) = child_to_joint.get(&current_link_idx) {
             let joint = &self.joints[joint_idx];
@@ -105,9 +105,13 @@ impl GalawModel {
             // Position of the joint based after doing FK
             let joint_position = links[joint.child_link_idx].translation;
             // Direction of joint motion
-            let local_axis = joint.rot_axis.or(joint.lin_axis).expect("actuated joint has an axis");
-            let joint_motion_axis = (links[joint.child_link_idx].rotation * local_axis).into_inner();
-            
+            let local_axis = joint
+                .rot_axis
+                .or(joint.lin_axis)
+                .expect("actuated joint has an axis");
+            let joint_motion_axis =
+                (links[joint.child_link_idx].rotation * local_axis).into_inner();
+
             let (linear_vel, angular_vel) = if joint.rot_axis.is_some() {
                 (
                     joint_motion_axis.cross(&(link_target_position.vector - joint_position.vector)),
@@ -119,16 +123,20 @@ impl GalawModel {
 
             let cmd_idx = joint.cmd_idx.unwrap();
             jacobian.set_column(
-                cmd_idx, 
+                cmd_idx,
                 &Vector6::new(
-                    linear_vel.x, linear_vel.y, linear_vel.z,
-                    angular_vel.x, angular_vel.y, angular_vel.z)
+                    linear_vel.x,
+                    linear_vel.y,
+                    linear_vel.z,
+                    angular_vel.x,
+                    angular_vel.y,
+                    angular_vel.z,
+                ),
             );
 
             current_link_idx = joint.parent_link_idx;
         }
 
         Ok(jacobian)
-
     }
 }

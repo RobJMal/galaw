@@ -22,8 +22,8 @@ pub fn assert_close(a: f64, b: f64) {
 }
 
 /// Sets up the different kinematics model for testing.
-/// 
-/// Mainly done because k_chain is stateful and thus we'll need to 
+///
+/// Mainly done because k_chain is stateful and thus we'll need to
 /// instantiate it for each test.
 pub fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
     let galaw_model = load_urdf(urdf_path).unwrap();
@@ -44,7 +44,7 @@ pub fn zero_joint_cmds(model: &GalawModel) -> Vec<f64> {
         .collect()
 }
 
-/// Generates random joint commands. 
+/// Generates random joint commands.
 pub fn random_joint_cmds(model: &GalawModel, rng: &mut ChaCha8Rng) -> Vec<f64> {
     model
         .joints

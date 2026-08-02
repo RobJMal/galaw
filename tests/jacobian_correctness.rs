@@ -1,15 +1,18 @@
+use k;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
-use rand::{SeedableRng};
+use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use k;
 
 // Custom
-use galaw::{types::GalawModel};
+use galaw::types::GalawModel;
 
 mod common;
-use common::{TestResult, NUM_POSES, RNG_SEED, assert_close, setup_kinematic_models, zero_joint_cmds, random_joint_cmds};
+use common::{
+    NUM_POSES, RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
+    zero_joint_cmds,
+};
 
 /// Compares galaw's Jacobian against k's for every link in the model at one pose.
 fn asssert_galaw_jacobian_matches_k(
@@ -23,7 +26,9 @@ fn asssert_galaw_jacobian_matches_k(
     for (target_link_idx, link) in galaw_model.links.iter().enumerate() {
         let galaw_jacobian = galaw_model.compute_jacobian(&joint_cmds, target_link_idx)?;
 
-        let k_node = k_chain.find_link(&link.name).ok_or("link missing from k chain")?;
+        let k_node = k_chain
+            .find_link(&link.name)
+            .ok_or("link missing from k chain")?;
         let k_serial = k::SerialChain::from_end(k_node);
         let k_jacobian = k::jacobian(&k_serial);
 
