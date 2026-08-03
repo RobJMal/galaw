@@ -8,21 +8,11 @@ use rand_chacha::ChaCha8Rng;
 // Custom
 use galaw::{load_urdf, types::GalawModel};
 
-// TYPES
-type TestResult = Result<(), Box<dyn std::error::Error>>;
-
-// CONSTANTS
-const TEST_TOLERANCE: f64 = 1e-10;
-const RNG_SEED: u64 = 42;
-const NUM_POSES: usize = 128; // Number of random robot poses to test out
-
-// HELPERS
-fn assert_close(a: f64, b: f64) {
-    assert!(
-        (a - b).abs() < TEST_TOLERANCE,
-        "expected {b}, got {a} OR not within {TEST_TOLERANCE}"
-    );
-}
+mod common;
+use common::{
+    NUM_POSES, RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
+    zero_joint_cmds,
+};
 
 /// Need to do this test because quaternions double-cover rotations (q=-q are same rotation)
 fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>) {
@@ -73,13 +63,6 @@ fn assert_galaw_fk_matches_k(
     Ok(())
 }
 
-/// Because k_chain is stateful, cannot have it easily parallelized and need to instantiate it for each test
-fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
-    let galaw_robot_model = load_urdf(urdf_path).unwrap();
-    let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
-    (galaw_robot_model, k_chain)
-}
-
 /// Runs the full correctness check (zero pose + random poses) for one URDF.
 /// The joint count is read from the model, so this works for any robot.
 fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
@@ -90,29 +73,13 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
     // joints (symmetric ranges like [-π, π]) this is still exactly zero; for
     // joints whose range doesn't include zero (e.g. a hand's finger joints,
     // which can't fully straighten), it's the closest valid value instead.
-    let zero_cmd: Vec<f64> = galaw_model
-        .joints
-        .iter()
-        .filter(|j| j.cmd_idx.is_some())
-        .map(|j| match (j.limit_lower, j.limit_upper) {
-            (Some(lower), Some(upper)) => 0.0_f64.clamp(lower, upper),
-            _ => 0.0,
-        })
-        .collect();
-    assert_galaw_fk_matches_k(&galaw_model, &k_chain, &zero_cmd)?;
+    let zero_joint_cmd: Vec<f64> = zero_joint_cmds(&galaw_model);
+    assert_galaw_fk_matches_k(&galaw_model, &k_chain, &zero_joint_cmd)?;
 
     // Random poses within each joint's limits (deterministic via the seed).
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
-        let joint_cmds: Vec<f64> = galaw_model
-            .joints
-            .iter()
-            .filter(|j| j.cmd_idx.is_some())
-            .map(|j| match (j.limit_lower, j.limit_upper) {
-                (Some(lower), Some(upper)) => rng.random_range(lower..upper),
-                _ => rng.random_range(0.0..0.0),
-            })
-            .collect();
+        let joint_cmds: Vec<f64> = random_joint_cmds(&galaw_model, &mut rng);
         assert_galaw_fk_matches_k(&galaw_model, &k_chain, &joint_cmds)?;
     }
 

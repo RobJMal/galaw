@@ -46,6 +46,5 @@ path = "src/bin/codegen_fk.rs"
 bench = false
 
 [[bench]]
-name = "fk_speed"
+name = "jacobian_speed"
 harness = false
-
