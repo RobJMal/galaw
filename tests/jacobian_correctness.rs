@@ -1,4 +1,3 @@
-use k;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
@@ -79,7 +78,7 @@ fn asssert_galaw_jacobian_matches_k(
     k_chain.set_joint_positions(joint_cmds)?;
     k_chain.update_transforms();
 
-    let galaw_jacobian = galaw_model.compute_jacobian(&joint_cmds)?;
+    let galaw_jacobian = galaw_model.compute_jacobian(joint_cmds)?;
 
     for (target_link_idx, link) in galaw_model.links.iter().enumerate() {
         let galaw_link_jacobian = &galaw_jacobian[target_link_idx];
