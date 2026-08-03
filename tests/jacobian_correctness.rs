@@ -1,9 +1,9 @@
+use k;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use k;
 
 // Custom
 use galaw::types::GalawModel;
@@ -27,8 +27,8 @@ fn assert_close_fd(a: f64, b: f64) {
 }
 
 /// Compare's galaw's analytic Jacobian against a central-difference approximation.
-/// 
-/// Purpose is to check correctness without relying on external libraries. 
+///
+/// Purpose is to check correctness without relying on external libraries.
 fn assert_galaw_jacobian_matches_finite_difference(
     galaw_model: &GalawModel,
     joint_cmds: &[f64],
@@ -36,7 +36,9 @@ fn assert_galaw_jacobian_matches_finite_difference(
     let jacobians = galaw_model.compute_jacobian(joint_cmds)?;
 
     for joint in &galaw_model.joints {
-        let Some(cmd_idx) = joint.cmd_idx else {continue};
+        let Some(cmd_idx) = joint.cmd_idx else {
+            continue;
+        };
 
         let mut plus = joint_cmds.to_vec();
         plus[cmd_idx] += FD_EPS;
@@ -51,7 +53,7 @@ fn assert_galaw_jacobian_matches_finite_difference(
                 - links_minus[link_idx].translation.vector)
                 / (2.0 * FD_EPS);
 
-            let relative_rotation = 
+            let relative_rotation =
                 links_plus[link_idx].rotation * links_minus[link_idx].rotation.inverse();
             let angular = relative_rotation.scaled_axis() / (2.0 * FD_EPS);
 
@@ -93,7 +95,10 @@ fn asssert_galaw_jacobian_matches_k(
                 .get_joint_idx(&k_joint.name)
                 .ok_or("joint missing from galaw model")?;
             for row in 0..6 {
-                assert_close(galaw_link_jacobian[(row, cmd_idx)], k_jacobian[(row, k_col_idx)]);
+                assert_close(
+                    galaw_link_jacobian[(row, cmd_idx)],
+                    k_jacobian[(row, k_col_idx)],
+                );
             }
         }
     }
@@ -132,7 +137,7 @@ fn check_jacobian_for_urdf(urdf_path: &str) -> TestResult {
     Ok(())
 }
 
-/// Generates Jacobian finite difference tests 
+/// Generates Jacobian finite difference tests
 macro_rules! jacobian_fd_tests {
     ($($name:ident => $path:expr),* $(,)?) => {
         $(

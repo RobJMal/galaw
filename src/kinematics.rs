@@ -88,12 +88,17 @@ impl GalawModel {
                 let cmd_idx = joint.cmd_idx.unwrap();
 
                 let joint_position = links[joint.child_link_idx].translation;
-                let local_axis = joint.rot_axis.or(joint.lin_axis).expect("actuated joint has an axis");
-                let joint_motion_axis = (links[joint.child_link_idx].rotation * local_axis).into_inner();
+                let local_axis = joint
+                    .rot_axis
+                    .or(joint.lin_axis)
+                    .expect("actuated joint has an axis");
+                let joint_motion_axis =
+                    (links[joint.child_link_idx].rotation * local_axis).into_inner();
 
                 let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
                     (
-                        joint_motion_axis.cross(&(joint_position_target.vector - joint_position.vector)),
+                        joint_motion_axis
+                            .cross(&(joint_position_target.vector - joint_position.vector)),
                         joint_motion_axis,
                     )
                 } else {
@@ -103,8 +108,7 @@ impl GalawModel {
                 jacobians[link_idx].set_column(
                     cmd_idx,
                     &Vector6::new(
-                        lin_vel.x, lin_vel.y, lin_vel.z,
-                        ang_vel.x, ang_vel.y, ang_vel.z,
+                        lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
                     ),
                 );
             }

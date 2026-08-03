@@ -1,5 +1,4 @@
-/// Bechmarks the Jacobian computations. 
-
+/// Bechmarks the Jacobian computations.
 use std::hint::black_box;
 
 // Third-party
@@ -7,7 +6,7 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-// Custom 
+// Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
 
 // ---- CONSTANTS ----
@@ -41,8 +40,8 @@ fn bench_jacobian(c: &mut Criterion) {
 
         // ---- galaw-runtime ----
         group.bench_with_input(
-            BenchmarkId::new("galaw-runtime", galaw_model.joints.len()), 
-            &joint_cmds, 
+            BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
+            &joint_cmds,
             |b, cmds| {
                 b.iter(|| {
                     for cmd in cmds {
