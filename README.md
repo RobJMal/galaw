@@ -37,7 +37,7 @@ fn main() -> Result<(), GalawError> {
 }
 ```
 
-Full runnable version: [`examples/basic_fk.rs`](examples/basic_fk.rs) — `cargo run --example basic_fk`
+Full runnable version: [`examples/runtime_fk.rs`](examples/runtime_fk.rs) — `cargo run --example runtime_fk`
 
 ### Generated
 
