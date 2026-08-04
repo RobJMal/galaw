@@ -346,7 +346,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         |s| (s.mean, s.lo, s.hi),
         |x| x.round(),
     )?;
-    let p1 = out.join("scaling_ns_per_call.png");
+    let p1 = out.join("fk_scaling_ns_per_call.png");
     renderer.save_format(
         ImageFormat::Png,
         &latency,
@@ -363,7 +363,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         move |s| (mcps(s.mean), mcps(s.hi), mcps(s.lo)),
         |x| (x * 100.0).round() / 100.0,
     )?;
-    let p2 = out.join("throughput_mcalls.png");
+    let p2 = out.join("fk_throughput_mcalls.png");
     renderer.save_format(
         ImageFormat::Png,
         &throughput,
