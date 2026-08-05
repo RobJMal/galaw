@@ -225,7 +225,6 @@ fn generate_fk_fn_code(
 }
 
 fn generate_jacobian_fn_code(
-    urdf_path: &String,
     galaw_model: &GalawModel,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut codegen_output: Vec<String> = Vec::new();
@@ -322,7 +321,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let galaw_model = load_urdf(urdf_path)?;
 
     let mut codegen_output = generate_fk_fn_code(urdf_path, &galaw_model)?;
-    codegen_output.extend(generate_jacobian_fn_code(urdf_path, &galaw_model)?);
+    codegen_output.extend(generate_jacobian_fn_code(&galaw_model)?);
     let codegen: String = codegen_output.join("\n");
 
     // Creating directory if it's missing
