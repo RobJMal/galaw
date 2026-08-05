@@ -235,6 +235,9 @@ fn generate_jacobian_fn_code(
         urdf_path,
     ));
 
+    // Imports
+    codegen_output.push("use nalgebra::{SMatrix, Vector6};".to_string());
+
     // Including function attributes
     codegen_output.push("#[allow(non_snake_case)]".to_string());
     codegen_output.push("#[rustfmt::skip]".to_string());
@@ -248,7 +251,67 @@ fn generate_jacobian_fn_code(
     ));
     codegen_output.push("let links = compute_fk(joint_cmds);".to_string());
 
-    // TODO: per-link walk + column-fill goes here
+    // ---- Main logic ----
+    // Each actuated joint's axis in world frame, computed once regardless
+    // of how many links it's an ancestor of. 
+    for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
+        let Some(_) = joint.cmd_idx else { continue };
+        let local_axis = joint
+            .rot_axis
+            .or(joint.lin_axis)
+            .expect("actuated joint has an axis")
+            .into_inner();
+        codegen_output.push(format!(
+            "let axis_world_{0} = links[{1}].rotation * Vector3::new({2:?}, {3:?}, {4:?});",
+            joint_idx, joint.child_link_idx, local_axis.x, local_axis.y, local_axis.z
+        ));
+    }
+
+    // Each link's ancestor joints
+    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); galaw_model.links.len()];
+    for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
+        let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
+        if joint.cmd_idx.is_some() {
+            ancestors.push(joint_idx);
+        }
+        ancestors_by_link[joint.child_link_idx] = ancestors;
+    }
+
+    // Jacobian vars declaration 
+    let mut jacobian_vars: Vec<String> = Vec::with_capacity(galaw_model.links.len());
+    for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
+        let jacobian_var = format!("jacobian_{}", galaw_model.links[link_idx].name);
+        codegen_output.push(format!(
+            "let mut {} = SMatrix::<f64, 6, {}>::zeros();",
+            jacobian_var, galaw_model.num_actuated_joints
+        ));
+
+        // Filling out the matrix
+        for &joint_idx in ancestors {
+            let joint = &galaw_model.joints[joint_idx];
+            let cmd_idx = joint.cmd_idx.unwrap();
+
+            let (lin_expr, ang_expr) = if joint.rot_axis.is_some() {
+                (
+                    format!(
+                        "axis_world_{0}.cross(&(links[{1}].translation.vector - links[{2}].translation.vector))",
+                        joint_idx, link_idx, joint.child_link_idx
+                    ),
+                    format!("axis_world_{0}", joint_idx),
+                )
+            } else {
+                (format!("axis_world_{0}", joint_idx), "Vector3::zeros()".to_string())
+            };
+
+            codegen_output.push(format!(
+                "{{ let lin = {lin_expr}; let ang = {ang_expr}; {jacobian_var}.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
+            ));
+        }
+
+        jacobian_vars.push(jacobian_var);
+    }
+
+    codegen_output.push(format!("[{}]", jacobian_vars.join(", ")));
 
     // function closing bracket
     codegen_output.push("}".to_string());
