@@ -1,7 +1,7 @@
 [package]
 name = "galaw"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 rust-version = "1.85"
 description = "Kinematics library for robotics, with a runtime API and an ahead-of-time code-generated API"
 license = "MIT OR Apache-2.0"
