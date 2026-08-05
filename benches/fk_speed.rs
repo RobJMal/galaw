@@ -39,6 +39,10 @@ fn system_specs() -> String {
     // total_memory() is BYTES in sysinfo 0.39 (older versions returned KB).
     let mem_gb = sys.total_memory() as f64 / 1e9;
 
+    // Read at runtime rather than hardcoded, since target-cpu=native isn't
+    // baked into .cargo/config.toml anymore (broke the CI pipeline)
+    let rustflags = std::env::var("RUSTFLAGS").unwrap_or_else(|_| "(none)".to_string());
+
     format!(
         "=== System specs ===\n\
          host:   {host}\n\
@@ -46,7 +50,7 @@ fn system_specs() -> String {
          kernel: {kernel}\n\
          cpu:    {cpu} @ {freq_mhz} MHz ({logical_cores} logical cores)\n\
          memory: {mem_gb:.1} GB\n\
-         rustflags: target-cpu=native\n\
+         rustflags: {rustflags}\n\
          ===================="
     )
 }
