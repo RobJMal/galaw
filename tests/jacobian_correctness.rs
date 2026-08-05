@@ -1,9 +1,9 @@
+use nalgebra::SMatrix;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use nalgebra::SMatrix;
 
 // Custom
 use galaw::types::GalawModel;

@@ -247,7 +247,7 @@ fn generate_jacobian_fn_code(
 
     // ---- Main logic ----
     // Each actuated joint's axis in world frame, computed once regardless
-    // of how many links it's an ancestor of. 
+    // of how many links it's an ancestor of.
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let Some(_) = joint.cmd_idx else { continue };
         let local_axis = joint
@@ -271,12 +271,12 @@ fn generate_jacobian_fn_code(
         ancestors_by_link[joint.child_link_idx] = ancestors;
     }
 
-    // Jacobian vars declaration 
+    // Jacobian vars declaration
     let mut jacobian_vars: Vec<String> = Vec::with_capacity(galaw_model.links.len());
     for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
         let jacobian_var = format!("jacobian_{}", galaw_model.links[link_idx].name);
-        
-        let mut_keyword = if ancestors.is_empty() { "" } else { "mut "};
+
+        let mut_keyword = if ancestors.is_empty() { "" } else { "mut " };
         codegen_output.push(format!(
             "let {}{} = SMatrix::<f64, 6, {}>::zeros();",
             mut_keyword, jacobian_var, galaw_model.num_actuated_joints
@@ -296,7 +296,10 @@ fn generate_jacobian_fn_code(
                     format!("axis_world_{0}", joint_idx),
                 )
             } else {
-                (format!("axis_world_{0}", joint_idx), "Vector3::zeros()".to_string())
+                (
+                    format!("axis_world_{0}", joint_idx),
+                    "Vector3::zeros()".to_string(),
+                )
             };
 
             codegen_output.push(format!(

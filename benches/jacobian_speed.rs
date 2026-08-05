@@ -15,7 +15,7 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
 
-/// Benchmarks a codegen'd `compute_jacobian` under the "galaw-generated" id. 
+/// Benchmarks a codegen'd `compute_jacobian` under the "galaw-generated" id.
 fn bench_generated_jacobian<const N: usize, const M: usize>(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id: usize,
