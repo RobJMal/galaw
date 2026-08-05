@@ -107,3 +107,213 @@ let link_inspection_payload_microphone = link_inspection_payload_head * Isometry
 let link_inspection_payload_camera_default = link_inspection_payload_mount * Translation3::new(0.0, 0.0, 0.175);
 [link_base, link_base_inertia, link_body_top, link_top_shell, link_bottom_shell, link_face_front, link_depth_camera_front_lower_camera, link_depth_camera_front_lower_camera_parent, link_depth_camera_front_lower_depth_frame, link_depth_camera_front_lower_depth_optical_frame, link_depth_camera_front_upper_camera, link_depth_camera_front_upper_camera_parent, link_depth_camera_front_upper_depth_frame, link_depth_camera_front_upper_depth_optical_frame, link_wide_angle_camera_front_camera, link_wide_angle_camera_front_camera_parent, link_face_rear, link_depth_camera_rear_lower_camera, link_depth_camera_rear_lower_camera_parent, link_depth_camera_rear_lower_depth_frame, link_depth_camera_rear_lower_depth_optical_frame, link_depth_camera_rear_upper_camera, link_depth_camera_rear_upper_camera_parent, link_depth_camera_rear_upper_depth_frame, link_depth_camera_rear_upper_depth_optical_frame, link_wide_angle_camera_rear_camera, link_wide_angle_camera_rear_camera_parent, link_face_shell_front, link_face_shell_rear, link_battery, link_docking_socket, link_hbc_receiver, link_imu_link, link_depth_camera_left_camera, link_depth_camera_left_camera_parent, link_depth_camera_left_depth_frame, link_depth_camera_left_depth_optical_frame, link_depth_camera_right_camera, link_depth_camera_right_camera_parent, link_depth_camera_right_depth_frame, link_depth_camera_right_depth_optical_frame, link_lidar_parent, link_lidar, link_LF_HAA_drive, link_LF_HIP, link_LF_hip_fixed, link_LF_HFE_output, link_LF_HFE_drive, link_LF_THIGH, link_LF_thigh_fixed, link_LF_KFE_drive, link_LF_SHANK, link_LF_shank_fixed, link_LF_FOOT, link_RF_HAA_drive, link_RF_HIP, link_RF_hip_fixed, link_RF_HFE_output, link_RF_HFE_drive, link_RF_THIGH, link_RF_thigh_fixed, link_RF_KFE_drive, link_RF_SHANK, link_RF_shank_fixed, link_RF_FOOT, link_LH_HAA_drive, link_LH_HIP, link_LH_hip_fixed, link_LH_HFE_output, link_LH_HFE_drive, link_LH_THIGH, link_LH_thigh_fixed, link_LH_KFE_drive, link_LH_SHANK, link_LH_shank_fixed, link_LH_FOOT, link_RH_HAA_drive, link_RH_HIP, link_RH_hip_fixed, link_RH_HFE_output, link_RH_HFE_drive, link_RH_THIGH, link_RH_thigh_fixed, link_RH_KFE_drive, link_RH_SHANK, link_RH_shank_fixed, link_RH_FOOT, link_inspection_payload_mount, link_inspection_payload_pan, link_inspection_payload_tilt, link_inspection_payload_head, link_inspection_payload_camera, link_inspection_payload_thermal_camera, link_inspection_payload_light, link_inspection_payload_microphone, link_inspection_payload_camera_default]
 }
+use nalgebra::{SMatrix, Vector6};
+#[allow(non_snake_case)]
+#[rustfmt::skip]
+pub fn compute_jacobian(joint_cmds: &[f64; 14]) -> [SMatrix<f64, 6, 14>; 96] {
+let links = compute_fk(joint_cmds);
+let axis_world_43 = links[44].rotation * Vector3::new(1.0, 0.0, 0.0);
+let axis_world_46 = links[48].rotation * Vector3::new(-1.0, 0.0, 0.0);
+let axis_world_50 = links[51].rotation * Vector3::new(1.0, 0.0, 0.0);
+let axis_world_54 = links[55].rotation * Vector3::new(1.0, 0.0, 0.0);
+let axis_world_57 = links[59].rotation * Vector3::new(1.0, 0.0, 0.0);
+let axis_world_61 = links[62].rotation * Vector3::new(-1.0, 0.0, 0.0);
+let axis_world_65 = links[66].rotation * Vector3::new(-1.0, 0.0, 0.0);
+let axis_world_68 = links[70].rotation * Vector3::new(-1.0, 0.0, 0.0);
+let axis_world_72 = links[73].rotation * Vector3::new(1.0, 0.0, 0.0);
+let axis_world_76 = links[77].rotation * Vector3::new(-1.0, 0.0, 0.0);
+let axis_world_79 = links[81].rotation * Vector3::new(1.0, 0.0, 0.0);
+let axis_world_83 = links[84].rotation * Vector3::new(-1.0, 0.0, 0.0);
+let axis_world_87 = links[88].rotation * Vector3::new(0.0, 0.0, 1.0);
+let axis_world_88 = links[89].rotation * Vector3::new(0.0, 1.0, 0.0);
+let mut jacobian_base = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_base_inertia = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_body_top = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_top_shell = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_bottom_shell = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_face_front = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_lower_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_lower_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_lower_depth_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_lower_depth_optical_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_upper_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_upper_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_upper_depth_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_front_upper_depth_optical_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_wide_angle_camera_front_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_wide_angle_camera_front_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_face_rear = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_lower_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_lower_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_lower_depth_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_lower_depth_optical_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_upper_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_upper_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_upper_depth_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_rear_upper_depth_optical_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_wide_angle_camera_rear_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_wide_angle_camera_rear_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_face_shell_front = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_face_shell_rear = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_battery = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_docking_socket = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_hbc_receiver = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_imu_link = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_left_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_left_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_left_depth_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_left_depth_optical_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_right_camera = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_right_camera_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_right_depth_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_depth_camera_right_depth_optical_frame = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_lidar_parent = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_lidar = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_LF_HAA_drive = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_LF_HIP = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[44].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_HIP.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_hip_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[45].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_hip_fixed.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_HFE_output = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[46].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_HFE_output.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_HFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[47].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_HFE_drive.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[47].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_HFE_drive.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_THIGH = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[48].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_THIGH.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[48].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_THIGH.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_thigh_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[49].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_thigh_fixed.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[49].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_thigh_fixed.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_KFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[50].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_KFE_drive.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[50].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_KFE_drive.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_SHANK = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[51].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_SHANK.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[51].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_SHANK.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_50.cross(&(links[51].translation.vector - links[51].translation.vector)); let ang = axis_world_50; jacobian_LF_SHANK.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_shank_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[52].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_shank_fixed.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[52].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_shank_fixed.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_50.cross(&(links[52].translation.vector - links[51].translation.vector)); let ang = axis_world_50; jacobian_LF_shank_fixed.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LF_FOOT = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_43.cross(&(links[53].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jacobian_LF_FOOT.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(links[53].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jacobian_LF_FOOT.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_50.cross(&(links[53].translation.vector - links[51].translation.vector)); let ang = axis_world_50; jacobian_LF_FOOT.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_HAA_drive = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_RF_HIP = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[55].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_HIP.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_hip_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[56].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_hip_fixed.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_HFE_output = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[57].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_HFE_output.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_HFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[58].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_HFE_drive.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[58].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_HFE_drive.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_THIGH = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[59].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_THIGH.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[59].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_THIGH.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_thigh_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[60].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_thigh_fixed.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[60].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_thigh_fixed.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_KFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[61].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_KFE_drive.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[61].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_KFE_drive.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_SHANK = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[62].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_SHANK.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[62].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_SHANK.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_61.cross(&(links[62].translation.vector - links[62].translation.vector)); let ang = axis_world_61; jacobian_RF_SHANK.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_shank_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[63].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_shank_fixed.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[63].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_shank_fixed.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_61.cross(&(links[63].translation.vector - links[62].translation.vector)); let ang = axis_world_61; jacobian_RF_shank_fixed.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RF_FOOT = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_54.cross(&(links[64].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jacobian_RF_FOOT.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(links[64].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jacobian_RF_FOOT.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_61.cross(&(links[64].translation.vector - links[62].translation.vector)); let ang = axis_world_61; jacobian_RF_FOOT.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_HAA_drive = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_LH_HIP = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[66].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_HIP.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_hip_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[67].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_hip_fixed.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_HFE_output = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[68].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_HFE_output.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_HFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[69].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_HFE_drive.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[69].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_HFE_drive.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_THIGH = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[70].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_THIGH.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[70].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_THIGH.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_thigh_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[71].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_thigh_fixed.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[71].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_thigh_fixed.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_KFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[72].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_KFE_drive.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[72].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_KFE_drive.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_SHANK = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[73].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_SHANK.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[73].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_SHANK.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_72.cross(&(links[73].translation.vector - links[73].translation.vector)); let ang = axis_world_72; jacobian_LH_SHANK.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_shank_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[74].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_shank_fixed.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[74].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_shank_fixed.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_72.cross(&(links[74].translation.vector - links[73].translation.vector)); let ang = axis_world_72; jacobian_LH_shank_fixed.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_LH_FOOT = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_65.cross(&(links[75].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jacobian_LH_FOOT.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(links[75].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jacobian_LH_FOOT.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_72.cross(&(links[75].translation.vector - links[73].translation.vector)); let ang = axis_world_72; jacobian_LH_FOOT.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_HAA_drive = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_RH_HIP = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[77].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_HIP.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_hip_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[78].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_hip_fixed.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_HFE_output = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[79].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_HFE_output.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_HFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[80].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_HFE_drive.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[80].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_HFE_drive.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_THIGH = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[81].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_THIGH.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[81].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_THIGH.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_thigh_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[82].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_thigh_fixed.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[82].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_thigh_fixed.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_KFE_drive = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[83].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_KFE_drive.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[83].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_KFE_drive.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_SHANK = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[84].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_SHANK.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[84].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_SHANK.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_83.cross(&(links[84].translation.vector - links[84].translation.vector)); let ang = axis_world_83; jacobian_RH_SHANK.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_shank_fixed = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[85].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_shank_fixed.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[85].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_shank_fixed.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_83.cross(&(links[85].translation.vector - links[84].translation.vector)); let ang = axis_world_83; jacobian_RH_shank_fixed.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_RH_FOOT = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_76.cross(&(links[86].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jacobian_RH_FOOT.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(links[86].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jacobian_RH_FOOT.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_83.cross(&(links[86].translation.vector - links[84].translation.vector)); let ang = axis_world_83; jacobian_RH_FOOT.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_mount = SMatrix::<f64, 6, 14>::zeros();
+let mut jacobian_inspection_payload_pan = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[88].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_pan.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_tilt = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[89].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_tilt.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(links[89].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jacobian_inspection_payload_tilt.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_head = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[90].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_head.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(links[90].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jacobian_inspection_payload_head.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_camera = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[91].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_camera.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(links[91].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jacobian_inspection_payload_camera.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_thermal_camera = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[92].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_thermal_camera.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(links[92].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jacobian_inspection_payload_thermal_camera.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_light = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[93].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_light.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(links[93].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jacobian_inspection_payload_light.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_microphone = SMatrix::<f64, 6, 14>::zeros();
+{ let lin = axis_world_87.cross(&(links[94].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jacobian_inspection_payload_microphone.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(links[94].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jacobian_inspection_payload_microphone.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_inspection_payload_camera_default = SMatrix::<f64, 6, 14>::zeros();
+[jacobian_base, jacobian_base_inertia, jacobian_body_top, jacobian_top_shell, jacobian_bottom_shell, jacobian_face_front, jacobian_depth_camera_front_lower_camera, jacobian_depth_camera_front_lower_camera_parent, jacobian_depth_camera_front_lower_depth_frame, jacobian_depth_camera_front_lower_depth_optical_frame, jacobian_depth_camera_front_upper_camera, jacobian_depth_camera_front_upper_camera_parent, jacobian_depth_camera_front_upper_depth_frame, jacobian_depth_camera_front_upper_depth_optical_frame, jacobian_wide_angle_camera_front_camera, jacobian_wide_angle_camera_front_camera_parent, jacobian_face_rear, jacobian_depth_camera_rear_lower_camera, jacobian_depth_camera_rear_lower_camera_parent, jacobian_depth_camera_rear_lower_depth_frame, jacobian_depth_camera_rear_lower_depth_optical_frame, jacobian_depth_camera_rear_upper_camera, jacobian_depth_camera_rear_upper_camera_parent, jacobian_depth_camera_rear_upper_depth_frame, jacobian_depth_camera_rear_upper_depth_optical_frame, jacobian_wide_angle_camera_rear_camera, jacobian_wide_angle_camera_rear_camera_parent, jacobian_face_shell_front, jacobian_face_shell_rear, jacobian_battery, jacobian_docking_socket, jacobian_hbc_receiver, jacobian_imu_link, jacobian_depth_camera_left_camera, jacobian_depth_camera_left_camera_parent, jacobian_depth_camera_left_depth_frame, jacobian_depth_camera_left_depth_optical_frame, jacobian_depth_camera_right_camera, jacobian_depth_camera_right_camera_parent, jacobian_depth_camera_right_depth_frame, jacobian_depth_camera_right_depth_optical_frame, jacobian_lidar_parent, jacobian_lidar, jacobian_LF_HAA_drive, jacobian_LF_HIP, jacobian_LF_hip_fixed, jacobian_LF_HFE_output, jacobian_LF_HFE_drive, jacobian_LF_THIGH, jacobian_LF_thigh_fixed, jacobian_LF_KFE_drive, jacobian_LF_SHANK, jacobian_LF_shank_fixed, jacobian_LF_FOOT, jacobian_RF_HAA_drive, jacobian_RF_HIP, jacobian_RF_hip_fixed, jacobian_RF_HFE_output, jacobian_RF_HFE_drive, jacobian_RF_THIGH, jacobian_RF_thigh_fixed, jacobian_RF_KFE_drive, jacobian_RF_SHANK, jacobian_RF_shank_fixed, jacobian_RF_FOOT, jacobian_LH_HAA_drive, jacobian_LH_HIP, jacobian_LH_hip_fixed, jacobian_LH_HFE_output, jacobian_LH_HFE_drive, jacobian_LH_THIGH, jacobian_LH_thigh_fixed, jacobian_LH_KFE_drive, jacobian_LH_SHANK, jacobian_LH_shank_fixed, jacobian_LH_FOOT, jacobian_RH_HAA_drive, jacobian_RH_HIP, jacobian_RH_hip_fixed, jacobian_RH_HFE_output, jacobian_RH_HFE_drive, jacobian_RH_THIGH, jacobian_RH_thigh_fixed, jacobian_RH_KFE_drive, jacobian_RH_SHANK, jacobian_RH_shank_fixed, jacobian_RH_FOOT, jacobian_inspection_payload_mount, jacobian_inspection_payload_pan, jacobian_inspection_payload_tilt, jacobian_inspection_payload_head, jacobian_inspection_payload_camera, jacobian_inspection_payload_thermal_camera, jacobian_inspection_payload_light, jacobian_inspection_payload_microphone, jacobian_inspection_payload_camera_default]
+}

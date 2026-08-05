@@ -15,3 +15,23 @@ let link_link2 = link_link1 * Translation3::new(0.0, 0.0, 0.5) * { let (s, c) = 
 let link_ee_link = link_link2 * Translation3::new(0.25, 0.0, 0.0) * Translation3::from(Vector3::new(1.0, 0.0, 0.0) * joint_cmds[2]);
 [link_base_link, link_link1, link_link2, link_ee_link]
 }
+use nalgebra::{SMatrix, Vector6};
+#[allow(non_snake_case)]
+#[rustfmt::skip]
+pub fn compute_jacobian(joint_cmds: &[f64; 3]) -> [SMatrix<f64, 6, 3>; 4] {
+let links = compute_fk(joint_cmds);
+let axis_world_0 = links[1].rotation * Vector3::new(0.0, 0.0, 1.0);
+let axis_world_1 = links[2].rotation * Vector3::new(0.0, 1.0, 0.0);
+let axis_world_2 = links[3].rotation * Vector3::new(1.0, 0.0, 0.0);
+let mut jacobian_base_link = SMatrix::<f64, 6, 3>::zeros();
+let mut jacobian_link1 = SMatrix::<f64, 6, 3>::zeros();
+{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_link1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_link2 = SMatrix::<f64, 6, 3>::zeros();
+{ let lin = axis_world_0.cross(&(links[2].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_link2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_link2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+let mut jacobian_ee_link = SMatrix::<f64, 6, 3>::zeros();
+{ let lin = axis_world_0.cross(&(links[3].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_ee_link.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[3].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_ee_link.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2; let ang = Vector3::zeros(); jacobian_ee_link.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+[jacobian_base_link, jacobian_link1, jacobian_link2, jacobian_ee_link]
+}
