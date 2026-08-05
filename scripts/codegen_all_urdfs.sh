@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs `codegen_fk` against every URDF under assets/urdf/, writing generated
+# Runs `codegen_kinematics` against every URDF under assets/urdf/, writing generated
 # FK code into src/generated/. Continues past failures and reports a summary,
-# since not every robot is expected to succeed yet (see codegen_fk.rs's
+# since not every robot is expected to succeed yet (see codegen_kinematics.rs's
 # hardcoded "base_link" root-link assumption).
 set -euo pipefail
 
@@ -36,9 +36,9 @@ macro_rules! for_each_generated_robot {
 }
 EOF
 
-echo "==> building codegen_fk"
-cargo build --bin codegen_fk
-BIN="target/debug/codegen_fk"
+echo "==> building codegen_kinematics"
+cargo build --bin codegen_kinematics
+BIN="target/debug/codegen_kinematics"
 
 ok_count=0
 fail_count=0

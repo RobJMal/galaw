@@ -45,7 +45,7 @@ Ahead of time, generate fixed FK code for a specific robot (code for the robots 
 
 ```
 # 1st arg: urdf_path, 2nd arg: out_path
-cargo run --bin codegen_fk -- assets/urdf/custom/simple_arm_2dof.urdf src/generated/simple_arm_2dof.rs
+cargo run --bin codegen_kinematics -- assets/urdf/custom/simple_arm_2dof.urdf src/generated/simple_arm_2dof.rs
 ```
 
 Then call the generated function directly — no `GalawModel`, no `Result`, no parsing at call time:

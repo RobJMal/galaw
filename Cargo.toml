@@ -41,8 +41,8 @@ k = "0.32.0"
 # implicit test/bench harness by default. Declaring them explicitly (still at
 # their auto-discovered paths) is the only way to override that per-binary.
 [[bin]]
-name = "codegen_fk"
-path = "src/bin/codegen_fk.rs"
+name = "codegen_kinematics"
+path = "src/bin/codegen_kinematics.rs"
 bench = false
 
 [[bench]]
