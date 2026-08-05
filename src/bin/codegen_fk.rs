@@ -275,9 +275,11 @@ fn generate_jacobian_fn_code(
     let mut jacobian_vars: Vec<String> = Vec::with_capacity(galaw_model.links.len());
     for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
         let jacobian_var = format!("jacobian_{}", galaw_model.links[link_idx].name);
+        
+        let mut_keyword = if ancestors.is_empty() { "" } else { "mut "};
         codegen_output.push(format!(
-            "let mut {} = SMatrix::<f64, 6, {}>::zeros();",
-            jacobian_var, galaw_model.num_actuated_joints
+            "let {}{} = SMatrix::<f64, 6, {}>::zeros();",
+            mut_keyword, jacobian_var, galaw_model.num_actuated_joints
         ));
 
         // Filling out the matrix

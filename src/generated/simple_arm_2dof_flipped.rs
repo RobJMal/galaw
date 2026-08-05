@@ -26,6 +26,6 @@ let mut jacobian_forearm = SMatrix::<f64, 6, 2>::zeros();
 { let lin = axis_world_1.cross(&(links[0].translation.vector - links[0].translation.vector)); let ang = axis_world_1; jacobian_forearm.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 let mut jacobian_upper_arm = SMatrix::<f64, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_upper_arm.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
+let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
 [jacobian_forearm, jacobian_upper_arm, jacobian_base_link]
 }

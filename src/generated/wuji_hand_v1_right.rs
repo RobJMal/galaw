@@ -62,7 +62,7 @@ let axis_world_20 = links[21].rotation * Vector3::new(0.0, 1.0, 0.0);
 let axis_world_21 = links[22].rotation * Vector3::new(0.0, 1.0, 0.0);
 let axis_world_22 = links[23].rotation * Vector3::new(0.0, 1.0, 0.0);
 let axis_world_23 = links[24].rotation * Vector3::new(0.0, 1.0, 0.0);
-let mut jacobian_right_palm_link = SMatrix::<f64, 6, 20>::zeros();
+let jacobian_right_palm_link = SMatrix::<f64, 6, 20>::zeros();
 let mut jacobian_right_finger1_link1 = SMatrix::<f64, 6, 20>::zeros();
 { let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 let mut jacobian_right_finger1_link2 = SMatrix::<f64, 6, 20>::zeros();

@@ -33,8 +33,8 @@ let axis_world_4 = links[5].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_5 = links[6].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_6 = links[7].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_7 = links[8].rotation * Vector3::new(0.0, 0.0, 1.0);
-let mut jacobian_world = SMatrix::<f64, 6, 7>::zeros();
-let mut jacobian_base_link = SMatrix::<f64, 6, 7>::zeros();
+let jacobian_world = SMatrix::<f64, 6, 7>::zeros();
+let jacobian_base_link = SMatrix::<f64, 6, 7>::zeros();
 let mut jacobian_link1 = SMatrix::<f64, 6, 7>::zeros();
 { let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_link1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 let mut jacobian_link2 = SMatrix::<f64, 6, 7>::zeros();

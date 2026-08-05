@@ -83,30 +83,30 @@ let axis_world_42 = links[49].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_48 = links[41].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_49 = links[42].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_50 = links[43].rotation * Vector3::new(0.0, 0.0, 1.0);
-let mut jacobian_base_footprint = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_base_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_5_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_5_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_4_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_4_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_3_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_3_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_2_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_2_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_1_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_1_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_0_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_line_sensor_0_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_head_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_lidar_right_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_lidar_left_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_camera_right_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_camera_right_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_camera_left_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_camera_left_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_camera_center_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_camera_center_optical_link = SMatrix::<f64, 6, 13>::zeros();
-let mut jacobian_mast_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_base_footprint = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_base_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_5_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_5_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_4_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_4_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_3_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_3_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_2_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_2_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_1_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_1_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_0_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_line_sensor_0_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_head_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_lidar_right_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_lidar_left_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_camera_right_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_camera_right_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_camera_left_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_camera_left_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_camera_center_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_camera_center_optical_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_mast_link = SMatrix::<f64, 6, 13>::zeros();
 let mut jacobian_lift_link = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_23; let ang = Vector3::zeros(); jacobian_lift_link.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 let mut jacobian_arm_l0_link = SMatrix::<f64, 6, 13>::zeros();
@@ -222,7 +222,7 @@ let mut jacobian_wheel_1_link = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_49.cross(&(links[42].translation.vector - links[42].translation.vector)); let ang = axis_world_49; jacobian_wheel_1_link.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 let mut jacobian_wheel_0_link = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_50.cross(&(links[43].translation.vector - links[43].translation.vector)); let ang = axis_world_50; jacobian_wheel_0_link.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_docking_contact_link = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_docking_contact_link = SMatrix::<f64, 6, 13>::zeros();
 let mut jacobian_quick_connect_interface_link = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_23; let ang = Vector3::zeros(); jacobian_quick_connect_interface_link.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_25; let ang = Vector3::zeros(); jacobian_quick_connect_interface_link.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -301,6 +301,6 @@ let mut jacobian_grasp_center_link = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_30.cross(&(links[52].translation.vector - links[31].translation.vector)); let ang = axis_world_30; jacobian_grasp_center_link.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_31.cross(&(links[52].translation.vector - links[32].translation.vector)); let ang = axis_world_31; jacobian_grasp_center_link.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_32.cross(&(links[52].translation.vector - links[33].translation.vector)); let ang = axis_world_32; jacobian_grasp_center_link.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_laser = SMatrix::<f64, 6, 13>::zeros();
+let jacobian_laser = SMatrix::<f64, 6, 13>::zeros();
 [jacobian_base_footprint, jacobian_base_link, jacobian_line_sensor_5_link, jacobian_line_sensor_5_optical_link, jacobian_line_sensor_4_link, jacobian_line_sensor_4_optical_link, jacobian_line_sensor_3_link, jacobian_line_sensor_3_optical_link, jacobian_line_sensor_2_link, jacobian_line_sensor_2_optical_link, jacobian_line_sensor_1_link, jacobian_line_sensor_1_optical_link, jacobian_line_sensor_0_link, jacobian_line_sensor_0_optical_link, jacobian_head_link, jacobian_lidar_right_link, jacobian_lidar_left_link, jacobian_camera_right_link, jacobian_camera_right_optical_link, jacobian_camera_left_link, jacobian_camera_left_optical_link, jacobian_camera_center_link, jacobian_camera_center_optical_link, jacobian_mast_link, jacobian_lift_link, jacobian_arm_l0_link, jacobian_arm_l1_link, jacobian_arm_l2_link, jacobian_arm_l3_link, jacobian_arm_l4_link, jacobian_wrist_link, jacobian_wrist_yaw_link, jacobian_wrist_pitch_link, jacobian_wrist_roll_link, jacobian_gripper_camera_link, jacobian_gripper_stereo_camera_color_optical_frame, jacobian_gripper_right_camera_color_optical_frame, jacobian_gripper_left_camera_color_optical_frame, jacobian_tool_attachment_site_link, jacobian_wrist_aruco_link, jacobian_wrist_reflector_link, jacobian_wheel_2_link, jacobian_wheel_1_link, jacobian_wheel_0_link, jacobian_docking_contact_link, jacobian_quick_connect_interface_link, jacobian_gripper_finger_right_link, jacobian_gripper_fingertip_right_link, jacobian_aruco_fingertip_right_link, jacobian_gripper_finger_left_link, jacobian_gripper_fingertip_left_link, jacobian_aruco_fingertip_left_link, jacobian_grasp_center_link, jacobian_laser]
 }

@@ -21,7 +21,7 @@ pub fn compute_jacobian(joint_cmds: &[f64; 2]) -> [SMatrix<f64, 6, 2>; 3] {
 let links = compute_fk(joint_cmds);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0, 1.0, 0.0);
-let mut jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
+let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
 let mut jacobian_upper_arm = SMatrix::<f64, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_upper_arm.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 let mut jacobian_forearm = SMatrix::<f64, 6, 2>::zeros();
