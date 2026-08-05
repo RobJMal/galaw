@@ -1,3 +1,4 @@
+use nalgebra::SMatrix;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
@@ -120,6 +121,36 @@ fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
     Ok(())
 }
 
+/// Runs correctness check generated `compute_jacobian` against the runtime version.
+fn check_generated_jacobian_matches_dynamic<const N: usize, const M: usize>(
+    urdf_path: &str,
+    generated_compute_jacobian: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
+) -> TestResult {
+    let galaw_model = galaw::load_urdf(urdf_path)?;
+
+    let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
+    for _ in 0..NUM_POSES {
+        let joint_cmds = random_joint_cmds(&galaw_model, &mut rng);
+        let dynamic_jacobians = galaw_model.compute_jacobian(&joint_cmds)?;
+
+        let joint_cmds_arr: [f64; N] = joint_cmds.clone().try_into().unwrap();
+        let generated_jacobians = generated_compute_jacobian(&joint_cmds_arr);
+
+        for link_idx in 0..galaw_model.links.len() {
+            for row in 0..6 {
+                for col in 0..N {
+                    assert_close(
+                        dynamic_jacobians[link_idx][(row, col)],
+                        generated_jacobians[link_idx][(row, col)],
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Runs the full correctness check (zero pose + random poses) for one URDF
 fn check_jacobian_for_urdf(urdf_path: &str) -> TestResult {
     let (galaw_model, k_chain) = setup_kinematic_models(urdf_path);
@@ -169,6 +200,24 @@ macro_rules! jacobian_correctness_tests {
         )*
     };
 }
+
+/// Generates Jacobian runtime vs generated tests
+macro_rules! jacobian_codegen_correctness_test {
+    ($module:ident, $path:expr, $compute_fk:path) => {
+        mod $module {
+            use super::*;
+
+            #[test]
+            fn matches_dynamic() -> TestResult {
+                check_generated_jacobian_matches_dynamic(
+                    $path,
+                    galaw::generated::$module::compute_jacobian,
+                )
+            }
+        }
+    };
+}
+galaw::for_each_generated_robot!(jacobian_codegen_correctness_test);
 
 jacobian_correctness_tests! {
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",

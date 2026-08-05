@@ -34,11 +34,10 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 /// are per iteration, so dividing by this converts to per single `compute_jacobian` call.
 const N_POSES: f64 = 100.0;
 
-/// No "galaw-generated" entry — no codegen'd Jacobian yet.
-const IMPLS: [&str; 2] = ["galaw-runtime", "k"];
+const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
 
-/// Wong (2011) colorblind-safe pair, in series order: galaw-runtime=blue, k=orange.
-const COLORS: [&str; 2] = ["#0072B2", "#E69F00"];
+/// Wong (2011) colorblind-safe triple: galaw-runtime=blue, galaw-generated=bluish green, k=orange.
+const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
 
 // ----- FONT SIZES (tweak here — every chart text element is driven off these) -----
 const TITLE_FONT_SIZE: f64 = 38.0;

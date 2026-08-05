@@ -3,7 +3,7 @@
 //! `galaw` is a robot kinematics library.
 //!
 //! Two APIs: [`load_urdf`] + [`types::GalawModel::compute_fk`] work for any
-//! URDF at runtime; the `codegen_fk` binary generates a fixed, faster
+//! URDF at runtime; the `codegen_kinematics` binary generates a fixed, faster
 //! `compute_fk` per robot ahead of time (see [`generated`]).
 //!
 //! ```
@@ -20,7 +20,7 @@ pub mod error;
 pub mod fixtures;
 /// Ahead-of-time generated `compute_fk` implementations, one per robot.
 ///
-/// Machine-written by `codegen_fk` (see `scripts/codegen_all_urdfs.sh`) —
+/// Machine-written by `codegen_kinematics` (see `scripts/codegen_all_urdfs.sh`) —
 /// exempt from `missing_docs` and `clippy` since files are auto-generated,
 /// not hand-maintained.
 #[allow(missing_docs)]
