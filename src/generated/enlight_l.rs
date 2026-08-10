@@ -26,13 +26,13 @@ use nalgebra::{SMatrix, Vector6};
 #[rustfmt::skip]
 pub fn compute_jacobian(joint_cmds: &[f64; 7]) -> [SMatrix<f64, 6, 7>; 10] {
 let links = compute_fk(joint_cmds);
-let axis_world_1 = links[2].rotation * Vector3::new(0.0, 0.0, 1.0);
-let axis_world_2 = links[3].rotation * Vector3::new(0.0, 0.0, 1.0);
-let axis_world_3 = links[4].rotation * Vector3::new(0.0, 0.0, 1.0);
-let axis_world_4 = links[5].rotation * Vector3::new(0.0, 0.0, 1.0);
-let axis_world_5 = links[6].rotation * Vector3::new(0.0, 0.0, 1.0);
-let axis_world_6 = links[7].rotation * Vector3::new(0.0, 0.0, 1.0);
-let axis_world_7 = links[8].rotation * Vector3::new(0.0, 0.0, 1.0);
+let axis_world_1 = Vector3::new(2.0 * (links[2].rotation.i * links[2].rotation.k + links[2].rotation.w * links[2].rotation.j), 2.0 * (links[2].rotation.j * links[2].rotation.k - links[2].rotation.w * links[2].rotation.i), 1.0 - 2.0 * (links[2].rotation.i * links[2].rotation.i + links[2].rotation.j * links[2].rotation.j));
+let axis_world_2 = Vector3::new(2.0 * (links[3].rotation.i * links[3].rotation.k + links[3].rotation.w * links[3].rotation.j), 2.0 * (links[3].rotation.j * links[3].rotation.k - links[3].rotation.w * links[3].rotation.i), 1.0 - 2.0 * (links[3].rotation.i * links[3].rotation.i + links[3].rotation.j * links[3].rotation.j));
+let axis_world_3 = Vector3::new(2.0 * (links[4].rotation.i * links[4].rotation.k + links[4].rotation.w * links[4].rotation.j), 2.0 * (links[4].rotation.j * links[4].rotation.k - links[4].rotation.w * links[4].rotation.i), 1.0 - 2.0 * (links[4].rotation.i * links[4].rotation.i + links[4].rotation.j * links[4].rotation.j));
+let axis_world_4 = Vector3::new(2.0 * (links[5].rotation.i * links[5].rotation.k + links[5].rotation.w * links[5].rotation.j), 2.0 * (links[5].rotation.j * links[5].rotation.k - links[5].rotation.w * links[5].rotation.i), 1.0 - 2.0 * (links[5].rotation.i * links[5].rotation.i + links[5].rotation.j * links[5].rotation.j));
+let axis_world_5 = Vector3::new(2.0 * (links[6].rotation.i * links[6].rotation.k + links[6].rotation.w * links[6].rotation.j), 2.0 * (links[6].rotation.j * links[6].rotation.k - links[6].rotation.w * links[6].rotation.i), 1.0 - 2.0 * (links[6].rotation.i * links[6].rotation.i + links[6].rotation.j * links[6].rotation.j));
+let axis_world_6 = Vector3::new(2.0 * (links[7].rotation.i * links[7].rotation.k + links[7].rotation.w * links[7].rotation.j), 2.0 * (links[7].rotation.j * links[7].rotation.k - links[7].rotation.w * links[7].rotation.i), 1.0 - 2.0 * (links[7].rotation.i * links[7].rotation.i + links[7].rotation.j * links[7].rotation.j));
+let axis_world_7 = Vector3::new(2.0 * (links[8].rotation.i * links[8].rotation.k + links[8].rotation.w * links[8].rotation.j), 2.0 * (links[8].rotation.j * links[8].rotation.k - links[8].rotation.w * links[8].rotation.i), 1.0 - 2.0 * (links[8].rotation.i * links[8].rotation.i + links[8].rotation.j * links[8].rotation.j));
 let jacobian_world = SMatrix::<f64, 6, 7>::zeros();
 let jacobian_base_link = SMatrix::<f64, 6, 7>::zeros();
 let mut jacobian_link1 = SMatrix::<f64, 6, 7>::zeros();

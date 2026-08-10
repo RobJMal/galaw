@@ -1,4 +1,4 @@
-use std::env::args;
+use std::{env::args};
 
 // Third-party
 use nalgebra::{Translation3, UnitQuaternion, Vector3};
@@ -58,6 +58,46 @@ fn optimize_axis_angle_rotation_code(vec: &Vector3<f64>, cmd_idx: usize) -> Stri
             "UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?})), joint_cmds[{}])",
             vec.x, vec.y, vec.z, cmd_idx
         ),
+    }
+}
+
+/// Bypasses general quaternion*vector rotation when axis being rotated is a signed basis vector
+fn optimize_axis_world_code(vec: &Vector3<f64>, rotation_expr: &str) -> String {
+    let aligned = match (vec.x, vec.y, vec.z) {
+        (x, 0.0, 0.0) if x == 1.0 || x == -1.0 => Some((0, x)),
+        (0.0, y, 0.0) if y == 1.0 || y == -1.0 => Some((1, y)),
+        (0.0, 0.0, z) if z == 1.0 || z == -1.0 => Some((2, z)),
+        _ => None,
+    };
+
+    let q = rotation_expr;
+    match aligned {
+        Some((slot, sign)) => {
+            let (x, y, z) = match slot {
+                0 => (
+                    format!("1.0 - 2.0 * ({q}.j * {q}.j + {q}.k * {q}.k)"),
+                    format!("2.0 * ({q}.i * {q}.j + {q}.w * {q}.k)"),
+                    format!("2.0 * ({q}.i * {q}.k - {q}.w * {q}.j)"),
+                ),
+                1 => (
+                    format!("2.0 * ({q}.i * {q}.j - {q}.w * {q}.k)"),
+                    format!("1.0 - 2.0 * ({q}.i * {q}.i + {q}.k * {q}.k)"),
+                    format!("2.0 * ({q}.j * {q}.k + {q}.w * {q}.i)"),
+                ),
+                _ => (
+                    format!("2.0 * ({q}.i * {q}.k + {q}.w * {q}.j)"),
+                    format!("2.0 * ({q}.j * {q}.k - {q}.w * {q}.i)"),
+                    format!("1.0 - 2.0 * ({q}.i * {q}.i + {q}.j * {q}.j)"),
+                ),
+            };
+
+            if sign > 0.0 {
+                format!("Vector3::new({x}, {y}, {z})")
+            } else {
+                format!("Vector3::new(-({x}), -({y}), -({z}))")
+            }
+        }
+        None => format!("({q} * Vector3::new({:?}, {:?}, {:?}))", vec.x, vec.y, vec.z),
     }
 }
 
@@ -255,10 +295,11 @@ fn generate_jacobian_fn_code(
             .or(joint.lin_axis)
             .expect("actuated joint has an axis")
             .into_inner();
+        let rotation_expr = format!("links[{}].rotation", joint.child_link_idx);
+        let axis_expr = optimize_axis_world_code(&local_axis, &rotation_expr);
         codegen_output.push(format!(
-            "let axis_world_{0} = links[{1}].rotation * Vector3::new({2:?}, {3:?}, {4:?});",
-            joint_idx, joint.child_link_idx, local_axis.x, local_axis.y, local_axis.z
-        ));
+            "let axis_world_{0} = {1};",
+            joint_idx, axis_expr));
     }
 
     // Each link's ancestor joints
