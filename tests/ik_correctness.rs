@@ -16,8 +16,9 @@ use common::{
 use crate::common::assert_galaw_transform_close;
 
 // ---- CONSTANTS ----
-pub const TEST_TOLERANCE: f64 = 1e-4;
-pub const NUM_POSES: usize = 128;
+const TEST_TOLERANCE: f64 = 1e-4;
+const NUM_POSES: usize = 128;
+const MAX_PERTUBATION: f64 = 0.5;   // radians/meters offset from target for IK initial pose
 
 /// Returns links that are valid IK targets (leaves of the kinematic tree)
 fn candidate_target_links(galaw_model: &GalawModel) -> Vec<usize> {
@@ -39,6 +40,31 @@ fn candidate_target_links(galaw_model: &GalawModel) -> Vec<usize> {
     (0..galaw_model.links.len())
         .filter(|&link_idx| {
             !parent_indices.contains(&link_idx) && !ancestors_by_link[link_idx].is_empty()
+        })
+        .collect()
+}
+
+/// Perturbs base joint config by small random offset per joint.
+/// 
+/// This is done to better replicate how IK is used in practice
+fn perturbed_joint_cmds(
+    model: &GalawModel,
+    base: &[f64],
+    rng: &mut ChaCha8Rng,
+    max_offset: f64,
+) -> Vec<f64> {
+    model
+        .joints
+        .iter()
+        .filter(|j| j.cmd_idx.is_some())
+        .zip(base.iter())
+        .map(|(j, &base_value)| {
+            let offset = rng.random_range(-max_offset..max_offset);
+            let perturbed = base_value + offset;
+            match (j.limit_lower, j.limit_upper) {
+                (Some(lower), Some(upper)) => perturbed.clamp(lower, upper),
+                _ => perturbed,
+            }
         })
         .collect()
 }
@@ -90,7 +116,7 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
     for _ in 0..NUM_POSES {
         let target_link_idx = candidates[rng.random_range(0..candidates.len())];
         let target_joint_cmd = random_joint_cmds(&galaw_model, &mut rng);
-        let init_joint_cmd = random_joint_cmds(&galaw_model, &mut rng);
+        let init_joint_cmd = perturbed_joint_cmds(&galaw_model, &target_joint_cmd, &mut rng, MAX_PERTUBATION);
         assert_galaw_ik_correctness(&galaw_model, target_link_idx, &target_joint_cmd, &init_joint_cmd)?;
     }
 
