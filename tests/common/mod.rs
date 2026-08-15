@@ -1,3 +1,7 @@
+// Each tests/*.rs compiles as its own crate, so dead_code is checked
+// per-binary — a function unused here may still be used by a sibling test.
+#![allow(dead_code)]
+
 // Third-party
 use nalgebra::{Isometry3, Translation3, UnitQuaternion};
 use rand::RngExt;
