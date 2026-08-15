@@ -1,4 +1,4 @@
-use nalgebra::{Isometry3, Matrix6xX, Translation3, UnitQuaternion, Vector3, Vector6};
+use nalgebra::{Isometry3, Matrix6, Matrix6xX, Translation3, UnitQuaternion, Vector3, Vector6};
 
 use crate::{
     error::{GalawError, KinematicsError},
@@ -115,5 +115,62 @@ impl GalawModel {
         }
 
         Ok(jacobians)
+    }
+
+    /// Computes inverse kinematics of a model.
+    pub fn compute_ik(&self, 
+        target_link_idx: usize, 
+        target_pose: &Isometry3<f64>, 
+        initial_joint_cmds: &[f64],
+    ) -> Result<Vec<f64>, GalawError> {
+
+        // IK solver params
+        const ERROR_TOLERANCE: f64 = 1e-5; 
+        const DAMPING_FACTOR: f64 = 1e-4;
+        const STEP_SIZE: f64 = 1.0;
+        const MAX_ITERATIONS: usize = 1000;
+
+        // Helper to compute error
+        let compute_error = |joint_cmds: &[f64]| -> Result<Vector6<f64>, GalawError> {
+            let current_pose = self.compute_fk(joint_cmds)?[target_link_idx];
+            let error_position = target_pose.translation.vector - current_pose.translation.vector;
+            let rotation_error = target_pose.rotation * current_pose.rotation.inverse();
+            let error_rotation = rotation_error.scaled_axis();
+            Ok(Vector6::new(
+                error_position.x, error_position.y, error_position.z, 
+                error_rotation.x, error_rotation.y, error_rotation.z,
+            ))
+        };
+        
+        let mut joint_cmds_candidate = initial_joint_cmds.to_vec(); 
+        let mut error = compute_error(&joint_cmds_candidate)?;
+        let mut iterations: usize = 0;
+
+        // Applies the Levenberg-Marquardt approach
+        while error.norm() > ERROR_TOLERANCE {
+            if iterations >= MAX_ITERATIONS {
+                return Err(KinematicsError::IkDidNotConverge { 
+                    iterations, 
+                    final_error: error.norm(), 
+                }
+                .into());
+            }
+
+            let jac = self.compute_jacobian(&joint_cmds_candidate)?[target_link_idx].clone();
+            let jjt_damped = &jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
+            let x = jjt_damped
+                .cholesky()
+                .expect("J*J^T + damping*I is always positive definite for damping > 0")
+                .solve(&error);
+            let dq = jac.transpose() * x;
+            for (q, dq_i) in joint_cmds_candidate.iter_mut().zip(dq.iter()) {
+                *q += STEP_SIZE * dq_i;
+            }
+
+            error = compute_error(&joint_cmds_candidate)?;
+            iterations += 1;
+        }
+
+        Ok(joint_cmds_candidate)
     }
 }
