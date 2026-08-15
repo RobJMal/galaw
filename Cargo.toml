@@ -52,3 +52,7 @@ harness = false
 [[bench]]
 name = "jacobian_speed"
 harness = false
+
+[[bench]]
+name = "ik_speed"
+harness = false
