@@ -10,41 +10,43 @@ use galaw::{load_urdf, types::GalawModel};
 pub type TestResult = Result<(), Box<dyn std::error::Error>>;
 
 // ---- CONSTANTS ----
-pub const TEST_TOLERANCE: f64 = 1e-10;
 pub const RNG_SEED: u64 = 42;
-pub const NUM_POSES: usize = 128;
 
 // ---- HELPERS ----
-pub fn assert_close(a: f64, b: f64) {
+pub fn assert_close(a: f64, b: f64, test_tolerance: &f64) {
     assert!(
-        (a - b).abs() < TEST_TOLERANCE,
-        "expected {b}, got {a} OR not within {TEST_TOLERANCE}"
+        (a - b).abs() < *test_tolerance,
+        "expected {b}, got {a} OR not within {test_tolerance}"
     );
 }
 
 /// Need to do this test because quaternions double-cover rotations (q=-q are same rotation)
-fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>) {
+fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>, test_tolerance: &f64) {
     let dot_prod = a.i * b.i + a.j * b.j + a.k * b.k + a.w * b.w;
-    assert_close(dot_prod.abs(), 1.0);
+    assert_close(dot_prod.abs(), 1.0, test_tolerance);
 }
 
-fn assert_position3d_close(a: &Translation3<f64>, b: &Translation3<f64>) {
-    assert_close(a.x, b.x);
-    assert_close(a.y, b.y);
-    assert_close(a.z, b.z);
+fn assert_position3d_close(a: &Translation3<f64>, b: &Translation3<f64>, test_tolerance: &f64) {
+    assert_close(a.x, b.x, test_tolerance);
+    assert_close(a.y, b.y, test_tolerance);
+    assert_close(a.z, b.z, test_tolerance);
 }
 
-pub fn assert_galaw_k_transform_close(galaw_transform: &Isometry3<f64>, k_iso: &k::nalgebra::Isometry3<f64>) {
-    assert_position3d_close(&galaw_transform.translation, &k_iso.translation);
-    assert_orientation_close(&galaw_transform.rotation, &k_iso.rotation);
+pub fn assert_galaw_k_transform_close(
+    galaw_transform: &Isometry3<f64>, 
+    k_iso: &k::nalgebra::Isometry3<f64>,
+    test_tolerance: &f64,
+) {
+    assert_position3d_close(&galaw_transform.translation, &k_iso.translation, test_tolerance);
+    assert_orientation_close(&galaw_transform.rotation, &k_iso.rotation, test_tolerance);
 }
 
 /// Both sides are plain `nalgebra::Isometry3<f64>` here (dynamic vs codegen'd
 /// FK), unlike `assert_galaw_k_transform_close` which bridges to `k`'s own re-exported
 /// nalgebra type.
-pub fn assert_galaw_transform_close(a: &Isometry3<f64>, b: &Isometry3<f64>) {
-    assert_position3d_close(&a.translation, &b.translation);
-    assert_orientation_close(&a.rotation, &b.rotation);
+pub fn assert_galaw_transform_close(a: &Isometry3<f64>, b: &Isometry3<f64>, test_tolerance: &f64) {
+    assert_position3d_close(&a.translation, &b.translation, test_tolerance);
+    assert_orientation_close(&a.rotation, &b.rotation, test_tolerance);
 }
 
 /// Sets up the different kinematics model for testing.

@@ -10,11 +10,13 @@ use galaw::types::GalawModel;
 
 mod common;
 use common::{
-    NUM_POSES, RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
+    RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
     zero_joint_cmds,
 };
 
 // ---- CONSTANTS ----
+const NUM_POSES: usize = 128;
+const TEST_TOLERANCE: f64 = 1e-7;
 const FD_EPS: f64 = 1e-6;
 const FD_TOLERANCE: f64 = 1e-5; // looser numerical error for finite difference 
 
@@ -98,6 +100,7 @@ fn asssert_galaw_jacobian_matches_k(
                 assert_close(
                     galaw_link_jacobian[(row, cmd_idx)],
                     k_jacobian[(row, k_col_idx)],
+                    &TEST_TOLERANCE,
                 );
             }
         }
@@ -142,6 +145,7 @@ fn check_generated_jacobian_matches_dynamic<const N: usize, const M: usize>(
                     assert_close(
                         dynamic_jacobians[link_idx][(row, col)],
                         generated_jacobians[link_idx][(row, col)],
+                        &TEST_TOLERANCE,
                     );
                 }
             }

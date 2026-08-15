@@ -10,9 +10,13 @@ use galaw::{load_urdf, types::GalawModel};
 
 mod common;
 use common::{
-    NUM_POSES, RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models,
+    RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models,
     zero_joint_cmds, assert_galaw_k_transform_close, assert_galaw_transform_close,
 };
+
+// ---- CONSTANTS ----
+const NUM_POSES: usize = 128;
+const TEST_TOLERANCE: f64 = 1e-7;
 
 fn assert_galaw_fk_matches_k(
     galaw_model: &GalawModel,
@@ -32,7 +36,7 @@ fn assert_galaw_fk_matches_k(
             .world_transform()
             .ok_or("invalid result")?;
 
-        assert_galaw_k_transform_close(&galaw_result[i], &k_link);
+        assert_galaw_k_transform_close(&galaw_result[i], &k_link, &TEST_TOLERANCE);
     }
 
     Ok(())
@@ -92,7 +96,7 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
         let generated_links = generated_compute_fk(&joint_cmds_arr);
 
         for i in 0..galaw_model.links.len() {
-            assert_galaw_transform_close(&dynamic_links[i], &generated_links[i]);
+            assert_galaw_transform_close(&dynamic_links[i], &generated_links[i], &TEST_TOLERANCE);
         }
     }
 
