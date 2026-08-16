@@ -24,7 +24,7 @@ let link_flange = link_link7 * Translation3::new(0.0, 0.0, 0.048);
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_jacobian(joint_cmds: &[f64; 7]) -> [SMatrix<f64, 6, 7>; 10] {
+pub fn compute_link_jacobians(joint_cmds: &[f64; 7]) -> [SMatrix<f64, 6, 7>; 10] {
 let links = compute_fk(joint_cmds);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_2 = links[3].rotation * Vector3::new(0.0, 0.0, 1.0);

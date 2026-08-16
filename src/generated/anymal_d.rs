@@ -110,7 +110,7 @@ let link_inspection_payload_camera_default = link_inspection_payload_mount * Tra
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_jacobian(joint_cmds: &[f64; 14]) -> [SMatrix<f64, 6, 14>; 96] {
+pub fn compute_link_jacobians(joint_cmds: &[f64; 14]) -> [SMatrix<f64, 6, 14>; 96] {
 let links = compute_fk(joint_cmds);
 let axis_world_43 = links[44].rotation * Vector3::new(1.0, 0.0, 0.0);
 let axis_world_46 = links[48].rotation * Vector3::new(-1.0, 0.0, 0.0);

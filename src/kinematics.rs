@@ -53,8 +53,8 @@ impl GalawModel {
         Ok(links)
     }
 
-    /// Computes Jacobian of a model.
-    pub fn compute_jacobian(&self, joint_cmds: &[f64]) -> Result<Vec<Matrix6xX<f64>>, GalawError> {
+    /// Computes the Jacobian of every link in a model.
+    pub fn compute_link_jacobians(&self, joint_cmds: &[f64]) -> Result<Vec<Matrix6xX<f64>>, GalawError> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -156,7 +156,7 @@ impl GalawModel {
                 .into());
             }
 
-            let jac = self.compute_jacobian(&joint_cmds_candidate)?[target_link_idx].clone();
+            let jac = self.compute_link_jacobians(&joint_cmds_candidate)?[target_link_idx].clone();
             let jjt_damped = &jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
             let x = jjt_damped
                 .cholesky()

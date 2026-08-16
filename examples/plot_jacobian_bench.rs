@@ -31,7 +31,7 @@ use charming::{Chart, ImageFormat, ImageRenderer};
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
 
 /// Calls per timed iteration in benches/jacobian_speed.rs. Criterion's estimates
-/// are per iteration, so dividing by this converts to per single `compute_jacobian` call.
+/// are per iteration, so dividing by this converts to per single `compute_link_jacobians` call.
 const N_POSES: f64 = 100.0;
 
 const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
@@ -57,7 +57,7 @@ const AXIS_TICK_FONT_SIZE: f64 = 19.0;
 const LABEL_FONT_SIZE: f64 = 19.0;
 const LABEL_STAGGER_PX: f64 = 16.0;
 
-/// Mean and 95% CI bounds for a single benchmark, in ns per `compute_jacobian` call.
+/// Mean and 95% CI bounds for a single benchmark, in ns per `compute_link_jacobians` call.
 struct Stat {
     mean: f64,
     lo: f64,
