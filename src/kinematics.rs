@@ -117,6 +117,67 @@ impl GalawModel {
         Ok(jacobians)
     }
 
+    /// Computes the Jacobian for a single link of a model.
+    /// 
+    /// Primarily, this is used for computations where we only need specific links
+    pub fn compute_link_jacobian(&self, joint_cmds: &[f64], target_link_idx: usize) -> Result<Matrix6xX<f64>, GalawError> {
+        if joint_cmds.len() != self.num_actuated_joints {
+            return Err(KinematicsError::JointCmdLengthMismatch { 
+                num_actuated: self.num_actuated_joints, 
+                num_input: joint_cmds.len(), 
+            }
+            .into());
+        }
+        if target_link_idx >= self.links.len() {
+            return Err(KinematicsError::LinkIdxOutOfBounds {
+                num_links: self.links.len(),
+                requested: target_link_idx,
+            }
+            .into());
+        }
+
+        let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
+
+        let mut child_to_joint: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+        for (joint_idx, joint) in self.joints.iter().enumerate() {
+            child_to_joint.insert(joint.child_link_idx, joint_idx);
+        }
+
+        let links = self.compute_fk(joint_cmds)?;
+        let target_position = links[target_link_idx].translation;
+
+        let mut current_link_idx = target_link_idx;
+        while let Some(&joint_idx) = child_to_joint.get(&current_link_idx) {
+            let joint = &self.joints[joint_idx];
+            current_link_idx = joint.parent_link_idx;
+
+            let Some(cmd_idx) = joint.cmd_idx else {continue};
+
+            let joint_position = links[joint.child_link_idx].translation;
+            let local_axis = joint.rot_axis.or(joint.lin_axis).expect("actuated joint has an axis");
+            let joint_motion_axis = (links[joint.child_link_idx].rotation * local_axis).into_inner();
+
+            let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
+                (
+                    joint_motion_axis.cross(&(target_position.vector - joint_position.vector)),
+                    joint_motion_axis,
+                )
+            } else {
+                (joint_motion_axis, Vector3::zeros())
+            };
+
+            jacobian.set_column(
+                cmd_idx, 
+                &Vector6::new(
+                    lin_vel.x, lin_vel.y, lin_vel.z, 
+                    ang_vel.x, ang_vel.y, ang_vel.z,
+                )
+            );
+        }
+
+        Ok(jacobian)
+    }
+
     /// Computes inverse kinematics of a model.
     pub fn compute_ik(&self, 
         target_link_idx: usize, 
@@ -156,7 +217,7 @@ impl GalawModel {
                 .into());
             }
 
-            let jac = self.compute_link_jacobians(&joint_cmds_candidate)?[target_link_idx].clone();
+            let jac = self.compute_link_jacobian(&joint_cmds_candidate, target_link_idx)?;
             let jjt_damped = &jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
             let x = jjt_damped
                 .cholesky()
