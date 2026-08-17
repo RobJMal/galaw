@@ -1,7 +1,7 @@
 /// Tests the correctness of the implemented forward kinematics function
 /// with Rust's k library
 // Third-party
-use nalgebra::{Isometry3};
+use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
@@ -10,8 +10,8 @@ use galaw::{load_urdf, types::GalawModel};
 
 mod common;
 use common::{
-    RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models,
-    zero_joint_cmds, assert_galaw_k_transform_close, assert_galaw_transform_close,
+    RNG_SEED, TestResult, assert_galaw_k_transform_close, assert_galaw_transform_close,
+    random_joint_cmds, setup_kinematic_models, zero_joint_cmds,
 };
 
 // ---- CONSTANTS ----

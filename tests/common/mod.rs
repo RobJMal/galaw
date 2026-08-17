@@ -25,7 +25,11 @@ pub fn assert_close(a: f64, b: f64, test_tolerance: &f64) {
 }
 
 /// Need to do this test because quaternions double-cover rotations (q=-q are same rotation)
-fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>, test_tolerance: &f64) {
+fn assert_orientation_close(
+    a: &UnitQuaternion<f64>,
+    b: &UnitQuaternion<f64>,
+    test_tolerance: &f64,
+) {
     let dot_prod = a.i * b.i + a.j * b.j + a.k * b.k + a.w * b.w;
     assert_close(dot_prod.abs(), 1.0, test_tolerance);
 }
@@ -37,11 +41,15 @@ fn assert_position3d_close(a: &Translation3<f64>, b: &Translation3<f64>, test_to
 }
 
 pub fn assert_galaw_k_transform_close(
-    galaw_transform: &Isometry3<f64>, 
+    galaw_transform: &Isometry3<f64>,
     k_iso: &k::nalgebra::Isometry3<f64>,
     test_tolerance: &f64,
 ) {
-    assert_position3d_close(&galaw_transform.translation, &k_iso.translation, test_tolerance);
+    assert_position3d_close(
+        &galaw_transform.translation,
+        &k_iso.translation,
+        test_tolerance,
+    );
     assert_orientation_close(&galaw_transform.rotation, &k_iso.rotation, test_tolerance);
 }
 

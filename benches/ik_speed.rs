@@ -94,11 +94,16 @@ fn bench_ik(c: &mut Criterion) {
                     for (target, init) in trials {
                         k_chain.set_joint_positions(target).unwrap();
                         k_chain.update_transforms();
-                        let pose = k_chain.find_link(link_name).unwrap().world_transform().unwrap();
+                        let pose = k_chain
+                            .find_link(link_name)
+                            .unwrap()
+                            .world_transform()
+                            .unwrap();
 
                         k_chain.set_joint_positions(black_box(init)).unwrap();
                         k_chain.update_transforms();
-                        let serial = k::SerialChain::from_end(k_chain.find_link(link_name).unwrap());
+                        let serial =
+                            k::SerialChain::from_end(k_chain.find_link(link_name).unwrap());
                         let _ = black_box(solver.solve(&serial, &pose));
                     }
                 });

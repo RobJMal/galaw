@@ -5,20 +5,17 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{types::GalawModel};
+use galaw::types::GalawModel;
 
 mod common;
-use common::{
-    RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models,
-    zero_joint_cmds,
-};
+use common::{RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models, zero_joint_cmds};
 
 use crate::common::assert_galaw_transform_close;
 
 // ---- CONSTANTS ----
 const TEST_TOLERANCE: f64 = 1e-4;
 const NUM_POSES: usize = 128;
-const MAX_PERTUBATION: f64 = 0.5;   // radians/meters offset from target for IK initial pose
+const MAX_PERTUBATION: f64 = 0.5; // radians/meters offset from target for IK initial pose
 
 /// Returns links that are valid IK targets (leaves of the kinematic tree)
 fn candidate_target_links(galaw_model: &GalawModel) -> Vec<usize> {
@@ -45,7 +42,7 @@ fn candidate_target_links(galaw_model: &GalawModel) -> Vec<usize> {
 }
 
 /// Perturbs base joint config by small random offset per joint.
-/// 
+///
 /// This is done to better replicate how IK is used in practice
 fn perturbed_joint_cmds(
     model: &GalawModel,
@@ -77,13 +74,14 @@ fn assert_galaw_ik_correctness(
     init_joint_cmd: &[f64],
 ) -> TestResult {
     eprintln!(
-        "[input] target_link_idx = {target_link_idx}, target_joint_cmd = {:?}", 
+        "[input] target_link_idx = {target_link_idx}, target_joint_cmd = {:?}",
         target_joint_cmd
     );
-    
+
     let target_link_pose = galaw_model.compute_fk(target_joint_cmd)?[target_link_idx];
 
-    let solved_joint_cmds = galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd)?;
+    let solved_joint_cmds =
+        galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd)?;
     let solved_link_poses = galaw_model.compute_fk(&solved_joint_cmds)?[target_link_idx];
 
     assert_galaw_transform_close(&target_link_pose, &solved_link_poses, &TEST_TOLERANCE);
@@ -107,7 +105,7 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
     let zero_joint_cmd: Vec<f64> = zero_joint_cmds(&galaw_model);
     let init_joint_cmd: Vec<f64> = random_joint_cmds(&galaw_model, &mut rng);
     assert_galaw_ik_correctness(
-        &galaw_model, 
+        &galaw_model,
         candidates[0],
         &zero_joint_cmd,
         &init_joint_cmd,
@@ -116,8 +114,14 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
     for _ in 0..NUM_POSES {
         let target_link_idx = candidates[rng.random_range(0..candidates.len())];
         let target_joint_cmd = random_joint_cmds(&galaw_model, &mut rng);
-        let init_joint_cmd = perturbed_joint_cmds(&galaw_model, &target_joint_cmd, &mut rng, MAX_PERTUBATION);
-        assert_galaw_ik_correctness(&galaw_model, target_link_idx, &target_joint_cmd, &init_joint_cmd)?;
+        let init_joint_cmd =
+            perturbed_joint_cmds(&galaw_model, &target_joint_cmd, &mut rng, MAX_PERTUBATION);
+        assert_galaw_ik_correctness(
+            &galaw_model,
+            target_link_idx,
+            &target_joint_cmd,
+            &init_joint_cmd,
+        )?;
     }
 
     Ok(())

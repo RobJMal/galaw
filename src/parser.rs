@@ -225,7 +225,7 @@ fn dfs_visit(
 
 /// Resolved joints (in DFS order), link name -> index, and joint name -> cmd_idx.
 type ResolvedJoints = (
-    Vec<Joint>, 
+    Vec<Joint>,
     HashMap<String, usize>, // link_name -> cmd_idx
     HashMap<String, usize>, // joint_name -> cmd_idx
     HashMap<usize, usize>,  // link_name -> parent joint_idx
@@ -324,7 +324,12 @@ fn resolve_joint_order(
         .map(|(joint_idx, j)| (j.child_link_idx, joint_idx))
         .collect();
 
-    Ok((ordered_joints, link_name_to_idx, joint_name_to_idx, link_idx_to_parent_joint_idx))
+    Ok((
+        ordered_joints,
+        link_name_to_idx,
+        joint_name_to_idx,
+        link_idx_to_parent_joint_idx,
+    ))
 }
 
 /// Parses a URDF file into a [`GalawModel`].

@@ -10,8 +10,7 @@ use galaw::types::GalawModel;
 
 mod common;
 use common::{
-    RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
-    zero_joint_cmds,
+    RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models, zero_joint_cmds,
 };
 
 // ---- CONSTANTS ----

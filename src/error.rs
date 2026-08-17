@@ -155,11 +155,11 @@ pub enum KinematicsError {
         requested: usize,
     },
     /// IK failed to converge
-    #[error("ik didnot not converge within {iterations} iterations. final error: {final_error}")] 
+    #[error("ik didnot not converge within {iterations} iterations. final error: {final_error}")]
     IkDidNotConverge {
         /// Number of iterations
         iterations: usize,
         /// Final error of iterations
         final_error: f64,
-    }
+    },
 }
