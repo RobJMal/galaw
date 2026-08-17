@@ -173,6 +173,69 @@ impl GalawModel {
         Ok(jacobian)
     }
 
+    /// Computes the pose and Jacobian of one link along a precomputed chain.
+    ///
+    /// Primarily, this is used by `compute_ik`'s loop, which needs both values
+    /// every iteration without recomputing the chain or walking the whole model.
+    #[inline]
+    fn compute_restricted_pose_and_jacobian(
+        &self,
+        chain: &[usize],
+        joint_cmds: &[f64],
+    ) -> (Isometry3<f64>, Matrix6xX<f64>) {
+        let mut pose = Isometry3::identity();
+        let mut chain_poses: Vec<Isometry3<f64>> = Vec::with_capacity(chain.len());
+
+        for &joint_idx in chain {
+            let joint = &self.joints[joint_idx];
+            let cmd = joint.cmd_idx.map(|idx| joint_cmds[idx]).unwrap_or(0.0);
+            
+            let rotation = match joint.rot_axis {
+                Some(axis) => UnitQuaternion::from_axis_angle(&axis, cmd),
+                None => UnitQuaternion::identity(),
+            };
+            let translation = match joint.lin_axis {
+                Some(axis) => Translation3::from(axis.into_inner() * cmd),
+                None => Translation3::identity(),
+            };
+
+            let joint_local = joint.transform * Isometry3::from_parts(translation, rotation);
+            pose = pose * joint_local;
+            chain_poses.push(pose);
+        }
+
+        let target_position = pose.translation;
+        let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
+
+        for (i, &joint_idx) in chain.iter().enumerate() {
+            let joint = &self.joints[joint_idx];
+            let Some(cmd_idx) = joint.cmd_idx else { continue };
+
+            let joint_position = chain_poses[i].translation;
+            let local_axis = joint.rot_axis.or(joint.lin_axis).expect("actuated joint has an axis");
+            let joint_motion_axis = (chain_poses[i].rotation * local_axis).into_inner();
+
+            let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
+                (
+                    joint_motion_axis.cross(&(target_position.vector - joint_position.vector)),
+                    joint_motion_axis,
+                )
+            } else {
+                (joint_motion_axis, Vector3::zeros())
+            };
+
+            jacobian.set_column(
+                cmd_idx, 
+                &Vector6::new(
+                    lin_vel.x, lin_vel.y, lin_vel.z, 
+                    ang_vel.x, ang_vel.y, ang_vel.z,
+                ),
+            );
+        }
+
+        (pose, jacobian)
+    }
+
     /// Computes inverse kinematics of a model.
     pub fn compute_ik(&self, 
         target_link_idx: usize, 
@@ -186,9 +249,17 @@ impl GalawModel {
         const STEP_SIZE: f64 = 1.0;
         const MAX_ITERATIONS: usize = 1000;
 
-        // Helper to compute error
-        let compute_error = |joint_cmds: &[f64]| -> Result<Vector6<f64>, GalawError> {
-            let current_pose = self.compute_fk(joint_cmds)?[target_link_idx];
+        // Constructing kinematic chain from root to target
+        let mut chain: Vec<usize> = Vec::new();
+        let mut walk_link_idx = target_link_idx;
+        while let Some(&joint_idx) = self.link_idx_to_parent_joint_idx.get(&walk_link_idx) {
+            chain.push(joint_idx);
+            walk_link_idx = self.joints[joint_idx].parent_link_idx;
+        }
+        chain.reverse();
+
+        // Helper to compute pose error
+        let compute_error = |current_pose: &Isometry3<f64>| -> Result<Vector6<f64>, GalawError> {
             let error_position = target_pose.translation.vector - current_pose.translation.vector;
             let rotation_error = target_pose.rotation * current_pose.rotation.inverse();
             let error_rotation = rotation_error.scaled_axis();
@@ -199,7 +270,8 @@ impl GalawModel {
         };
         
         let mut joint_cmds_candidate = initial_joint_cmds.to_vec(); 
-        let mut error = compute_error(&joint_cmds_candidate)?;
+        let (mut current_pose, mut jac) = self.compute_restricted_pose_and_jacobian(&chain, &joint_cmds_candidate);
+        let mut error = compute_error(&current_pose)?;
         let mut iterations: usize = 0;
 
         // Applies the Levenberg-Marquardt approach
@@ -212,7 +284,6 @@ impl GalawModel {
                 .into());
             }
 
-            let jac = self.compute_link_jacobian(&joint_cmds_candidate, target_link_idx)?;
             let jjt_damped = &jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
             let x = jjt_damped
                 .cholesky()
@@ -223,7 +294,10 @@ impl GalawModel {
                 *q += STEP_SIZE * dq_i;
             }
 
-            error = compute_error(&joint_cmds_candidate)?;
+            let (new_pose, new_jac) = self.compute_restricted_pose_and_jacobian(&chain, &joint_cmds_candidate);
+            current_pose = new_pose;
+            jac = new_jac;
+            error = compute_error(&current_pose)?;
             iterations += 1;
         }
 
