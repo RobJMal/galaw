@@ -1,4 +1,4 @@
-use nalgebra::{Isometry3, Matrix6, Matrix6xX, Translation3, UnitQuaternion, Vector3, Vector6};
+use nalgebra::{DVector, Isometry3, Matrix6, Matrix6xX, Translation3, UnitQuaternion, Vector3, Vector6};
 
 use crate::{
     error::{GalawError, KinematicsError},
@@ -274,6 +274,7 @@ impl GalawModel {
         let mut joint_cmds_candidate = initial_joint_cmds.to_vec(); 
         let mut chain_poses: Vec<Isometry3<f64>> = Vec::with_capacity(chain.len());
         let mut jac: Matrix6xX<f64> = Matrix6xX::zeros(self.num_actuated_joints);
+        let mut dq: DVector<f64> = DVector::zeros(self.num_actuated_joints);
 
         let mut current_pose = self.compute_restricted_pose_and_jacobian(
             &chain, &joint_cmds_candidate, &mut chain_poses, &mut jac);
@@ -295,7 +296,7 @@ impl GalawModel {
                 .cholesky()
                 .expect("J*J^T + damping*I is always positive definite for damping > 0")
                 .solve(&error);
-            let dq = jac.transpose() * x;
+            jac.tr_mul_to(&x, &mut dq);
             for (q, dq_i) in joint_cmds_candidate.iter_mut().zip(dq.iter()) {
                 *q += STEP_SIZE * dq_i;
             }
