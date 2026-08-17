@@ -138,16 +138,11 @@ impl GalawModel {
 
         let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
 
-        let mut child_to_joint: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
-        for (joint_idx, joint) in self.joints.iter().enumerate() {
-            child_to_joint.insert(joint.child_link_idx, joint_idx);
-        }
-
         let links = self.compute_fk(joint_cmds)?;
         let target_position = links[target_link_idx].translation;
 
         let mut current_link_idx = target_link_idx;
-        while let Some(&joint_idx) = child_to_joint.get(&current_link_idx) {
+        while let Some(&joint_idx) = self.link_idx_to_parent_joint_idx.get(&current_link_idx) {
             let joint = &self.joints[joint_idx];
             current_link_idx = joint.parent_link_idx;
 

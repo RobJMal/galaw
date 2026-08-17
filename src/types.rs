@@ -78,6 +78,8 @@ pub struct GalawModel {
     pub link_name_to_idx: HashMap<String, usize>,
     /// Maps an actuated joint's name to its `cmd_idx` (its position in a `joint_cmds` slice).
     pub joint_name_to_idx: HashMap<String, usize>,
+    /// Maps a link's index to index of joint that connectes it to parent (edge in tree)
+    pub link_idx_to_parent_joint_idx: HashMap<usize, usize>,
     /// Number of actuated (non-`Fixed`) joints — the expected length of a `joint_cmds` slice.
     pub num_actuated_joints: usize,
 }

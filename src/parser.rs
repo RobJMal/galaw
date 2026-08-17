@@ -224,7 +224,12 @@ fn dfs_visit(
 }
 
 /// Resolved joints (in DFS order), link name -> index, and joint name -> cmd_idx.
-type ResolvedJoints = (Vec<Joint>, HashMap<String, usize>, HashMap<String, usize>);
+type ResolvedJoints = (
+    Vec<Joint>, 
+    HashMap<String, usize>, // link_name -> cmd_idx
+    HashMap<String, usize>, // joint_name -> cmd_idx
+    HashMap<usize, usize>,  // link_name -> parent joint_idx
+);
 
 /// Resolves joint order for downstream functions.
 ///
@@ -313,7 +318,13 @@ fn resolve_joint_order(
         .filter_map(|j| j.cmd_idx.map(|idx| (j.name.clone(), idx)))
         .collect();
 
-    Ok((ordered_joints, link_name_to_idx, joint_name_to_idx))
+    let link_idx_to_parent_joint_idx: HashMap<usize, usize> = ordered_joints
+        .iter()
+        .enumerate()
+        .map(|(joint_idx, j)| (j.child_link_idx, joint_idx))
+        .collect();
+
+    Ok((ordered_joints, link_name_to_idx, joint_name_to_idx, link_idx_to_parent_joint_idx))
 }
 
 /// Parses a URDF file into a [`GalawModel`].
@@ -358,7 +369,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
         }
     }
 
-    let (ordered_joints, link_name_to_idx, joint_name_to_idx) =
+    let (ordered_joints, link_name_to_idx, joint_name_to_idx, link_idx_to_parent_joint_idx) =
         resolve_joint_order(&links, &joints)?;
 
     let num_actuated_joints = ordered_joints
@@ -372,6 +383,7 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
         link_name_to_idx,
         joints: ordered_joints,
         joint_name_to_idx,
+        link_idx_to_parent_joint_idx,
         num_actuated_joints,
     })
 }
