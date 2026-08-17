@@ -217,7 +217,7 @@ impl GalawModel {
             };
 
             let joint_local = joint.transform * Isometry3::from_parts(translation, rotation);
-            pose = pose * joint_local;
+            pose *= joint_local;
             chain_poses.push(pose);
         }
 
