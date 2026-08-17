@@ -182,9 +182,11 @@ impl GalawModel {
         &self,
         chain: &[usize],
         joint_cmds: &[f64],
-    ) -> (Isometry3<f64>, Matrix6xX<f64>) {
+        chain_poses: &mut Vec<Isometry3<f64>>,
+        jacobian: &mut Matrix6xX<f64>,
+    ) -> Isometry3<f64> {
+        chain_poses.clear();
         let mut pose = Isometry3::identity();
-        let mut chain_poses: Vec<Isometry3<f64>> = Vec::with_capacity(chain.len());
 
         for &joint_idx in chain {
             let joint = &self.joints[joint_idx];
@@ -205,7 +207,7 @@ impl GalawModel {
         }
 
         let target_position = pose.translation;
-        let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
+        jacobian.fill(0.0);
 
         for (i, &joint_idx) in chain.iter().enumerate() {
             let joint = &self.joints[joint_idx];
@@ -233,7 +235,7 @@ impl GalawModel {
             );
         }
 
-        (pose, jacobian)
+        pose
     }
 
     /// Computes inverse kinematics of a model.
@@ -270,7 +272,11 @@ impl GalawModel {
         };
         
         let mut joint_cmds_candidate = initial_joint_cmds.to_vec(); 
-        let (mut current_pose, mut jac) = self.compute_restricted_pose_and_jacobian(&chain, &joint_cmds_candidate);
+        let mut chain_poses: Vec<Isometry3<f64>> = Vec::with_capacity(chain.len());
+        let mut jac: Matrix6xX<f64> = Matrix6xX::zeros(self.num_actuated_joints);
+
+        let mut current_pose = self.compute_restricted_pose_and_jacobian(
+            &chain, &joint_cmds_candidate, &mut chain_poses, &mut jac);
         let mut error = compute_error(&current_pose)?;
         let mut iterations: usize = 0;
 
@@ -294,9 +300,8 @@ impl GalawModel {
                 *q += STEP_SIZE * dq_i;
             }
 
-            let (new_pose, new_jac) = self.compute_restricted_pose_and_jacobian(&chain, &joint_cmds_candidate);
-            current_pose = new_pose;
-            jac = new_jac;
+            current_pose = self.compute_restricted_pose_and_jacobian(
+                &chain, &joint_cmds_candidate, &mut chain_poses, &mut jac);
             error = compute_error(&current_pose)?;
             iterations += 1;
         }
