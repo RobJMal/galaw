@@ -173,12 +173,13 @@ impl GalawModel {
         Ok(jacobian)
     }
 
-    /// Computes the pose and Jacobian of one link along a precomputed chain.
+    /// Computes the pose of one link along a precomputed chain, and fills
+    /// `jacobian` with that link's Jacobian in place.
     ///
     /// Primarily, this is used by `compute_ik`'s loop, which needs both values
     /// every iteration without recomputing the chain or walking the whole model.
     #[inline]
-    fn compute_restricted_pose_and_jacobian(
+    fn compute_restricted_pose_and_fill_jacobian(
         &self,
         chain: &[usize],
         joint_cmds: &[f64],
@@ -276,7 +277,7 @@ impl GalawModel {
         let mut jac: Matrix6xX<f64> = Matrix6xX::zeros(self.num_actuated_joints);
         let mut dq: DVector<f64> = DVector::zeros(self.num_actuated_joints);
 
-        let mut current_pose = self.compute_restricted_pose_and_jacobian(
+        let mut current_pose = self.compute_restricted_pose_and_fill_jacobian(
             &chain, &joint_cmds_candidate, &mut chain_poses, &mut jac);
         let mut error = compute_error(&current_pose)?;
         let mut iterations: usize = 0;
@@ -301,7 +302,7 @@ impl GalawModel {
                 *q += STEP_SIZE * dq_i;
             }
 
-            current_pose = self.compute_restricted_pose_and_jacobian(
+            current_pose = self.compute_restricted_pose_and_fill_jacobian(
                 &chain, &joint_cmds_candidate, &mut chain_poses, &mut jac);
             error = compute_error(&current_pose)?;
             iterations += 1;
