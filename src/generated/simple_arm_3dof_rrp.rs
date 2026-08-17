@@ -18,7 +18,7 @@ let link_ee_link = link_link2 * Translation3::new(0.25, 0.0, 0.0) * Translation3
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_jacobian(joint_cmds: &[f64; 3]) -> [SMatrix<f64, 6, 3>; 4] {
+pub fn compute_link_jacobians(joint_cmds: &[f64; 3]) -> [SMatrix<f64, 6, 3>; 4] {
 let links = compute_fk(joint_cmds);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0, 1.0, 0.0);

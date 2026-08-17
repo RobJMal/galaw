@@ -238,7 +238,7 @@ fn generate_jacobian_fn_code(
 
     // function signature
     codegen_output.push(format!(
-        "pub fn compute_jacobian(joint_cmds: &[f64; {}]) -> [SMatrix<f64, 6, {}>; {}] {{",
+        "pub fn compute_link_jacobians(joint_cmds: &[f64; {}]) -> [SMatrix<f64, 6, {}>; {}] {{",
         galaw_model.num_actuated_joints,
         galaw_model.num_actuated_joints,
         galaw_model.links.len(),

@@ -10,11 +10,12 @@ use galaw::types::GalawModel;
 
 mod common;
 use common::{
-    NUM_POSES, RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
-    zero_joint_cmds,
+    RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models, zero_joint_cmds,
 };
 
 // ---- CONSTANTS ----
+const NUM_POSES: usize = 128;
+const TEST_TOLERANCE: f64 = 1e-7;
 const FD_EPS: f64 = 1e-6;
 const FD_TOLERANCE: f64 = 1e-5; // looser numerical error for finite difference 
 
@@ -33,7 +34,7 @@ fn assert_galaw_jacobian_matches_finite_difference(
     galaw_model: &GalawModel,
     joint_cmds: &[f64],
 ) -> TestResult {
-    let jacobians = galaw_model.compute_jacobian(joint_cmds)?;
+    let jacobians = galaw_model.compute_link_jacobians(joint_cmds)?;
 
     for joint in &galaw_model.joints {
         let Some(cmd_idx) = joint.cmd_idx else {
@@ -79,7 +80,7 @@ fn asssert_galaw_jacobian_matches_k(
     k_chain.set_joint_positions(joint_cmds)?;
     k_chain.update_transforms();
 
-    let galaw_jacobian = galaw_model.compute_jacobian(joint_cmds)?;
+    let galaw_jacobian = galaw_model.compute_link_jacobians(joint_cmds)?;
 
     for (target_link_idx, link) in galaw_model.links.iter().enumerate() {
         let galaw_link_jacobian = &galaw_jacobian[target_link_idx];
@@ -98,6 +99,7 @@ fn asssert_galaw_jacobian_matches_k(
                 assert_close(
                     galaw_link_jacobian[(row, cmd_idx)],
                     k_jacobian[(row, k_col_idx)],
+                    &TEST_TOLERANCE,
                 );
             }
         }
@@ -121,20 +123,20 @@ fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
     Ok(())
 }
 
-/// Runs correctness check generated `compute_jacobian` against the runtime version.
+/// Runs correctness check generated `compute_link_jacobians` against the runtime version.
 fn check_generated_jacobian_matches_dynamic<const N: usize, const M: usize>(
     urdf_path: &str,
-    generated_compute_jacobian: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
+    generated_compute_link_jacobians: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
 ) -> TestResult {
     let galaw_model = galaw::load_urdf(urdf_path)?;
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
         let joint_cmds = random_joint_cmds(&galaw_model, &mut rng);
-        let dynamic_jacobians = galaw_model.compute_jacobian(&joint_cmds)?;
+        let dynamic_jacobians = galaw_model.compute_link_jacobians(&joint_cmds)?;
 
         let joint_cmds_arr: [f64; N] = joint_cmds.clone().try_into().unwrap();
-        let generated_jacobians = generated_compute_jacobian(&joint_cmds_arr);
+        let generated_jacobians = generated_compute_link_jacobians(&joint_cmds_arr);
 
         for link_idx in 0..galaw_model.links.len() {
             for row in 0..6 {
@@ -142,6 +144,7 @@ fn check_generated_jacobian_matches_dynamic<const N: usize, const M: usize>(
                     assert_close(
                         dynamic_jacobians[link_idx][(row, col)],
                         generated_jacobians[link_idx][(row, col)],
+                        &TEST_TOLERANCE,
                     );
                 }
             }
@@ -211,7 +214,7 @@ macro_rules! jacobian_codegen_correctness_test {
             fn matches_dynamic() -> TestResult {
                 check_generated_jacobian_matches_dynamic(
                     $path,
-                    galaw::generated::$module::compute_jacobian,
+                    galaw::generated::$module::compute_link_jacobians,
                 )
             }
         }

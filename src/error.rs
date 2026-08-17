@@ -146,4 +146,20 @@ pub enum KinematicsError {
         /// Number of joint commands actually given.
         num_input: usize,
     },
+    /// `target_link_idx` is out of range for this model's links.
+    #[error("model has {num_links} links, requested index {requested}")]
+    LinkIdxOutOfBounds {
+        /// Number of links in the model.
+        num_links: usize,
+        /// The out-of-range index that was requested.
+        requested: usize,
+    },
+    /// IK failed to converge
+    #[error("ik didnot not converge within {iterations} iterations. final error: {final_error}")]
+    IkDidNotConverge {
+        /// Number of iterations
+        iterations: usize,
+        /// Final error of iterations
+        final_error: f64,
+    },
 }

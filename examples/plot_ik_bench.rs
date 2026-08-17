@@ -1,14 +1,14 @@
-//! Renders Jacobian benchmark charts from Criterion's JSON output using
+//! Renders IK benchmark charts from Criterion's JSON output using
 //! `charming` (Apache ECharts bindings). Reads each benchmark's `estimates.json`
-//! so the charts stay in sync with the latest `cargo bench --bench jacobian_speed` run.
+//! so the charts stay in sync with the latest `cargo bench --bench ik_speed` run.
 //!
 //! Each chart is a line-over-DOF plot per implementation, showing:
 //!   * the mean per-call time/throughput (with the value printed as a label), and
 //!   * a shaded 95% confidence-interval band (ECharts has no native error bars;
 //!     the band is drawn as a stacked area between the CI's lower and upper bounds).
 //!
-//! Usage (after `cargo bench --bench jacobian_speed`):
-//!     cargo run --release --example plot_jacobian_bench
+//! Usage (after `cargo bench --bench ik_speed`):
+//!     cargo run --release --example plot_ik_bench
 //!
 //! Output PNGs land in docs/bench/. Requires dev-deps `charming` (feature
 //! "ssr-raster") and `serde_json`. The first build is slow: charming's `ssr`
@@ -30,14 +30,16 @@ use charming::{Chart, ImageFormat, ImageRenderer};
 // Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
 
-/// Calls per timed iteration in benches/jacobian_speed.rs. Criterion's estimates
-/// are per iteration, so dividing by this converts to per single `compute_link_jacobians` call.
+/// Calls per timed iteration in benches/ik_speed.rs. Criterion's estimates
+/// are per iteration, so dividing by this converts to per single `compute_ik` call.
 const N_POSES: f64 = 100.0;
 
-const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
+/// No codegen counterpart for IK (see docs on `compute_ik`) — only the
+/// runtime solver and `k`'s own Jacobian IK solver are benchmarked.
+const IMPLS: [&str; 2] = ["galaw-runtime", "k"];
 
-/// Wong (2011) colorblind-safe triple: galaw-runtime=blue, galaw-generated=bluish green, k=orange.
-const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
+/// Wong (2011) colorblind-safe pair: galaw-runtime=blue, k=orange.
+const COLORS: [&str; 2] = ["#0072B2", "#E69F00"];
 
 // ----- FONT SIZES (tweak here — every chart text element is driven off these) -----
 const TITLE_FONT_SIZE: f64 = 38.0;
@@ -57,7 +59,7 @@ const AXIS_TICK_FONT_SIZE: f64 = 19.0;
 const LABEL_FONT_SIZE: f64 = 19.0;
 const LABEL_STAGGER_PX: f64 = 16.0;
 
-/// Mean and 95% CI bounds for a single benchmark, in ns per `compute_link_jacobians` call.
+/// Mean and 95% CI bounds for a single benchmark, in ns per `compute_ik` call.
 struct Stat {
     mean: f64,
     lo: f64,
@@ -80,7 +82,7 @@ fn robot_info(urdf_path: &str) -> Result<RobotInfo, Box<dyn Error>> {
     let model = load_urdf(urdf_path)?;
     Ok(RobotInfo {
         name: model.name.clone(),
-        group: format!("jacobian_{}", model.name),
+        group: format!("ik_{}", model.name),
         bench_id: model.joints.len() as u32,
         dof: model.num_actuated_joints as u32,
     })
@@ -97,7 +99,7 @@ fn stat(group: &str, impl_: &str, dof: u32) -> Result<Stat, Box<dyn Error>> {
 
     let text = fs::read_to_string(&path).map_err(|e| {
         format!(
-            "could not read {} (run `cargo bench --bench jacobian_speed` first): {e}",
+            "could not read {} (run `cargo bench --bench ik_speed` first): {e}",
             path.display()
         )
     })?;
@@ -285,12 +287,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let latency = build_chart(
         &robots,
-        "Jacobian latency scaling (95% CI)",
+        "IK latency scaling (95% CI)",
         "ns per call (lower is better)",
         |s| (s.mean, s.lo, s.hi),
         |x| x.round(),
     )?;
-    let p1 = out.join("jacobian_scaling_ns_per_call.png");
+    let p1 = out.join("ik_scaling_ns_per_call.png");
     renderer.save_format(
         ImageFormat::Png,
         &latency,
@@ -301,12 +303,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mcps = |ns: f64| 1e9 / ns / 1e6;
     let throughput = build_chart(
         &robots,
-        "Jacobian throughput (95% CI)",
+        "IK throughput (95% CI)",
         "million calls/sec (higher is better)",
         move |s| (mcps(s.mean), mcps(s.hi), mcps(s.lo)),
         |x| (x * 100.0).round() / 100.0,
     )?;
-    let p2 = out.join("jacobian_throughput_mcalls.png");
+    let p2 = out.join("ik_throughput_mcalls.png");
     renderer.save_format(
         ImageFormat::Png,
         &throughput,

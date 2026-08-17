@@ -15,12 +15,12 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
 
-/// Benchmarks a codegen'd `compute_jacobian` under the "galaw-generated" id.
+/// Benchmarks a codegen'd `compute_link_jacobians` under the "galaw-generated" id.
 fn bench_generated_jacobian<const N: usize, const M: usize>(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id: usize,
     joint_cmds: &[Vec<f64>],
-    generated_compute_jacobian: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
+    generated_compute_link_jacobians: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let joint_cmds_arr: Vec<[f64; N]> = joint_cmds
@@ -34,7 +34,7 @@ fn bench_generated_jacobian<const N: usize, const M: usize>(
         |b, cmds| {
             b.iter(|| {
                 for cmd in cmds {
-                    let out = generated_compute_jacobian(black_box(cmd));
+                    let out = generated_compute_link_jacobians(black_box(cmd));
                     black_box(out);
                 }
             });
@@ -74,7 +74,7 @@ fn bench_jacobian(c: &mut Criterion) {
             |b, cmds| {
                 b.iter(|| {
                     for cmd in cmds {
-                        let out = galaw_model.compute_jacobian(black_box(cmd)).unwrap();
+                        let out = galaw_model.compute_link_jacobians(black_box(cmd)).unwrap();
                         black_box(out);
                     }
                 });
@@ -90,7 +90,7 @@ fn bench_jacobian(c: &mut Criterion) {
                         &mut group,
                         galaw_model.joints.len(),
                         &joint_cmds,
-                        galaw::generated::$module::compute_jacobian,
+                        galaw::generated::$module::compute_link_jacobians,
                     );
                     generated_bench_registered = true;
                 }
@@ -99,7 +99,7 @@ fn bench_jacobian(c: &mut Criterion) {
         galaw::for_each_generated_robot!(bench_if_matches);
         assert!(
             generated_bench_registered,
-            "no generated compute_jacobian registered for {urdf_path} — run scripts/codegen_all_urdfs.sh"
+            "no generated compute_link_jacobians registered for {urdf_path} — run scripts/codegen_all_urdfs.sh"
         );
 
         // ---- k ----

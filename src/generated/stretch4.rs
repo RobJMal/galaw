@@ -68,7 +68,7 @@ let link_laser = link_base_link;
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_jacobian(joint_cmds: &[f64; 13]) -> [SMatrix<f64, 6, 13>; 54] {
+pub fn compute_link_jacobians(joint_cmds: &[f64; 13]) -> [SMatrix<f64, 6, 13>; 54] {
 let links = compute_fk(joint_cmds);
 let axis_world_23 = links[24].rotation * Vector3::new(0.0, 0.0, 1.0);
 let axis_world_25 = links[26].rotation * Vector3::new(1.0, 0.0, 0.0);

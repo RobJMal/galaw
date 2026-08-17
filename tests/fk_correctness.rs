@@ -1,7 +1,7 @@
 /// Tests the correctness of the implemented forward kinematics function
 /// with Rust's k library
 // Third-party
-use nalgebra::{Isometry3, Translation3, UnitQuaternion};
+use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
@@ -10,34 +10,13 @@ use galaw::{load_urdf, types::GalawModel};
 
 mod common;
 use common::{
-    NUM_POSES, RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models,
-    zero_joint_cmds,
+    RNG_SEED, TestResult, assert_galaw_k_transform_close, assert_galaw_transform_close,
+    random_joint_cmds, setup_kinematic_models, zero_joint_cmds,
 };
 
-/// Need to do this test because quaternions double-cover rotations (q=-q are same rotation)
-fn assert_orientation_close(a: &UnitQuaternion<f64>, b: &UnitQuaternion<f64>) {
-    let dot_prod = a.i * b.i + a.j * b.j + a.k * b.k + a.w * b.w;
-    assert_close(dot_prod.abs(), 1.0);
-}
-
-fn assert_position3d_close(a: &Translation3<f64>, b: &Translation3<f64>) {
-    assert_close(a.x, b.x);
-    assert_close(a.y, b.y);
-    assert_close(a.z, b.z);
-}
-
-fn assert_transform_close(galaw_transform: &Isometry3<f64>, k_iso: &k::nalgebra::Isometry3<f64>) {
-    assert_position3d_close(&galaw_transform.translation, &k_iso.translation);
-    assert_orientation_close(&galaw_transform.rotation, &k_iso.rotation);
-}
-
-/// Both sides are plain `nalgebra::Isometry3<f64>` here (dynamic vs codegen'd
-/// FK), unlike `assert_transform_close` which bridges to `k`'s own re-exported
-/// nalgebra type.
-fn assert_galaw_transform_close(a: &Isometry3<f64>, b: &Isometry3<f64>) {
-    assert_position3d_close(&a.translation, &b.translation);
-    assert_orientation_close(&a.rotation, &b.rotation);
-}
+// ---- CONSTANTS ----
+const NUM_POSES: usize = 128;
+const TEST_TOLERANCE: f64 = 1e-7;
 
 fn assert_galaw_fk_matches_k(
     galaw_model: &GalawModel,
@@ -57,7 +36,7 @@ fn assert_galaw_fk_matches_k(
             .world_transform()
             .ok_or("invalid result")?;
 
-        assert_transform_close(&galaw_result[i], &k_link);
+        assert_galaw_k_transform_close(&galaw_result[i], &k_link, &TEST_TOLERANCE);
     }
 
     Ok(())
@@ -117,7 +96,7 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
         let generated_links = generated_compute_fk(&joint_cmds_arr);
 
         for i in 0..galaw_model.links.len() {
-            assert_galaw_transform_close(&dynamic_links[i], &generated_links[i]);
+            assert_galaw_transform_close(&dynamic_links[i], &generated_links[i], &TEST_TOLERANCE);
         }
     }
 
