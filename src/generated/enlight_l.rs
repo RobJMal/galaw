@@ -99,9 +99,8 @@ let mut joint_cmds = *initial_joint_cmds;
 match target_link_idx {
 1 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
-let pose_0 = Isometry3::identity();
 let jac = SMatrix::<f64, 6, 0>::zeros();
-(pose_0, jac)
+(Isometry3::identity(), jac)
 };
 let (mut current_pose, mut _jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -120,13 +119,12 @@ Ok(joint_cmds)
 }
 2 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_1.translation;
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let target_position = pose_0.translation;
 let mut jac = SMatrix::<f64, 6, 1>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_1, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_0, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -149,16 +147,15 @@ Ok(joint_cmds)
 }
 3 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_2.translation;
+let target_position = pose_1.translation;
 let mut jac = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_2, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_1, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -182,19 +179,18 @@ Ok(joint_cmds)
 }
 4 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_3.translation;
+let target_position = pose_2.translation;
 let mut jac = SMatrix::<f64, 6, 3>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_3, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_2, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -219,22 +215,21 @@ Ok(joint_cmds)
 }
 5 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_4 = pose_4.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_4.translation;
+let target_position = pose_3.translation;
 let mut jac = SMatrix::<f64, 6, 4>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_4, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_3, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -260,25 +255,24 @@ Ok(joint_cmds)
 }
 6 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 5>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_4 = pose_4.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_5 = pose_5.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_5.translation;
+let target_position = pose_4.translation;
 let mut jac = SMatrix::<f64, 6, 5>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_5, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_4, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -305,28 +299,27 @@ Ok(joint_cmds)
 }
 7 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 6>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_4 = pose_4.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.0261, 0.124), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_5 = pose_5.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_6 = pose_5 * Isometry3::from_parts(Translation3::new(0.0, -0.0261, 0.124), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_6 = pose_6.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_6.translation;
+let target_position = pose_5.translation;
 let mut jac = SMatrix::<f64, 6, 6>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(target_position.vector - pose_6.translation.vector)); let ang = axis_world_6; jac.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_6, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_5, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -354,31 +347,30 @@ Ok(joint_cmds)
 }
 8 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 7>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_4 = pose_4.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.0261, 0.124), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_5 = pose_5.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_6 = pose_5 * Isometry3::from_parts(Translation3::new(0.0, -0.0261, 0.124), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_6 = pose_5 * Isometry3::from_parts(Translation3::new(0.0, 0.134, -0.0261), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_6 = pose_6.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_7 = pose_6 * Isometry3::from_parts(Translation3::new(0.0, 0.134, -0.0261), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_7 = pose_7.rotation * Vector3::new(0.0, 0.0, 1.0);
-let target_position = pose_7.translation;
+let target_position = pose_6.translation;
 let mut jac = SMatrix::<f64, 6, 7>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(target_position.vector - pose_6.translation.vector)); let ang = axis_world_6; jac.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_7.cross(&(target_position.vector - pose_7.translation.vector)); let ang = axis_world_7; jac.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_7, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_6.cross(&(target_position.vector - pose_6.translation.vector)); let ang = axis_world_6; jac.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_6, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
@@ -407,32 +399,31 @@ Ok(joint_cmds)
 }
 9 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 7]| -> (Isometry3<f64>, SMatrix<f64, 6, 7>) {
-let pose_0 = Isometry3::identity();
-let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.146) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, -0.037, 0.114), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.181, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_3 = pose_2 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, 0.037, 0.109), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_4 = pose_3 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_4 = pose_4.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.156, -0.037), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_5 = pose_4 * Isometry3::from_parts(Translation3::new(0.0, -0.0261, 0.124), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_5 = pose_5.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_6 = pose_5 * Isometry3::from_parts(Translation3::new(0.0, -0.0261, 0.124), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, 0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let pose_6 = pose_5 * Isometry3::from_parts(Translation3::new(0.0, 0.134, -0.0261), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_6 = pose_6.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_7 = pose_6 * Isometry3::from_parts(Translation3::new(0.0, 0.134, -0.0261), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476, -0.7071067811865475, 0.0, 0.0))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
-let axis_world_7 = pose_7.rotation * Vector3::new(0.0, 0.0, 1.0);
-let pose_8 = pose_7 * Translation3::new(0.0, 0.0, 0.048);
-let target_position = pose_8.translation;
+let pose_7 = pose_6 * Translation3::new(0.0, 0.0, 0.048);
+let target_position = pose_7.translation;
 let mut jac = SMatrix::<f64, 6, 7>::zeros();
-{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(target_position.vector - pose_6.translation.vector)); let ang = axis_world_6; jac.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_7.cross(&(target_position.vector - pose_7.translation.vector)); let ang = axis_world_7; jac.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-(pose_8, jac)
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(target_position.vector - pose_3.translation.vector)); let ang = axis_world_3; jac.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_4.cross(&(target_position.vector - pose_4.translation.vector)); let ang = axis_world_4; jac.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_5.cross(&(target_position.vector - pose_5.translation.vector)); let ang = axis_world_5; jac.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_6.cross(&(target_position.vector - pose_6.translation.vector)); let ang = axis_world_6; jac.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_7, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);

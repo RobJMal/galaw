@@ -1,7 +1,7 @@
 use std::env::args;
 
 // Third-party
-use nalgebra::{Translation3, UnitQuaternion, Vector3};
+use nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
 
 // Custom
 use galaw::{load_urdf, types::GalawModel};
@@ -407,10 +407,52 @@ fn generate_ik_fn_code(
         // (cmd_idx, pose var at this joint, world-frame axis var, is rotational)
         let mut actuated_steps: Vec<(usize, String, String, bool)> = Vec::new();
 
-        for (step, &joint_idx) in chain.iter().enumerate() {
-            let joint = &galaw_model.joints[joint_idx];
+        let mut pose_step: usize = 0;
+        let mut i = 0;
+        while i < chain.len() {
+            let joint = &galaw_model.joints[chain[i]];
 
-            // Using Unit::new_unchecked since already normalized in parser.rs
+            if joint.rot_axis.is_none() && joint.lin_axis.is_none() {
+                // Consecutive fixed joints don't depend on joint_cmds, so
+                // multiply their transforms together here (at codegen time)
+                // into one constant, instead of one runtime multiply each.
+                let mut combined = Isometry3::identity();
+                let mut j = i;
+                while j < chain.len() {
+                    let run_joint = &galaw_model.joints[chain[j]];
+                    if run_joint.rot_axis.is_some() || run_joint.lin_axis.is_some() {
+                        break;
+                    }
+                    combined = combined * run_joint.transform;
+                    j += 1;
+                }
+
+                let t_str = format!(
+                    "Translation3::new({:?}, {:?}, {:?})",
+                    combined.translation.x, combined.translation.y, combined.translation.z
+                );
+                let r_str = format!(
+                    "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
+                    combined.rotation.w, combined.rotation.i, combined.rotation.j, combined.rotation.k
+                );
+                if let Some(constant) = optimize_joint_transform_code(
+                    &combined.translation,
+                    &combined.rotation,
+                    &t_str,
+                    &r_str,
+                ) {
+                    let new_pose_var = format!("pose_{}", pose_step);
+                    pose_step += 1;
+                    codegen_output
+                        .push(format!("let {} = {} * {};", new_pose_var, pose_var, constant));
+                    pose_var = new_pose_var;
+                }
+                i = j;
+                continue;
+            }
+
+            // Actuated joint: still one at a time, since its motion depends
+            // on joint_cmds at call time, not just codegen-time constants.
             let rotation: String = match joint.rot_axis {
                 Some(axis) => {
                     optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap())
@@ -451,7 +493,6 @@ fn generate_ik_fn_code(
                 factors.push(jt);
             }
 
-            let is_fixed_joint = joint.rot_axis.is_none() && joint.lin_axis.is_none();
             let is_revolute_continous_joint = joint.rot_axis.is_some() && joint.lin_axis.is_none();
             let is_prismatic_joint = joint.lin_axis.is_some() && joint.rot_axis.is_none();
 
@@ -459,35 +500,33 @@ fn generate_ik_fn_code(
                 factors.push(rotation);
             } else if is_prismatic_joint {
                 factors.push(translation);
-            } else if !is_fixed_joint {
+            } else {
                 factors.push(format!(
                     "Isometry3::from_parts({}, {})",
                     translation, rotation
                 ));
             }
 
-            let new_pose_var = format!("pose_{}", step);
+            let new_pose_var = format!("pose_{}", pose_step);
+            let this_step = pose_step;
+            pose_step += 1;
             codegen_output.push(format!("let {} = {};", new_pose_var, factors.join(" * ")));
             pose_var = new_pose_var.clone();
 
-            if let Some(cmd_idx) = joint.cmd_idx {
-                let local_axis = joint
-                    .rot_axis
-                    .or(joint.lin_axis)
-                    .expect("actuated joint has an axis")
-                    .into_inner();
-                let axis_var = format!("axis_world_{}", step);
-                codegen_output.push(format!(
-                    "let {} = {}.rotation * Vector3::new({:?}, {:?}, {:?});",
-                    axis_var, new_pose_var, local_axis.x, local_axis.y, local_axis.z
-                ));
-                actuated_steps.push((
-                    cmd_idx,
-                    new_pose_var.clone(),
-                    axis_var,
-                    joint.rot_axis.is_some(),
-                ));
-            }
+            let cmd_idx = joint.cmd_idx.unwrap(); // actuated, so always Some
+            let local_axis = joint
+                .rot_axis
+                .or(joint.lin_axis)
+                .expect("actuated joint has an axis")
+                .into_inner();
+            let axis_var = format!("axis_world_{}", this_step);
+            codegen_output.push(format!(
+                "let {} = {}.rotation * Vector3::new({:?}, {:?}, {:?});",
+                axis_var, new_pose_var, local_axis.x, local_axis.y, local_axis.z
+            ));
+            actuated_steps.push((cmd_idx, new_pose_var.clone(), axis_var, joint.rot_axis.is_some()));
+
+            i += 1;
         }
 
         // Only a rotational joint's column needs the cross product below —
