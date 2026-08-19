@@ -346,13 +346,11 @@ fn generate_ik_fn_code(
     codegen_output.push("const MAX_ITERATIONS: usize = 1000;".to_string());
 
     // Loop-invariant, so computed once instead of every LM iteration.
-    codegen_output
-        .push("let damping_matrix = DAMPING_FACTOR * Matrix6::identity();".to_string());
+    codegen_output.push("let damping_matrix = DAMPING_FACTOR * Matrix6::identity();".to_string());
 
     // Chain-independent, so hoisted above the match instead of duplicated per arm.
-    codegen_output.push(
-        "let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {".to_string(),
-    );
+    codegen_output
+        .push("let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {".to_string());
     codegen_output.push(
         "let error_position = target_pose.translation.vector - current_pose.translation.vector;"
             .to_string(),
@@ -437,7 +435,10 @@ fn generate_ik_fn_code(
                 );
                 let r_str = format!(
                     "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
-                    combined.rotation.w, combined.rotation.i, combined.rotation.j, combined.rotation.k
+                    combined.rotation.w,
+                    combined.rotation.i,
+                    combined.rotation.j,
+                    combined.rotation.k
                 );
                 if let Some(constant) = optimize_joint_transform_code(
                     &combined.translation,
@@ -447,8 +448,10 @@ fn generate_ik_fn_code(
                 ) {
                     let new_pose_var = format!("pose_{}", pose_step);
                     pose_step += 1;
-                    codegen_output
-                        .push(format!("let {} = {} * {};", new_pose_var, pose_var, constant));
+                    codegen_output.push(format!(
+                        "let {} = {} * {};",
+                        new_pose_var, pose_var, constant
+                    ));
                     pose_var = new_pose_var;
                 }
                 i = j;
@@ -528,7 +531,12 @@ fn generate_ik_fn_code(
                 "let {} = {}.rotation * Vector3::new({:?}, {:?}, {:?});",
                 axis_var, new_pose_var, local_axis.x, local_axis.y, local_axis.z
             ));
-            actuated_steps.push((cmd_idx, new_pose_var.clone(), axis_var, joint.rot_axis.is_some()));
+            actuated_steps.push((
+                cmd_idx,
+                new_pose_var.clone(),
+                axis_var,
+                joint.rot_axis.is_some(),
+            ));
 
             i += 1;
         }
@@ -541,7 +549,11 @@ fn generate_ik_fn_code(
             codegen_output.push(format!("let target_position = {}.translation;", pose_var));
         }
         // Same reasoning for `mut`: no actuated joint means no `set_column` call.
-        let jac_mut_keyword = if actuated_steps.is_empty() { "" } else { "mut " };
+        let jac_mut_keyword = if actuated_steps.is_empty() {
+            ""
+        } else {
+            "mut "
+        };
         codegen_output.push(format!(
             "let {}jac = SMatrix::<f64, 6, {}>::zeros();",
             jac_mut_keyword, chain_actuated_count
@@ -597,9 +609,8 @@ fn generate_ik_fn_code(
         // whole solve is a no-op (and every binding here would be unused) —
         // skip straight to the next pose/error recompute below.
         if !actuated_steps.is_empty() {
-            codegen_output.push(
-                "let jjt_damped = jac * jac.transpose() + damping_matrix;".to_string(),
-            );
+            codegen_output
+                .push("let jjt_damped = jac * jac.transpose() + damping_matrix;".to_string());
             codegen_output.push(
                 "let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);"
                     .to_string(),

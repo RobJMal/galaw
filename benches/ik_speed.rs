@@ -62,7 +62,11 @@ fn bench_generated_ik<const N: usize>(
     link_idx: usize,
     bench_id: usize,
     trials: &[(Vec<f64>, Vec<f64>)],
-    generated_compute_ik: impl Fn(usize, &Isometry3<f64>, &[f64; N]) -> Result<[f64; N], KinematicsError>,
+    generated_compute_ik: impl Fn(
+        usize,
+        &Isometry3<f64>,
+        &[f64; N],
+    ) -> Result<[f64; N], KinematicsError>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let trials_arr: Vec<(Vec<f64>, [f64; N])> = trials
