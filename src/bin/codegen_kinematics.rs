@@ -345,6 +345,10 @@ fn generate_ik_fn_code(
     codegen_output.push("const STEP_SIZE: f64 = 1.0;".to_string());
     codegen_output.push("const MAX_ITERATIONS: usize = 1000;".to_string());
 
+    // Loop-invariant, so computed once instead of every LM iteration.
+    codegen_output
+        .push("let damping_matrix = DAMPING_FACTOR * Matrix6::identity();".to_string());
+
     // Chain-independent, so hoisted above the match instead of duplicated per arm.
     codegen_output.push(
         "let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {".to_string(),
@@ -594,8 +598,7 @@ fn generate_ik_fn_code(
         // skip straight to the next pose/error recompute below.
         if !actuated_steps.is_empty() {
             codegen_output.push(
-                "let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();"
-                    .to_string(),
+                "let jjt_damped = jac * jac.transpose() + damping_matrix;".to_string(),
             );
             codegen_output.push(
                 "let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);"

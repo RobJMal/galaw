@@ -39,6 +39,7 @@ const ERROR_TOLERANCE: f64 = 1e-5;
 const DAMPING_FACTOR: f64 = 1e-4;
 const STEP_SIZE: f64 = 1.0;
 const MAX_ITERATIONS: usize = 1000;
+let damping_matrix = DAMPING_FACTOR * Matrix6::identity();
 let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {
 let error_position = target_pose.translation.vector - current_pose.translation.vector;
 let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();
@@ -65,7 +66,7 @@ while error.norm() > ERROR_TOLERANCE {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
-let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
+let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
 let dq: SVector<f64, 2> = jac.transpose() * x;
 joint_cmds[0] += STEP_SIZE * dq[0];
@@ -94,7 +95,7 @@ while error.norm() > ERROR_TOLERANCE {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
-let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
+let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
 let dq: SVector<f64, 1> = jac.transpose() * x;
 joint_cmds[0] += STEP_SIZE * dq[0];

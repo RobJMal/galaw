@@ -296,6 +296,7 @@ impl GalawModel {
 
         let mut joint_cmds_candidate = initial_joint_cmds.to_vec();
         let mut chain_poses: Vec<Isometry3<f64>> = Vec::with_capacity(chain.len());
+        let damping_matrix = DAMPING_FACTOR * Matrix6::identity();
         let mut jac: Matrix6xX<f64> = Matrix6xX::zeros(self.num_actuated_joints);
         let mut dq: DVector<f64> = DVector::zeros(self.num_actuated_joints);
 
@@ -318,7 +319,7 @@ impl GalawModel {
                 .into());
             }
 
-            let jjt_damped = &jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
+            let jjt_damped = &jac * jac.transpose() + damping_matrix;
             let x = jjt_damped
                 .cholesky()
                 .expect("J*J^T + damping*I is always positive definite for damping > 0")
