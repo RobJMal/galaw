@@ -29,3 +29,88 @@ let mut jacobian_upper_arm = SMatrix::<f64, 6, 2>::zeros();
 let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
 [jacobian_forearm, jacobian_upper_arm, jacobian_base_link]
 }
+use nalgebra::{SVector, Matrix6};
+use crate::error::KinematicsError;
+/// Computes inverse kinematics for the robot described by `simple_arm_2dof_flipped`.
+#[allow(non_snake_case)]
+#[rustfmt::skip]
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 2]) -> Result<[f64; 2], KinematicsError> {
+const ERROR_TOLERANCE: f64 = 1e-5;
+const DAMPING_FACTOR: f64 = 1e-4;
+const STEP_SIZE: f64 = 1.0;
+const MAX_ITERATIONS: usize = 1000;
+let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {
+let error_position = target_pose.translation.vector - current_pose.translation.vector;
+let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();
+Vector6::new(error_position.x, error_position.y, error_position.z, error_rotation.x, error_rotation.y, error_rotation.z)
+};
+let mut joint_cmds = *initial_joint_cmds;
+match target_link_idx {
+0 => {
+let compute_pose_and_jacobian = |joint_cmds: &[f64; 2]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.1) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.9) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
+let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
+let target_position = pose_1.translation;
+let mut jac = SMatrix::<f64, 6, 2>::zeros();
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_1, jac)
+};
+let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
+let mut error = compute_error(&current_pose);
+let mut iterations: usize = 0;
+while error.norm() > ERROR_TOLERANCE {
+if iterations >= MAX_ITERATIONS {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
+}
+let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
+let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
+let dq: SVector<f64, 2> = jac.transpose() * x;
+for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }
+let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
+current_pose = pose;
+jac = new_jac;
+error = compute_error(&current_pose);
+iterations += 1;
+}
+Ok(joint_cmds)
+}
+1 => {
+let compute_pose_and_jacobian = |joint_cmds: &[f64; 2]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
+let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.1) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
+let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
+let target_position = pose_0.translation;
+let mut jac = SMatrix::<f64, 6, 2>::zeros();
+{ let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+(pose_0, jac)
+};
+let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
+let mut error = compute_error(&current_pose);
+let mut iterations: usize = 0;
+while error.norm() > ERROR_TOLERANCE {
+if iterations >= MAX_ITERATIONS {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
+}
+let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
+let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
+let dq: SVector<f64, 2> = jac.transpose() * x;
+for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }
+let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
+current_pose = pose;
+jac = new_jac;
+error = compute_error(&current_pose);
+iterations += 1;
+}
+Ok(joint_cmds)
+}
+_ => {
+let error = compute_error(&Isometry3::identity());
+if error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
+}
+Ok(joint_cmds)
+}
+}
+}

@@ -224,6 +224,7 @@ fn generate_fk_fn_code(
     Ok(codegen_output)
 }
 
+/// Generates Jacobian function code.
 fn generate_jacobian_fn_code(
     galaw_model: &GalawModel,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -318,6 +319,280 @@ fn generate_jacobian_fn_code(
     Ok(codegen_output)
 }
 
+/// Generates inverse-kinematics function code.
+fn generate_ik_fn_code(
+    galaw_model: &GalawModel,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut codegen_output: Vec<String> = Vec::new();
+
+    codegen_output.push("use nalgebra::{SVector, Matrix6};".to_string());
+    codegen_output.push("use crate::error::KinematicsError;".to_string());
+
+    let n = galaw_model.num_actuated_joints;
+
+    codegen_output.push(format!(
+        "/// Computes inverse kinematics for the robot described by `{}`.",
+        galaw_model.name
+    ));
+    codegen_output.push("#[allow(non_snake_case)]".to_string());
+    codegen_output.push("#[rustfmt::skip]".to_string());
+    codegen_output.push(format!(
+        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; {}]) -> Result<[f64; {}], KinematicsError> {{",
+        n, n
+    ));
+    codegen_output.push("const ERROR_TOLERANCE: f64 = 1e-5;".to_string());
+    codegen_output.push("const DAMPING_FACTOR: f64 = 1e-4;".to_string());
+    codegen_output.push("const STEP_SIZE: f64 = 1.0;".to_string());
+    codegen_output.push("const MAX_ITERATIONS: usize = 1000;".to_string());
+
+    // Shared by every arm below — doesn't depend on the chain.
+    codegen_output.push(
+        "let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {".to_string(),
+    );
+    codegen_output.push(
+        "let error_position = target_pose.translation.vector - current_pose.translation.vector;"
+            .to_string(),
+    );
+    codegen_output.push(
+        "let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();"
+            .to_string(),
+    );
+    codegen_output.push(
+        "Vector6::new(error_position.x, error_position.y, error_position.z, error_rotation.x, error_rotation.y, error_rotation.z)"
+            .to_string(),
+    );
+    codegen_output.push("};".to_string());
+
+    codegen_output.push("let mut joint_cmds = *initial_joint_cmds;".to_string());
+    codegen_output.push("match target_link_idx {".to_string());
+
+    for link_idx in 0..galaw_model.links.len() {
+        // Walk the chain from root to this link (same approach as
+        // `GalawModel::compute_ik`), so it can be baked in below.
+        let mut chain: Vec<usize> = Vec::new();
+        let mut walk_link_idx = link_idx;
+        while let Some(&joint_idx) = galaw_model.link_idx_to_parent_joint_idx.get(&walk_link_idx) {
+            chain.push(joint_idx);
+            walk_link_idx = galaw_model.joints[joint_idx].parent_link_idx;
+        }
+        chain.reverse();
+
+        // Empty only for the root link — handled by the `_` arm below,
+        // same as the runtime function falling out of its chain-walk loop
+        // immediately for a link with no parent.
+        if chain.is_empty() {
+            continue;
+        }
+
+        codegen_output.push(format!("{} => {{", link_idx));
+
+        // A chain of entirely fixed joints never indexes into `joint_cmds`
+        // (every rotation/translation factor below resolves to `::identity()`
+        // — `joint_cmds[cmd_idx]` is only ever emitted for a joint that has
+        // an axis, i.e. one with `cmd_idx.is_some()`), so name the closure
+        // param `_joint_cmds` in that case to avoid an unused-variable warning.
+        let chain_has_actuated_joint = chain
+            .iter()
+            .any(|&joint_idx| galaw_model.joints[joint_idx].cmd_idx.is_some());
+        let joint_cmds_param = if chain_has_actuated_joint {
+            "joint_cmds"
+        } else {
+            "_joint_cmds"
+        };
+
+        // Closure computing this link's pose and Jacobian for a given
+        // joint_cmds, with the chain fully unrolled.
+        codegen_output.push(format!(
+            "let compute_pose_and_jacobian = |{}: &[f64; {}]| -> (Isometry3<f64>, SMatrix<f64, 6, {}>) {{",
+            joint_cmds_param, n, n
+        ));
+
+        let mut pose_var = "Isometry3::identity()".to_string();
+        // (cmd_idx, pose var at this joint, world-frame axis var, is rotational)
+        let mut actuated_steps: Vec<(usize, String, String, bool)> = Vec::new();
+
+        for (step, &joint_idx) in chain.iter().enumerate() {
+            let joint = &galaw_model.joints[joint_idx];
+
+            // Using Unit::new_unchecked since already normalized in parser.rs
+            let rotation: String = match joint.rot_axis {
+                Some(axis) => {
+                    optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap())
+                }
+                None => "UnitQuaternion::identity()".to_string(),
+            };
+            let translation: String = match joint.lin_axis {
+                Some(axis) => {
+                    let vec = axis.into_inner();
+                    let axis_vec_str: String =
+                        format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
+                    format!(
+                        "Translation3::from({} * joint_cmds[{}])",
+                        axis_vec_str,
+                        joint.cmd_idx.unwrap()
+                    )
+                }
+                None => "Translation3::identity()".to_string(),
+            };
+            let joint_transform_t = &joint.transform.translation;
+            let joint_transform_t_str: String = format!(
+                "Translation3::new({:?}, {:?}, {:?})",
+                joint_transform_t.x, joint_transform_t.y, joint_transform_t.z
+            );
+            let joint_transform_r = &joint.transform.rotation;
+            let joint_transform_r_str: String = format!(
+                "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
+                joint_transform_r.w, joint_transform_r.i, joint_transform_r.j, joint_transform_r.k
+            );
+
+            let mut factors: Vec<String> = vec![pose_var.clone()];
+            if let Some(jt) = optimize_joint_transform_code(
+                joint_transform_t,
+                joint_transform_r,
+                &joint_transform_t_str,
+                &joint_transform_r_str,
+            ) {
+                factors.push(jt);
+            }
+
+            let is_fixed_joint = joint.rot_axis.is_none() && joint.lin_axis.is_none();
+            let is_revolute_continous_joint = joint.rot_axis.is_some() && joint.lin_axis.is_none();
+            let is_prismatic_joint = joint.lin_axis.is_some() && joint.rot_axis.is_none();
+
+            if is_revolute_continous_joint {
+                factors.push(rotation);
+            } else if is_prismatic_joint {
+                factors.push(translation);
+            } else if !is_fixed_joint {
+                factors.push(format!(
+                    "Isometry3::from_parts({}, {})",
+                    translation, rotation
+                ));
+            }
+
+            let new_pose_var = format!("pose_{}", step);
+            codegen_output.push(format!("let {} = {};", new_pose_var, factors.join(" * ")));
+            pose_var = new_pose_var.clone();
+
+            if let Some(cmd_idx) = joint.cmd_idx {
+                let local_axis = joint
+                    .rot_axis
+                    .or(joint.lin_axis)
+                    .expect("actuated joint has an axis")
+                    .into_inner();
+                let axis_var = format!("axis_world_{}", step);
+                codegen_output.push(format!(
+                    "let {} = {}.rotation * Vector3::new({:?}, {:?}, {:?});",
+                    axis_var, new_pose_var, local_axis.x, local_axis.y, local_axis.z
+                ));
+                actuated_steps.push((
+                    cmd_idx,
+                    new_pose_var.clone(),
+                    axis_var,
+                    joint.rot_axis.is_some(),
+                ));
+            }
+        }
+
+        // `target_position` is only read below for a *rotational* actuated
+        // joint (the cross-product for its linear velocity column) — a
+        // prismatic joint's column is just its axis, no cross product.
+        let chain_has_rotational_actuated_joint =
+            actuated_steps.iter().any(|(_, _, _, is_rot)| *is_rot);
+        if chain_has_rotational_actuated_joint {
+            codegen_output.push(format!("let target_position = {}.translation;", pose_var));
+        }
+        // Only `mut` when there's an actuated joint to `set_column` below —
+        // otherwise `jac` is never mutated and `mut` itself would warn.
+        let jac_mut_keyword = if actuated_steps.is_empty() { "" } else { "mut " };
+        codegen_output.push(format!(
+            "let {}jac = SMatrix::<f64, 6, {}>::zeros();",
+            jac_mut_keyword, n
+        ));
+
+        for (cmd_idx, joint_pose_var, axis_var, is_rot) in &actuated_steps {
+            let (lin_expr, ang_expr) = if *is_rot {
+                (
+                    format!(
+                        "{}.cross(&(target_position.vector - {}.translation.vector))",
+                        axis_var, joint_pose_var
+                    ),
+                    axis_var.clone(),
+                )
+            } else {
+                (axis_var.clone(), "Vector3::zeros()".to_string())
+            };
+            codegen_output.push(format!(
+                "{{ let lin = {lin_expr}; let ang = {ang_expr}; jac.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
+            ));
+        }
+
+        codegen_output.push(format!("({}, jac)", pose_var));
+        codegen_output.push("};".to_string());
+
+        // The Levenberg-Marquardt loop itself: identical shape in every
+        // arm, so this part isn't unrolled — only `n` varies.
+        codegen_output.push(
+            "let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);"
+                .to_string(),
+        );
+        codegen_output.push("let mut error = compute_error(&current_pose);".to_string());
+        codegen_output.push("let mut iterations: usize = 0;".to_string());
+        codegen_output.push("while error.norm() > ERROR_TOLERANCE {".to_string());
+        codegen_output.push("if iterations >= MAX_ITERATIONS {".to_string());
+        codegen_output.push(
+            "return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });"
+                .to_string(),
+        );
+        codegen_output.push("}".to_string());
+        codegen_output.push(
+            "let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();"
+                .to_string(),
+        );
+        codegen_output.push(
+            "let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);"
+                .to_string(),
+        );
+        codegen_output.push(format!(
+            "let dq: SVector<f64, {}> = jac.transpose() * x;",
+            n
+        ));
+        codegen_output.push(
+            "for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }"
+                .to_string(),
+        );
+        codegen_output
+            .push("let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);".to_string());
+        codegen_output.push("current_pose = pose;".to_string());
+        codegen_output.push("jac = new_jac;".to_string());
+        codegen_output.push("error = compute_error(&current_pose);".to_string());
+        codegen_output.push("iterations += 1;".to_string());
+        codegen_output.push("}".to_string());
+        codegen_output.push("Ok(joint_cmds)".to_string());
+        codegen_output.push("}".to_string()); // closes this match arm
+    }
+
+    // Fallback for the root link (empty chain) and any out-of-range
+    // target_link_idx: pose is always identity, and since a zero Jacobian
+    // can never move joint_cmds, there's no LM iteration to unroll — just
+    // check once whether target_pose is already reached.
+    codegen_output.push("_ => {".to_string());
+    codegen_output.push("let error = compute_error(&Isometry3::identity());".to_string());
+    codegen_output.push("if error.norm() > ERROR_TOLERANCE {".to_string());
+    codegen_output.push(
+        "return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });"
+            .to_string(),
+    );
+    codegen_output.push("}".to_string());
+    codegen_output.push("Ok(joint_cmds)".to_string());
+    codegen_output.push("}".to_string()); // closes fallback arm
+
+    codegen_output.push("}".to_string()); // closes match
+    codegen_output.push("}".to_string()); // closes fn
+
+    Ok(codegen_output)
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = args().collect();
 
@@ -327,6 +602,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut codegen_output = generate_fk_fn_code(urdf_path, &galaw_model)?;
     codegen_output.extend(generate_jacobian_fn_code(&galaw_model)?);
+    codegen_output.extend(generate_ik_fn_code(&galaw_model)?);
     let codegen: String = codegen_output.join("\n");
 
     // Creating directory if it's missing

@@ -1,11 +1,12 @@
 /// Tests the correctness of the implemented inverse kinematics function
 /// with Rust's k library
 // Third-party
+use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::types::GalawModel;
+use galaw::{error::KinematicsError, types::GalawModel};
 
 mod common;
 use common::{RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models, zero_joint_cmds};
@@ -126,6 +127,63 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
 
     Ok(())
 }
+
+/// Compares a codegen'd `compute_ik` against the dynamic `GalawModel::compute_ik`.
+fn check_generated_matches_runtime<const N: usize>(
+    urdf_path: &str,
+    generated_compute_ik: impl Fn(
+        usize,
+        &Isometry3<f64>,
+        &[f64; N],
+    ) -> Result<[f64; N], KinematicsError>,
+) -> TestResult {
+    let (galaw_model, _) = setup_kinematic_models(urdf_path);
+
+    let candidates = candidate_target_links(&galaw_model);
+    assert!(
+        !candidates.is_empty(),
+        "no valid IK target links found for {urdf_path}"
+    );
+    let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
+
+    for _ in 0..NUM_POSES {
+        let target_link_idx = candidates[rng.random_range(0..candidates.len())];
+        let target_joint_cmd: Vec<f64> = random_joint_cmds(&galaw_model, &mut rng);
+        let init_joint_cmd: Vec<f64> =
+            perturbed_joint_cmds(&galaw_model, &target_joint_cmd, &mut rng, MAX_PERTUBATION);
+
+        eprintln!(
+            "[input] target_link_idx = {target_link_idx}, target_joint_cmd = {:?}",
+            target_joint_cmd
+        );
+
+        let target_pose = galaw_model.compute_fk(&target_joint_cmd)?[target_link_idx];
+
+        let init_joint_cmd_arr: [f64; N] = init_joint_cmd.try_into().unwrap();
+        let solved_joint_cmds =
+            generated_compute_ik(target_link_idx, &target_pose, &init_joint_cmd_arr)?;
+        let solved_pose = galaw_model.compute_fk(&solved_joint_cmds)?[target_link_idx];
+
+        assert_galaw_transform_close(&target_pose, &solved_pose, &TEST_TOLERANCE);
+    }
+
+    Ok(())
+}
+
+/// Generates one `#[test]` per robot with codegen'd IK
+macro_rules! ik_codegen_correctness_test {
+    ($module:ident, $path:expr, $compute_fk:path) => {
+        mod $module {
+            use super::*;
+
+            #[test]
+            fn matches_runtime() -> TestResult {
+                check_generated_matches_runtime($path, galaw::generated::$module::compute_ik)
+            }
+        }
+    };
+}
+galaw::for_each_generated_robot!(ik_codegen_correctness_test);
 
 /// Generates one `#[test]` per URDF.
 macro_rules! ik_correctness_tests {
