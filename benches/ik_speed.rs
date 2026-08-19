@@ -1,12 +1,14 @@
 use std::collections::HashSet;
 use std::hint::black_box;
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::measurement::WallTime;
+use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use k::InverseKinematicsSolver;
+use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-use galaw::{fixtures::BENCH_URDFS, load_urdf, types::GalawModel};
+use galaw::{error::KinematicsError, fixtures::BENCH_URDFS, load_urdf, types::GalawModel};
 
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
@@ -53,6 +55,35 @@ fn target_link(model: &GalawModel) -> usize {
         .unwrap()
 }
 
+/// Benchmarks a codegen'd `compute_ik` under the "galaw-generated" id.
+fn bench_generated_ik<const N: usize>(
+    group: &mut BenchmarkGroup<'_, WallTime>,
+    galaw_model: &GalawModel,
+    link_idx: usize,
+    bench_id: usize,
+    trials: &[(Vec<f64>, Vec<f64>)],
+    generated_compute_ik: impl Fn(usize, &Isometry3<f64>, &[f64; N]) -> Result<[f64; N], KinematicsError>,
+) {
+    // Conversion to fixed-size arrays happens once, up front - not timed.
+    let trials_arr: Vec<(Vec<f64>, [f64; N])> = trials
+        .iter()
+        .map(|(target, init)| (target.clone(), init.clone().try_into().unwrap()))
+        .collect();
+
+    group.bench_with_input(
+        BenchmarkId::new("galaw-generated", bench_id),
+        &trials_arr,
+        |b, trials| {
+            b.iter(|| {
+                for (target, init) in trials {
+                    let pose = galaw_model.compute_fk(target).unwrap()[link_idx];
+                    let _ = black_box(generated_compute_ik(link_idx, &pose, black_box(init)));
+                }
+            });
+        },
+    );
+}
+
 fn bench_ik(c: &mut Criterion) {
     for &urdf_path in BENCH_URDFS {
         let galaw_model = load_urdf(urdf_path).unwrap();
@@ -72,6 +103,7 @@ fn bench_ik(c: &mut Criterion) {
         let mut group = c.benchmark_group(format!("ik/{}", galaw_model.name));
         group.throughput(criterion::Throughput::Elements(trials.len() as u64));
 
+        // ----- galaw-runtime -----
         group.bench_with_input(
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &trials,
@@ -85,6 +117,30 @@ fn bench_ik(c: &mut Criterion) {
             },
         );
 
+        // ----- galaw-generated -----
+        let mut generated_bench_registered = false;
+        macro_rules! bench_ik_if_matches {
+            ($module:ident, $path:expr, $compute_fk:path) => {
+                if urdf_path == $path {
+                    bench_generated_ik(
+                        &mut group,
+                        &galaw_model,
+                        link_idx,
+                        galaw_model.joints.len(),
+                        &trials,
+                        galaw::generated::$module::compute_ik,
+                    );
+                    generated_bench_registered = true;
+                }
+            };
+        }
+        galaw::for_each_generated_robot!(bench_ik_if_matches);
+        assert!(
+            generated_bench_registered,
+            "no generated compute_ik registered for {urdf_path} — run scripts/codegen_all_urdfs.sh"
+        );
+
+        // ----- k -----
         let solver = k::JacobianIkSolver::new(1e-4, 1e-4, 1.0, 1000);
         group.bench_with_input(
             BenchmarkId::new("k", galaw_model.joints.len()),
