@@ -384,12 +384,15 @@ fn generate_ik_fn_code(
 
         codegen_output.push(format!("{} => {{", link_idx));
 
+        // Jacobian is sized to this chain's own actuated joints, not `n` —
+        // most links only touch a fraction of the model's total DOF.
+        let chain_actuated_count = chain
+            .iter()
+            .filter(|&&joint_idx| galaw_model.joints[joint_idx].cmd_idx.is_some())
+            .count();
         // An all-fixed chain never emits a `joint_cmds[cmd_idx]` reference,
         // so avoid an unused-variable warning on the closure param.
-        let chain_has_actuated_joint = chain
-            .iter()
-            .any(|&joint_idx| galaw_model.joints[joint_idx].cmd_idx.is_some());
-        let joint_cmds_param = if chain_has_actuated_joint {
+        let joint_cmds_param = if chain_actuated_count > 0 {
             "joint_cmds"
         } else {
             "_joint_cmds"
@@ -397,7 +400,7 @@ fn generate_ik_fn_code(
 
         codegen_output.push(format!(
             "let compute_pose_and_jacobian = |{}: &[f64; {}]| -> (Isometry3<f64>, SMatrix<f64, 6, {}>) {{",
-            joint_cmds_param, n, n
+            joint_cmds_param, n, chain_actuated_count
         ));
 
         let mut pose_var = "Isometry3::identity()".to_string();
@@ -498,10 +501,14 @@ fn generate_ik_fn_code(
         let jac_mut_keyword = if actuated_steps.is_empty() { "" } else { "mut " };
         codegen_output.push(format!(
             "let {}jac = SMatrix::<f64, 6, {}>::zeros();",
-            jac_mut_keyword, n
+            jac_mut_keyword, chain_actuated_count
         ));
 
-        for (cmd_idx, joint_pose_var, axis_var, is_rot) in &actuated_steps {
+        // Column index is this step's position within the chain, not its
+        // global cmd_idx — jac is only chain_actuated_count wide now.
+        for (local_col, (_cmd_idx, joint_pose_var, axis_var, is_rot)) in
+            actuated_steps.iter().enumerate()
+        {
             let (lin_expr, ang_expr) = if *is_rot {
                 (
                     format!(
@@ -514,7 +521,7 @@ fn generate_ik_fn_code(
                 (axis_var.clone(), "Vector3::zeros()".to_string())
             };
             codegen_output.push(format!(
-                "{{ let lin = {lin_expr}; let ang = {ang_expr}; jac.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
+                "{{ let lin = {lin_expr}; let ang = {ang_expr}; jac.set_column({local_col}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
             ));
         }
 
@@ -522,10 +529,18 @@ fn generate_ik_fn_code(
         codegen_output.push("};".to_string());
 
         // LM loop is identical across arms (only `n` varies), so it isn't unrolled.
-        codegen_output.push(
-            "let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);"
-                .to_string(),
-        );
+        // `jac`/`new_jac` only get read inside the `if !actuated_steps.is_empty()`
+        // block below, so when it's empty, underscore-prefix them too — otherwise
+        // they'd be dead stores every loop iteration.
+        let (jac_binding, new_jac_binding) = if actuated_steps.is_empty() {
+            ("_jac", "_new_jac")
+        } else {
+            ("jac", "new_jac")
+        };
+        codegen_output.push(format!(
+            "let (mut current_pose, mut {}) = compute_pose_and_jacobian(&joint_cmds);",
+            jac_binding
+        ));
         codegen_output.push("let mut error = compute_error(&current_pose);".to_string());
         codegen_output.push("let mut iterations: usize = 0;".to_string());
         codegen_output.push("while error.norm() > ERROR_TOLERANCE {".to_string());
@@ -535,26 +550,37 @@ fn generate_ik_fn_code(
                 .to_string(),
         );
         codegen_output.push("}".to_string());
-        codegen_output.push(
-            "let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();"
-                .to_string(),
-        );
-        codegen_output.push(
-            "let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);"
-                .to_string(),
-        );
+        // No actuated joints in this chain means jac is always zero, so the
+        // whole solve is a no-op (and every binding here would be unused) —
+        // skip straight to the next pose/error recompute below.
+        if !actuated_steps.is_empty() {
+            codegen_output.push(
+                "let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();"
+                    .to_string(),
+            );
+            codegen_output.push(
+                "let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);"
+                    .to_string(),
+            );
+            codegen_output.push(format!(
+                "let dq: SVector<f64, {}> = jac.transpose() * x;",
+                chain_actuated_count
+            ));
+            // dq is chain-local (see jac above), so scatter each entry back
+            // to its actuated joint's own global cmd_idx individually.
+            for (local_col, (cmd_idx, _, _, _)) in actuated_steps.iter().enumerate() {
+                codegen_output.push(format!(
+                    "joint_cmds[{}] += STEP_SIZE * dq[{}];",
+                    cmd_idx, local_col
+                ));
+            }
+        }
         codegen_output.push(format!(
-            "let dq: SVector<f64, {}> = jac.transpose() * x;",
-            n
+            "let (pose, {}) = compute_pose_and_jacobian(&joint_cmds);",
+            new_jac_binding
         ));
-        codegen_output.push(
-            "for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }"
-                .to_string(),
-        );
-        codegen_output
-            .push("let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);".to_string());
         codegen_output.push("current_pose = pose;".to_string());
-        codegen_output.push("jac = new_jac;".to_string());
+        codegen_output.push(format!("{} = {};", jac_binding, new_jac_binding));
         codegen_output.push("error = compute_error(&current_pose);".to_string());
         codegen_output.push("iterations += 1;".to_string());
         codegen_output.push("}".to_string());

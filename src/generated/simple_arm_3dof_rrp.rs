@@ -53,11 +53,11 @@ Vector6::new(error_position.x, error_position.y, error_position.z, error_rotatio
 let mut joint_cmds = *initial_joint_cmds;
 match target_link_idx {
 1 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 3]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
+let compute_pose_and_jacobian = |joint_cmds: &[f64; 3]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
 let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.05) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
 let target_position = pose_0.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<f64, 6, 1>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_0, jac)
 };
@@ -70,8 +70,8 @@ return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.no
 }
 let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }
+let dq: SVector<f64, 1> = jac.transpose() * x;
+joint_cmds[0] += STEP_SIZE * dq[0];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
@@ -81,13 +81,13 @@ iterations += 1;
 Ok(joint_cmds)
 }
 2 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 3]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
+let compute_pose_and_jacobian = |joint_cmds: &[f64; 3]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
 let pose_0 = Isometry3::identity() * Translation3::new(0.0, 0.0, 0.05) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, 0.0, s)) };
 let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 0.0, 1.0);
 let pose_1 = pose_0 * Translation3::new(0.0, 0.0, 0.5) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
 let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
 let target_position = pose_1.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<f64, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_1, jac)
@@ -101,8 +101,9 @@ return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.no
 }
 let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }
+let dq: SVector<f64, 2> = jac.transpose() * x;
+joint_cmds[0] += STEP_SIZE * dq[0];
+joint_cmds[1] += STEP_SIZE * dq[1];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
@@ -136,7 +137,9 @@ return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.no
 let jjt_damped = jac * jac.transpose() + DAMPING_FACTOR * Matrix6::identity();
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
 let dq: SVector<f64, 3> = jac.transpose() * x;
-for (q, dq_i) in joint_cmds.iter_mut().zip(dq.iter()) { *q += STEP_SIZE * dq_i; }
+joint_cmds[0] += STEP_SIZE * dq[0];
+joint_cmds[1] += STEP_SIZE * dq[1];
+joint_cmds[2] += STEP_SIZE * dq[2];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
