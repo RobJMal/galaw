@@ -425,7 +425,7 @@ fn generate_ik_fn_code(
                     if run_joint.rot_axis.is_some() || run_joint.lin_axis.is_some() {
                         break;
                     }
-                    combined = combined * run_joint.transform;
+                    combined *= run_joint.transform;
                     j += 1;
                 }
 
