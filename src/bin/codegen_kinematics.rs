@@ -345,7 +345,7 @@ fn generate_ik_fn_code(
     codegen_output.push("const STEP_SIZE: f64 = 1.0;".to_string());
     codegen_output.push("const MAX_ITERATIONS: usize = 1000;".to_string());
 
-    // Shared by every arm below — doesn't depend on the chain.
+    // Chain-independent, so hoisted above the match instead of duplicated per arm.
     codegen_output.push(
         "let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {".to_string(),
     );
@@ -377,20 +377,15 @@ fn generate_ik_fn_code(
         }
         chain.reverse();
 
-        // Empty only for the root link — handled by the `_` arm below,
-        // same as the runtime function falling out of its chain-walk loop
-        // immediately for a link with no parent.
+        // Empty only for the root link — the `_` arm below covers it.
         if chain.is_empty() {
             continue;
         }
 
         codegen_output.push(format!("{} => {{", link_idx));
 
-        // A chain of entirely fixed joints never indexes into `joint_cmds`
-        // (every rotation/translation factor below resolves to `::identity()`
-        // — `joint_cmds[cmd_idx]` is only ever emitted for a joint that has
-        // an axis, i.e. one with `cmd_idx.is_some()`), so name the closure
-        // param `_joint_cmds` in that case to avoid an unused-variable warning.
+        // An all-fixed chain never emits a `joint_cmds[cmd_idx]` reference,
+        // so avoid an unused-variable warning on the closure param.
         let chain_has_actuated_joint = chain
             .iter()
             .any(|&joint_idx| galaw_model.joints[joint_idx].cmd_idx.is_some());
@@ -400,8 +395,6 @@ fn generate_ik_fn_code(
             "_joint_cmds"
         };
 
-        // Closure computing this link's pose and Jacobian for a given
-        // joint_cmds, with the chain fully unrolled.
         codegen_output.push(format!(
             "let compute_pose_and_jacobian = |{}: &[f64; {}]| -> (Isometry3<f64>, SMatrix<f64, 6, {}>) {{",
             joint_cmds_param, n, n
@@ -494,16 +487,14 @@ fn generate_ik_fn_code(
             }
         }
 
-        // `target_position` is only read below for a *rotational* actuated
-        // joint (the cross-product for its linear velocity column) — a
-        // prismatic joint's column is just its axis, no cross product.
+        // Only a rotational joint's column needs the cross product below —
+        // skip emitting `target_position` otherwise, or it'd go unused.
         let chain_has_rotational_actuated_joint =
             actuated_steps.iter().any(|(_, _, _, is_rot)| *is_rot);
         if chain_has_rotational_actuated_joint {
             codegen_output.push(format!("let target_position = {}.translation;", pose_var));
         }
-        // Only `mut` when there's an actuated joint to `set_column` below —
-        // otherwise `jac` is never mutated and `mut` itself would warn.
+        // Same reasoning for `mut`: no actuated joint means no `set_column` call.
         let jac_mut_keyword = if actuated_steps.is_empty() { "" } else { "mut " };
         codegen_output.push(format!(
             "let {}jac = SMatrix::<f64, 6, {}>::zeros();",
@@ -530,8 +521,7 @@ fn generate_ik_fn_code(
         codegen_output.push(format!("({}, jac)", pose_var));
         codegen_output.push("};".to_string());
 
-        // The Levenberg-Marquardt loop itself: identical shape in every
-        // arm, so this part isn't unrolled — only `n` varies.
+        // LM loop is identical across arms (only `n` varies), so it isn't unrolled.
         codegen_output.push(
             "let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);"
                 .to_string(),
@@ -572,10 +562,8 @@ fn generate_ik_fn_code(
         codegen_output.push("}".to_string()); // closes this match arm
     }
 
-    // Fallback for the root link (empty chain) and any out-of-range
-    // target_link_idx: pose is always identity, and since a zero Jacobian
-    // can never move joint_cmds, there's no LM iteration to unroll — just
-    // check once whether target_pose is already reached.
+    // Root link / out-of-range index: pose is identity and the Jacobian is
+    // always zero, so joint_cmds can never move — just check once.
     codegen_output.push("_ => {".to_string());
     codegen_output.push("let error = compute_error(&Isometry3::identity());".to_string());
     codegen_output.push("if error.norm() > ERROR_TOLERANCE {".to_string());
