@@ -279,6 +279,17 @@ impl GalawModel {
         }
         chain.reverse();
 
+        // Extracting joint limits
+        // Defaulting to 0.0 for safety
+        let mut joint_lower = vec![0.0; self.num_actuated_joints];
+        let mut joint_upper = vec![0.0; self.num_actuated_joints];
+        for joint in &self.joints {
+            if let Some(cmd_idx) = joint.cmd_idx {
+                joint_lower[cmd_idx] = joint.limit_lower.unwrap_or(0.0);
+                joint_upper[cmd_idx] = joint.limit_upper.unwrap_or(0.0);
+            }
+        }
+
         // Helper to compute pose error
         let compute_error = |current_pose: &Isometry3<f64>| -> Result<Vector6<f64>, GalawError> {
             let error_position = target_pose.translation.vector - current_pose.translation.vector;
@@ -337,6 +348,27 @@ impl GalawModel {
             );
             error = compute_error(&current_pose)?;
             iterations += 1;
+        }
+
+        // Clamped converged solution to joint limits
+        // No null-space steering
+        for (i, cmd) in joint_cmds_candidate.iter_mut().enumerate() {
+            *cmd = cmd.clamp(joint_lower[i], joint_upper[i]);
+        }
+
+        let clamped_pose = self.compute_restricted_pose_and_fill_jacobian(
+            &chain, 
+            &joint_cmds_candidate, 
+            &mut chain_poses, 
+            &mut jac,
+        );
+        let clamped_error = compute_error(&clamped_pose)?;
+        if clamped_error.norm() > ERROR_TOLERANCE {
+            return Err(KinematicsError::IkDidNotConverge { 
+                iterations, 
+                final_error: clamped_error.norm(), 
+            }
+            .into());
         }
 
         Ok(joint_cmds_candidate)
