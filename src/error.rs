@@ -1,8 +1,8 @@
 //! Error types returned by this crate's public API.
 //!
-//! [`GalawError`] is the crate-wide error type every public function
-//! returns; it wraps the more specific [`UrdfParseError`],
-//! [`ModelTopologyError`], and [`KinematicsError`] enums.
+//! [`crate::error::GalawError`] is the crate-wide error type every public function
+//! returns; it wraps the more specific [`crate::error::UrdfParseError`],
+//! [`crate::error::ModelTopologyError`], and [`crate::error::KinematicsError`] enums.
 
 /// The crate-wide error type returned by every public `galaw` function.
 #[derive(Debug, thiserror::Error)]
