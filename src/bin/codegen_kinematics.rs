@@ -655,7 +655,8 @@ fn generate_ik_fn_code(
                 ));
             }
         }
-        codegen_output.push("let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);".to_string());
+        codegen_output
+            .push("let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);".to_string());
         codegen_output.push("let clamped_error = compute_error(&clamped_pose);".to_string());
         codegen_output.push("if clamped_error.norm() > ERROR_TOLERANCE {".to_string());
         codegen_output.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });".to_string());

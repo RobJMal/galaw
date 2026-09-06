@@ -357,16 +357,16 @@ impl GalawModel {
         }
 
         let clamped_pose = self.compute_restricted_pose_and_fill_jacobian(
-            &chain, 
-            &joint_cmds_candidate, 
-            &mut chain_poses, 
+            &chain,
+            &joint_cmds_candidate,
+            &mut chain_poses,
             &mut jac,
         );
         let clamped_error = compute_error(&clamped_pose)?;
         if clamped_error.norm() > ERROR_TOLERANCE {
-            return Err(KinematicsError::IkDidNotConverge { 
-                iterations, 
-                final_error: clamped_error.norm(), 
+            return Err(KinematicsError::IkDidNotConverge {
+                iterations,
+                final_error: clamped_error.norm(),
             }
             .into());
         }
