@@ -320,6 +320,12 @@ let jacobian_inspection_payload_camera_default = SMatrix::<f64, 6, 14>::zeros();
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
 /// Computes inverse kinematics for the robot described by `anymal-D`.
+///
+/// The returned commands are clamped into each joint's limits. If the clamped
+/// configuration no longer reaches `target_pose` within tolerance, returns
+/// [`KinematicsError::IkDidNotConverge`]. This is a deliberately simple baseline
+/// with no null-space handling, so it can fail on redundant chains where a
+/// limits-aware solver would succeed.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 14]) -> Result<[f64; 14], KinematicsError> {
@@ -353,6 +359,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 2 => {
@@ -374,6 +385,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 3 => {
@@ -394,6 +410,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 4 => {
@@ -413,6 +434,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -435,6 +461,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 6 => {
@@ -455,6 +486,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -477,6 +513,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 8 => {
@@ -497,6 +538,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -519,6 +565,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 10 => {
@@ -539,6 +590,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -561,6 +617,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 12 => {
@@ -581,6 +642,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -603,6 +669,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 14 => {
@@ -623,6 +694,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -645,6 +721,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 16 => {
@@ -665,6 +746,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -687,6 +773,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 18 => {
@@ -707,6 +798,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -729,6 +825,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 20 => {
@@ -749,6 +850,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -771,6 +877,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 22 => {
@@ -791,6 +902,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -813,6 +929,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 24 => {
@@ -833,6 +954,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -855,6 +981,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 26 => {
@@ -875,6 +1006,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -897,6 +1033,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 28 => {
@@ -918,6 +1059,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 29 => {
@@ -937,6 +1083,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -959,6 +1110,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 31 => {
@@ -979,6 +1135,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1001,6 +1162,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 33 => {
@@ -1021,6 +1187,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1043,6 +1214,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 35 => {
@@ -1063,6 +1239,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1085,6 +1266,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 37 => {
@@ -1105,6 +1291,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1127,6 +1318,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 39 => {
@@ -1147,6 +1343,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1169,6 +1370,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 41 => {
@@ -1189,6 +1395,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1211,6 +1422,11 @@ _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 43 => {
@@ -1231,6 +1447,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1261,6 +1482,12 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 45 => {
@@ -1289,6 +1516,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1319,6 +1552,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1354,6 +1593,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 48 => {
@@ -1387,6 +1633,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1423,6 +1676,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 50 => {
@@ -1457,6 +1717,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1496,6 +1763,14 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[2] = joint_cmds[2].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1537,6 +1812,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[2] = joint_cmds[2].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 53 => {
@@ -1577,6 +1860,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[2] = joint_cmds[2].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 54 => {
@@ -1597,6 +1888,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1627,6 +1923,12 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 56 => {
@@ -1655,6 +1957,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1685,6 +1993,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1720,6 +2034,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 59 => {
@@ -1753,6 +2074,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1789,6 +2117,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 61 => {
@@ -1823,6 +2158,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1862,6 +2204,14 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[5] = joint_cmds[5].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1903,6 +2253,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[5] = joint_cmds[5].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 64 => {
@@ -1943,6 +2301,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[3] = joint_cmds[3].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[4] = joint_cmds[4].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[5] = joint_cmds[5].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 65 => {
@@ -1963,6 +2329,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -1992,6 +2363,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2023,6 +2400,12 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 68 => {
@@ -2052,6 +2435,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2087,6 +2476,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 70 => {
@@ -2120,6 +2516,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2156,6 +2559,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 72 => {
@@ -2190,6 +2600,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2229,6 +2646,14 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[8] = joint_cmds[8].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2270,6 +2695,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[8] = joint_cmds[8].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 75 => {
@@ -2310,6 +2743,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[6] = joint_cmds[6].clamp(-0.7853985_f64, 0.6108655_f64);
+joint_cmds[7] = joint_cmds[7].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[8] = joint_cmds[8].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 76 => {
@@ -2330,6 +2771,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2359,6 +2805,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2390,6 +2842,12 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 79 => {
@@ -2419,6 +2877,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2454,6 +2918,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 81 => {
@@ -2487,6 +2958,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2523,6 +3001,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 83 => {
@@ -2557,6 +3042,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2596,6 +3088,14 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[11] = joint_cmds[11].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2637,6 +3137,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[11] = joint_cmds[11].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 86 => {
@@ -2677,6 +3185,14 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[9] = joint_cmds[9].clamp(-0.6108655_f64, 0.7853985_f64);
+joint_cmds[10] = joint_cmds[10].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+joint_cmds[11] = joint_cmds[11].clamp(-9.42477796076938_f64, 9.42477796076938_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 87 => {
@@ -2697,6 +3213,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2726,6 +3247,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2760,6 +3287,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+joint_cmds[13] = joint_cmds[13].clamp(-1.570796_f64, 1.570796_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 90 => {
@@ -2792,6 +3326,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+joint_cmds[13] = joint_cmds[13].clamp(-1.570796_f64, 1.570796_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2827,6 +3368,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+joint_cmds[13] = joint_cmds[13].clamp(-1.570796_f64, 1.570796_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 92 => {
@@ -2860,6 +3408,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+joint_cmds[13] = joint_cmds[13].clamp(-1.570796_f64, 1.570796_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -2895,6 +3450,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+joint_cmds[13] = joint_cmds[13].clamp(-1.570796_f64, 1.570796_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 94 => {
@@ -2929,6 +3491,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[12] = joint_cmds[12].clamp(-2.6_f64, 2.6_f64);
+joint_cmds[13] = joint_cmds[13].clamp(-1.570796_f64, 1.570796_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 95 => {
@@ -2949,6 +3518,11 @@ current_pose = pose;
 _jac = _new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }

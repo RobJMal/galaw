@@ -32,6 +32,12 @@ let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
 /// Computes inverse kinematics for the robot described by `simple_arm_2dof_flipped`.
+///
+/// The returned commands are clamped into each joint's limits. If the clamped
+/// configuration no longer reaches `target_pose` within tolerance, returns
+/// [`KinematicsError::IkDidNotConverge`]. This is a deliberately simple baseline
+/// with no null-space handling, so it can fail on redundant chains where a
+/// limits-aware solver would succeed.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 2]) -> Result<[f64; 2], KinematicsError> {
@@ -77,6 +83,13 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-1.57_f64, 1.57_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-1.57_f64, 1.57_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 1 => {
@@ -104,6 +117,12 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-1.57_f64, 1.57_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
