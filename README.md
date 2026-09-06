@@ -104,14 +104,24 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 
 ## Performance
 
-`galaw` outperforms [`k`](https://crates.io/crates/k) overall. Averaged (geometric mean) across the four benchmarked robots: `galaw-runtime` is **~3.3x** faster than `k`, and `galaw-generated` is **~8.9x** faster than `k`.
+`galaw` outperforms [`k`](https://crates.io/crates/k) across all three operations. Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
 
-Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
+Reproduce with `cargo bench` and then the corresponding plot example (e.g. `cargo run --release --example plot_fk_bench`).
 
-![FK latency scaling](img/scaling_ns_per_call.png)
-![FK throughput](img/throughput_mcalls.png)
+### Forward Kinematics
 
-Reproduce with `cargo bench` followed by `cargo run --release --example plot_fk_bench` (see [`benches/fk_speed.rs`](benches/fk_speed.rs)). Jacobian and IK benchmarks are in [`benches/jacobian_speed.rs`](benches/jacobian_speed.rs) and [`benches/ik_speed.rs`](benches/ik_speed.rs).
+![FK latency scaling](img/fk_scaling_ns_per_call.png)
+![FK throughput](img/fk_throughput_mcalls.png)
+
+### Jacobian
+
+![Jacobian latency scaling](img/jacobian_scaling_ns_per_call.png)
+![Jacobian throughput](img/jacobian_throughput_mcalls.png)
+
+### Inverse Kinematics
+
+![IK latency scaling](img/ik_scaling_ns_per_call.png)
+![IK throughput](img/ik_throughput_mcalls.png)
 
 ## Attributions
 
