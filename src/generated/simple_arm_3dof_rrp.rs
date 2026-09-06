@@ -38,6 +38,12 @@ let mut jacobian_ee_link = SMatrix::<f64, 6, 3>::zeros();
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
 /// Computes inverse kinematics for the robot described by `rr_prismatic_robot`.
+///
+/// The returned commands are clamped into each joint's limits. If the clamped
+/// configuration no longer reaches `target_pose` within tolerance, returns
+/// [`KinematicsError::IkDidNotConverge`]. This is a deliberately simple baseline
+/// with no null-space handling, so it can fail on redundant chains where a
+/// limits-aware solver would succeed.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 3]) -> Result<[f64; 3], KinematicsError> {
@@ -79,6 +85,12 @@ jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
+joint_cmds[0] = joint_cmds[0].clamp(-3.14_f64, 3.14_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
+}
 Ok(joint_cmds)
 }
 2 => {
@@ -110,6 +122,13 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-3.14_f64, 3.14_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-1.57_f64, 1.57_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
@@ -146,6 +165,14 @@ current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
+}
+joint_cmds[0] = joint_cmds[0].clamp(-3.14_f64, 3.14_f64);
+joint_cmds[1] = joint_cmds[1].clamp(-1.57_f64, 1.57_f64);
+joint_cmds[2] = joint_cmds[2].clamp(0.0_f64, 0.3_f64);
+let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
+let clamped_error = compute_error(&clamped_pose);
+if clamped_error.norm() > ERROR_TOLERANCE {
+return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }

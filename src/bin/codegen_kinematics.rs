@@ -331,7 +331,13 @@ fn generate_ik_fn_code(
     let n = galaw_model.num_actuated_joints;
 
     codegen_output.push(format!(
-        "/// Computes inverse kinematics for the robot described by `{}`.",
+        "/// Computes inverse kinematics for the robot described by `{}`.
+///
+/// The returned commands are clamped into each joint's limits. If the clamped
+/// configuration no longer reaches `target_pose` within tolerance, returns
+/// [`KinematicsError::IkDidNotConverge`]. This is a deliberately simple baseline
+/// with no null-space handling, so it can fail on redundant chains where a
+/// limits-aware solver would succeed.",
         galaw_model.name
     ));
     codegen_output.push("#[allow(non_snake_case)]".to_string());
@@ -636,6 +642,23 @@ fn generate_ik_fn_code(
         codegen_output.push(format!("{} = {};", jac_binding, new_jac_binding));
         codegen_output.push("error = compute_error(&current_pose);".to_string());
         codegen_output.push("iterations += 1;".to_string());
+        codegen_output.push("}".to_string());
+        // Clamp each actuated chain joint to its limits, then re-verify FK.
+        for &joint_idx in &chain {
+            let joint = &galaw_model.joints[joint_idx];
+            if let Some(cmd_idx) = joint.cmd_idx {
+                let lo = joint.limit_lower.unwrap_or(f64::NEG_INFINITY);
+                let hi = joint.limit_upper.unwrap_or(f64::INFINITY);
+                // Use {:?} so integer-valued limits emit `0.0` not `0` (valid f64 literal).
+                codegen_output.push(format!(
+                    "joint_cmds[{cmd_idx}] = joint_cmds[{cmd_idx}].clamp({lo:?}_f64, {hi:?}_f64);"
+                ));
+            }
+        }
+        codegen_output.push("let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);".to_string());
+        codegen_output.push("let clamped_error = compute_error(&clamped_pose);".to_string());
+        codegen_output.push("if clamped_error.norm() > ERROR_TOLERANCE {".to_string());
+        codegen_output.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });".to_string());
         codegen_output.push("}".to_string());
         codegen_output.push("Ok(joint_cmds)".to_string());
         codegen_output.push("}".to_string()); // closes this match arm
