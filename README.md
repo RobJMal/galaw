@@ -104,7 +104,13 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 
 ## Performance
 
-`galaw` outperforms [`k`](https://crates.io/crates/k) across all three operations. Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
+`galaw` outperforms [`k`](https://crates.io/crates/k) across all three operations (geometric mean across four robots). Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
+
+| Operation | galaw-runtime vs k | galaw-generated vs k |
+|-----------|-------------------|----------------------|
+| FK        | ~3.3×             | ~8.9×                |
+| Jacobian  | ~7.7×             | ~16.7×               |
+| IK        | ~4.9×             | ~10.0×               |
 
 Reproduce with `cargo bench` and then the corresponding plot example (e.g. `cargo run --release --example plot_fk_bench`).
 
