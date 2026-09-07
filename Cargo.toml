@@ -7,9 +7,9 @@ description = "Kinematics library for robotics, with a runtime API and an ahead-
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/RobJMal/galaw"
 readme = "README.md"
-keywords = ["robotics", "kinematics", "urdf", "forward-kinematics"]
+keywords = ["robotics", "kinematics", "urdf", "control"]
 categories = ["science::robotics"]
-exclude = ["docs/"]
+exclude = ["docs/", "img/"]
 
 [profile.release]
 lto = true
