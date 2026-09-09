@@ -33,7 +33,8 @@ fn main() -> Result<(), GalawError> {
     // Use the FK result above as the target, then solve from a zero initial guess.
     let target_pose = poses[forearm_idx];
     let init_joint_cmds: [f64; 2] = [0.0; 2];
-    let solved_joint_cmds = simple_arm_2dof::compute_ik(forearm_idx, &target_pose, &init_joint_cmds)?;
+    let solved_joint_cmds =
+        simple_arm_2dof::compute_ik(forearm_idx, &target_pose, &init_joint_cmds)?;
     println!("\n=== IK ===");
     println!("target pose:       {:?}", target_pose);
     println!("solved joint cmds: {:?}", solved_joint_cmds);
