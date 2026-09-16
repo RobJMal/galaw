@@ -19,7 +19,7 @@ const NUM_POSES: usize = 128;
 const TEST_TOLERANCE: f64 = 1e-7;
 
 fn assert_galaw_fk_matches_k(
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
     k_chain: &k::Chain<f64>,
     joint_cmd: &[f64],
 ) -> TestResult {
@@ -76,7 +76,7 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
     urdf_path: &str,
     generated_compute_fk: impl Fn(&[f64; N]) -> [Isometry3<f64>; M],
 ) -> TestResult {
-    let galaw_model = load_urdf(urdf_path).unwrap();
+    let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {

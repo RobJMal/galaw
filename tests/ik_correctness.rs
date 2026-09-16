@@ -19,7 +19,7 @@ const NUM_POSES: usize = 128;
 const MAX_PERTUBATION: f64 = 0.5; // radians/meters offset from target for IK initial pose
 
 /// Returns links that are valid IK targets (leaves of the kinematic tree)
-fn candidate_target_links(galaw_model: &GalawModel) -> Vec<usize> {
+fn candidate_target_links(galaw_model: &GalawModel<f64>) -> Vec<usize> {
     let parent_indices: std::collections::HashSet<usize> = galaw_model
         .joints
         .iter()
@@ -46,7 +46,7 @@ fn candidate_target_links(galaw_model: &GalawModel) -> Vec<usize> {
 ///
 /// This is done to better replicate how IK is used in practice
 fn perturbed_joint_cmds(
-    model: &GalawModel,
+    model: &GalawModel<f64>,
     base: &[f64],
     rng: &mut ChaCha8Rng,
     max_offset: f64,
@@ -69,7 +69,7 @@ fn perturbed_joint_cmds(
 
 /// Assert that IK is correct by running check with internal FK.
 fn assert_galaw_ik_correctness(
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
     target_link_idx: usize,
     target_joint_cmd: &[f64],
     init_joint_cmd: &[f64],
@@ -160,7 +160,7 @@ fn check_generated_matches_runtime<const N: usize>(
         usize,
         &Isometry3<f64>,
         &[f64; N],
-    ) -> Result<[f64; N], KinematicsError>,
+    ) -> Result<[f64; N], KinematicsError<f64>>,
 ) -> TestResult {
     let (galaw_model, _) = setup_kinematic_models(urdf_path);
 

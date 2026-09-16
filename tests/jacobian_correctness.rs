@@ -31,7 +31,7 @@ fn assert_close_fd(a: f64, b: f64) {
 ///
 /// Purpose is to check correctness without relying on external libraries.
 fn assert_galaw_jacobian_matches_finite_difference(
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
     joint_cmds: &[f64],
 ) -> TestResult {
     let jacobians = galaw_model.compute_link_jacobians(joint_cmds)?;
@@ -73,7 +73,7 @@ fn assert_galaw_jacobian_matches_finite_difference(
 
 /// Compares galaw's Jacobian against k's for every link in the model at one pose.
 fn asssert_galaw_jacobian_matches_k(
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
     k_chain: &k::Chain<f64>,
     joint_cmds: &[f64],
 ) -> TestResult {
@@ -110,7 +110,7 @@ fn asssert_galaw_jacobian_matches_k(
 
 /// Runs correctness check of Jacobians with finite-difference method
 fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
-    let galaw_model = galaw::load_urdf(urdf_path)?;
+    let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
 
     assert_galaw_jacobian_matches_finite_difference(&galaw_model, &zero_joint_cmds(&galaw_model))?;
 
@@ -128,7 +128,7 @@ fn check_generated_jacobian_matches_dynamic<const N: usize, const M: usize>(
     urdf_path: &str,
     generated_compute_link_jacobians: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
 ) -> TestResult {
-    let galaw_model = galaw::load_urdf(urdf_path)?;
+    let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
