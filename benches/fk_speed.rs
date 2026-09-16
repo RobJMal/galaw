@@ -101,7 +101,7 @@ fn bench_fk(c: &mut Criterion) {
 
     for &urdf_path in BENCH_URDFS {
         // Setup is NOT timed
-        let galaw_model = load_urdf(urdf_path).unwrap();
+        let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
 
         // Generate commands

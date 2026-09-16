@@ -14,7 +14,7 @@ const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
 const MAX_PERTURBATION: f64 = 0.5;
 
-fn random_joint_cmds(model: &GalawModel, rng: &mut ChaCha8Rng) -> Vec<f64> {
+fn random_joint_cmds(model: &GalawModel<f64>, rng: &mut ChaCha8Rng) -> Vec<f64> {
     model
         .joints
         .iter()
@@ -26,7 +26,7 @@ fn random_joint_cmds(model: &GalawModel, rng: &mut ChaCha8Rng) -> Vec<f64> {
         .collect()
 }
 
-fn perturbed_joint_cmds(model: &GalawModel, base: &[f64], rng: &mut ChaCha8Rng) -> Vec<f64> {
+fn perturbed_joint_cmds(model: &GalawModel<f64>, base: &[f64], rng: &mut ChaCha8Rng) -> Vec<f64> {
     model
         .joints
         .iter()
@@ -43,7 +43,7 @@ fn perturbed_joint_cmds(model: &GalawModel, base: &[f64], rng: &mut ChaCha8Rng) 
 }
 
 // First leaf link with an actuated ancestor.
-fn target_link(model: &GalawModel) -> usize {
+fn target_link(model: &GalawModel<f64>) -> usize {
     let parents: HashSet<usize> = model.joints.iter().map(|j| j.parent_link_idx).collect();
     let mut has_actuated_ancestor = vec![false; model.links.len()];
     for joint in &model.joints {
@@ -58,7 +58,7 @@ fn target_link(model: &GalawModel) -> usize {
 /// Benchmarks a codegen'd `compute_ik` under the "galaw-generated" id.
 fn bench_generated_ik<const N: usize>(
     group: &mut BenchmarkGroup<'_, WallTime>,
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
     link_idx: usize,
     bench_id: usize,
     trials: &[(Vec<f64>, Vec<f64>)],
@@ -66,7 +66,7 @@ fn bench_generated_ik<const N: usize>(
         usize,
         &Isometry3<f64>,
         &[f64; N],
-    ) -> Result<[f64; N], KinematicsError>,
+    ) -> Result<[f64; N], KinematicsError<f64>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let trials_arr: Vec<(Vec<f64>, [f64; N])> = trials
@@ -90,7 +90,7 @@ fn bench_generated_ik<const N: usize>(
 
 fn bench_ik(c: &mut Criterion) {
     for &urdf_path in BENCH_URDFS {
-        let galaw_model = load_urdf(urdf_path).unwrap();
+        let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
         let link_idx = target_link(&galaw_model);
         let link_name = &galaw_model.links[link_idx].name;
