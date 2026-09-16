@@ -8,152 +8,152 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 20]) -> [Isometry3<f64>; 26] {
+pub fn compute_fk<T: nalgebra::RealField + Copy>(joint_cmds: &[T; 20]) -> [Isometry3<T>; 26] {
 let link_right_palm_link = Isometry3::identity();
-let link_right_finger1_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger1_link2 = link_right_finger1_link1 * Isometry3::from_parts(Translation3::new(-0.0047549, -0.0058191, 0.014132), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893, 0.29085087339109844, -0.08559118145800193, -0.6169580674889091))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger1_link3 = link_right_finger1_link2 * Isometry3::from_parts(Translation3::new(-0.000266705, 0.0009915016, 0.03466562), UnitQuaternion::from_quaternion(Quaternion::new(0.8157388773627973, 0.01500362433027275, 0.021238187340727802, 0.5778355428790437))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger1_link4 = link_right_finger1_link3 * Translation3::new(0.0, 0.0002, 0.0295) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger1_tip_link = link_right_finger1_link4 * Translation3::new(-0.00105, -0.0002, 0.0313);
-let link_right_finger2_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(-0.0058701, 0.029434, 0.091917), UnitQuaternion::from_quaternion(Quaternion::new(0.9916887635847301, -0.058829485633527225, -0.029275462547150216, -0.11061390099139398))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger2_link2 = link_right_finger2_link1 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger2_link3 = link_right_finger2_link2 * Isometry3::from_parts(Translation3::new(0.0, 0.004750282, 0.04361766), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger2_link4 = link_right_finger2_link3 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[7] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger2_tip_link = link_right_finger2_link4 * Translation3::new(-0.00105, 0.0002, 0.0267);
-let link_right_finger3_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(-0.01046, 0.0074615, 0.089544), UnitQuaternion::from_quaternion(Quaternion::new(0.9990481890991502, -1.2684824867247146e-5, -0.04361916183339305, 0.00029054733912970787))) * { let (s, c) = (joint_cmds[8] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger3_link2 = link_right_finger3_link1 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[9] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger3_link3 = link_right_finger3_link2 * Isometry3::from_parts(Translation3::new(0.0, 0.00475, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[10] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger3_link4 = link_right_finger3_link3 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[11] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger3_tip_link = link_right_finger3_link4 * Translation3::new(-0.001049087, 0.0002010395, 0.0267);
-let link_right_finger4_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(-0.0076649, -0.013712, 0.084429), UnitQuaternion::from_quaternion(Quaternion::new(0.9977885672599305, 0.04610193435442398, -0.04058837269304493, 0.025400210555943416))) * { let (s, c) = (joint_cmds[12] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger4_link2 = link_right_finger4_link1 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[13] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger4_link3 = link_right_finger4_link2 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[14] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger4_link4 = link_right_finger4_link3 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[15] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger4_tip_link = link_right_finger4_link4 * Translation3::new(-0.00105961, 0.0001904508, 0.0267);
-let link_right_finger5_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(-0.002268651, -0.03400111, 0.07428134), UnitQuaternion::from_quaternion(Quaternion::new(0.9908692876130022, 0.09931734008761313, -0.03832545015380128, 0.08273621150217035))) * { let (s, c) = (joint_cmds[16] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger5_link2 = link_right_finger5_link1 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[17] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger5_link3 = link_right_finger5_link2 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[18] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger5_link4 = link_right_finger5_link3 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[19] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let link_right_finger5_tip_link = link_right_finger5_link4 * Translation3::new(-0.001044639, 0.0002113095, 0.0267);
+let link_right_finger1_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0084399_f64), nalgebra::convert(0.020587_f64), nalgebra::convert(0.028893_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.6822193668878683_f64), nalgebra::convert(-0.6176690399171142_f64), nalgebra::convert(0.08050471975634982_f64), nalgebra::convert(-0.3828585674474818_f64)))) * { let (s, c) = (joint_cmds[0] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger1_link2 = link_right_finger1_link1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0047549_f64), nalgebra::convert(-0.0058191_f64), nalgebra::convert(0.014132_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7262524781813893_f64), nalgebra::convert(0.29085087339109844_f64), nalgebra::convert(-0.08559118145800193_f64), nalgebra::convert(-0.6169580674889091_f64)))) * { let (s, c) = (joint_cmds[1] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger1_link3 = link_right_finger1_link2 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.000266705_f64), nalgebra::convert(0.0009915016_f64), nalgebra::convert(0.03466562_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.8157388773627973_f64), nalgebra::convert(0.01500362433027275_f64), nalgebra::convert(0.021238187340727802_f64), nalgebra::convert(0.5778355428790437_f64)))) * { let (s, c) = (joint_cmds[2] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger1_link4 = link_right_finger1_link3 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[3] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger1_tip_link = link_right_finger1_link4 * Translation3::new(nalgebra::convert(-0.00105_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0313_f64));
+let link_right_finger2_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0058701_f64), nalgebra::convert(0.029434_f64), nalgebra::convert(0.091917_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9916887635847301_f64), nalgebra::convert(-0.058829485633527225_f64), nalgebra::convert(-0.029275462547150216_f64), nalgebra::convert(-0.11061390099139398_f64)))) * { let (s, c) = (joint_cmds[4] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger2_link2 = link_right_finger2_link1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[5] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger2_link3 = link_right_finger2_link2 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004750282_f64), nalgebra::convert(0.04361766_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[6] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger2_link4 = link_right_finger2_link3 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[7] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger2_tip_link = link_right_finger2_link4 * Translation3::new(nalgebra::convert(-0.00105_f64), nalgebra::convert(0.0002_f64), nalgebra::convert(0.0267_f64));
+let link_right_finger3_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.01046_f64), nalgebra::convert(0.0074615_f64), nalgebra::convert(0.089544_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9990481890991502_f64), nalgebra::convert(-1.2684824867247146e-5_f64), nalgebra::convert(-0.04361916183339305_f64), nalgebra::convert(0.00029054733912970787_f64)))) * { let (s, c) = (joint_cmds[8] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger3_link2 = link_right_finger3_link1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[9] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger3_link3 = link_right_finger3_link2 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.00475_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[10] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger3_link4 = link_right_finger3_link3 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[11] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger3_tip_link = link_right_finger3_link4 * Translation3::new(nalgebra::convert(-0.001049087_f64), nalgebra::convert(0.0002010395_f64), nalgebra::convert(0.0267_f64));
+let link_right_finger4_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0076649_f64), nalgebra::convert(-0.013712_f64), nalgebra::convert(0.084429_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9977885672599305_f64), nalgebra::convert(0.04610193435442398_f64), nalgebra::convert(-0.04058837269304493_f64), nalgebra::convert(0.025400210555943416_f64)))) * { let (s, c) = (joint_cmds[12] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger4_link2 = link_right_finger4_link1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[13] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger4_link3 = link_right_finger4_link2 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[14] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger4_link4 = link_right_finger4_link3 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[15] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger4_tip_link = link_right_finger4_link4 * Translation3::new(nalgebra::convert(-0.00105961_f64), nalgebra::convert(0.0001904508_f64), nalgebra::convert(0.0267_f64));
+let link_right_finger5_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.002268651_f64), nalgebra::convert(-0.03400111_f64), nalgebra::convert(0.07428134_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9908692876130022_f64), nalgebra::convert(0.09931734008761313_f64), nalgebra::convert(-0.03832545015380128_f64), nalgebra::convert(0.08273621150217035_f64)))) * { let (s, c) = (joint_cmds[16] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger5_link2 = link_right_finger5_link1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[17] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger5_link3 = link_right_finger5_link2 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[18] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger5_link4 = link_right_finger5_link3 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[19] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let link_right_finger5_tip_link = link_right_finger5_link4 * Translation3::new(nalgebra::convert(-0.001044639_f64), nalgebra::convert(0.0002113095_f64), nalgebra::convert(0.0267_f64));
 [link_right_palm_link, link_right_finger1_link1, link_right_finger1_link2, link_right_finger1_link3, link_right_finger1_link4, link_right_finger1_tip_link, link_right_finger2_link1, link_right_finger2_link2, link_right_finger2_link3, link_right_finger2_link4, link_right_finger2_tip_link, link_right_finger3_link1, link_right_finger3_link2, link_right_finger3_link3, link_right_finger3_link4, link_right_finger3_tip_link, link_right_finger4_link1, link_right_finger4_link2, link_right_finger4_link3, link_right_finger4_link4, link_right_finger4_tip_link, link_right_finger5_link1, link_right_finger5_link2, link_right_finger5_link3, link_right_finger5_link4, link_right_finger5_tip_link]
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_link_jacobians(joint_cmds: &[f64; 20]) -> [SMatrix<f64, 6, 20>; 26] {
+pub fn compute_link_jacobians<T: nalgebra::RealField + Copy>(joint_cmds: &[T; 20]) -> [SMatrix<T, 6, 20>; 26] {
 let links = compute_fk(joint_cmds);
-let axis_world_0 = links[1].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_1 = links[2].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_2 = links[3].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_3 = links[4].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_5 = links[6].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_6 = links[7].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_7 = links[8].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_8 = links[9].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_10 = links[11].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_11 = links[12].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_12 = links[13].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_13 = links[14].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_15 = links[16].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_16 = links[17].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_17 = links[18].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_18 = links[19].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_20 = links[21].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_21 = links[22].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_22 = links[23].rotation * Vector3::new(0.0, 1.0, 0.0);
-let axis_world_23 = links[24].rotation * Vector3::new(0.0, 1.0, 0.0);
-let jacobian_right_palm_link = SMatrix::<f64, 6, 20>::zeros();
-let mut jacobian_right_finger1_link1 = SMatrix::<f64, 6, 20>::zeros();
+let axis_world_0 = links[1].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_1 = links[2].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_2 = links[3].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_3 = links[4].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_5 = links[6].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_6 = links[7].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_7 = links[8].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_8 = links[9].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_10 = links[11].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_11 = links[12].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_12 = links[13].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_13 = links[14].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_15 = links[16].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_16 = links[17].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_17 = links[18].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_18 = links[19].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_20 = links[21].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_21 = links[22].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_22 = links[23].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let axis_world_23 = links[24].rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let jacobian_right_palm_link = SMatrix::<T, 6, 20>::zeros();
+let mut jacobian_right_finger1_link1 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_link2 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger1_link2 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_0.cross(&(links[2].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_link2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_link3 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger1_link3 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_0.cross(&(links[3].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link3.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(links[3].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_link3.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(links[3].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jacobian_right_finger1_link3.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_link4 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger1_link4 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_0.cross(&(links[4].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link4.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(links[4].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_link4.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(links[4].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jacobian_right_finger1_link4.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_3.cross(&(links[4].translation.vector - links[4].translation.vector)); let ang = axis_world_3; jacobian_right_finger1_link4.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_tip_link = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger1_tip_link = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_0.cross(&(links[5].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_tip_link.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(links[5].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_tip_link.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(links[5].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jacobian_right_finger1_tip_link.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_3.cross(&(links[5].translation.vector - links[4].translation.vector)); let ang = axis_world_3; jacobian_right_finger1_tip_link.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link1 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger2_link1 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_5.cross(&(links[6].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link1.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link2 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger2_link2 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_5.cross(&(links[7].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link2.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_6.cross(&(links[7].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_link2.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link3 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger2_link3 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_5.cross(&(links[8].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link3.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_6.cross(&(links[8].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_link3.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_7.cross(&(links[8].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jacobian_right_finger2_link3.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link4 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger2_link4 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_5.cross(&(links[9].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link4.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_6.cross(&(links[9].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_link4.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_7.cross(&(links[9].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jacobian_right_finger2_link4.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_8.cross(&(links[9].translation.vector - links[9].translation.vector)); let ang = axis_world_8; jacobian_right_finger2_link4.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_tip_link = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger2_tip_link = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_5.cross(&(links[10].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_tip_link.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_6.cross(&(links[10].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_tip_link.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_7.cross(&(links[10].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jacobian_right_finger2_tip_link.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_8.cross(&(links[10].translation.vector - links[9].translation.vector)); let ang = axis_world_8; jacobian_right_finger2_tip_link.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link1 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger3_link1 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_10.cross(&(links[11].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link1.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link2 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger3_link2 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_10.cross(&(links[12].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link2.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_11.cross(&(links[12].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_link2.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link3 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger3_link3 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_10.cross(&(links[13].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link3.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_11.cross(&(links[13].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_link3.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_12.cross(&(links[13].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jacobian_right_finger3_link3.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link4 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger3_link4 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_10.cross(&(links[14].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link4.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_11.cross(&(links[14].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_link4.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_12.cross(&(links[14].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jacobian_right_finger3_link4.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_13.cross(&(links[14].translation.vector - links[14].translation.vector)); let ang = axis_world_13; jacobian_right_finger3_link4.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_tip_link = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger3_tip_link = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_10.cross(&(links[15].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_tip_link.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_11.cross(&(links[15].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_tip_link.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_12.cross(&(links[15].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jacobian_right_finger3_tip_link.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_13.cross(&(links[15].translation.vector - links[14].translation.vector)); let ang = axis_world_13; jacobian_right_finger3_tip_link.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link1 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger4_link1 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_15.cross(&(links[16].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link1.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link2 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger4_link2 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_15.cross(&(links[17].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link2.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_16.cross(&(links[17].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_link2.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link3 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger4_link3 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_15.cross(&(links[18].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link3.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_16.cross(&(links[18].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_link3.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_17.cross(&(links[18].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jacobian_right_finger4_link3.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link4 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger4_link4 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_15.cross(&(links[19].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link4.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_16.cross(&(links[19].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_link4.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_17.cross(&(links[19].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jacobian_right_finger4_link4.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_18.cross(&(links[19].translation.vector - links[19].translation.vector)); let ang = axis_world_18; jacobian_right_finger4_link4.set_column(15, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_tip_link = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger4_tip_link = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_15.cross(&(links[20].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_tip_link.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_16.cross(&(links[20].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_tip_link.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_17.cross(&(links[20].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jacobian_right_finger4_tip_link.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_18.cross(&(links[20].translation.vector - links[19].translation.vector)); let ang = axis_world_18; jacobian_right_finger4_tip_link.set_column(15, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link1 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger5_link1 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_20.cross(&(links[21].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link1.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link2 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger5_link2 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_20.cross(&(links[22].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link2.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_21.cross(&(links[22].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_link2.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link3 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger5_link3 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_20.cross(&(links[23].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link3.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_21.cross(&(links[23].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_link3.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_22.cross(&(links[23].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jacobian_right_finger5_link3.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link4 = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger5_link4 = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_20.cross(&(links[24].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link4.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_21.cross(&(links[24].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_link4.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_22.cross(&(links[24].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jacobian_right_finger5_link4.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_23.cross(&(links[24].translation.vector - links[24].translation.vector)); let ang = axis_world_23; jacobian_right_finger5_link4.set_column(19, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_tip_link = SMatrix::<f64, 6, 20>::zeros();
+let mut jacobian_right_finger5_tip_link = SMatrix::<T, 6, 20>::zeros();
 { let lin = axis_world_20.cross(&(links[25].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_tip_link.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_21.cross(&(links[25].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_tip_link.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_22.cross(&(links[25].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jacobian_right_finger5_tip_link.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -171,13 +171,13 @@ use crate::error::KinematicsError;
 /// limits-aware solver would succeed.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 20]) -> Result<[f64; 20], KinematicsError<f64>> {
-const ERROR_TOLERANCE: f64 = 1e-5;
-const DAMPING_FACTOR: f64 = 1e-4;
-const STEP_SIZE: f64 = 1.0;
+pub fn compute_ik<T: nalgebra::RealField + Copy>(target_link_idx: usize, target_pose: &Isometry3<T>, initial_joint_cmds: &[T; 20]) -> Result<[T; 20], KinematicsError<T>> {
+let error_tolerance: T = nalgebra::convert(1e-5_f64);
+let damping_factor: T = nalgebra::convert(1e-4_f64);
+let step_size: T = nalgebra::convert(1.0_f64);
 const MAX_ITERATIONS: usize = 1000;
-let damping_matrix = DAMPING_FACTOR * Matrix6::identity();
-let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {
+let damping_matrix = Matrix6::<T>::identity() * damping_factor;
+let compute_error = |current_pose: &Isometry3<T>| -> Vector6<T> {
 let error_position = target_pose.translation.vector - current_pose.translation.vector;
 let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();
 Vector6::new(error_position.x, error_position.y, error_position.z, error_rotation.x, error_rotation.y, error_rotation.z)
@@ -185,47 +185,47 @@ Vector6::new(error_position.x, error_position.y, error_position.z, error_rotatio
 let mut joint_cmds = *initial_joint_cmds;
 match target_link_idx {
 1 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 1>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0084399_f64), nalgebra::convert(0.020587_f64), nalgebra::convert(0.028893_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.6822193668878683_f64), nalgebra::convert(-0.6176690399171142_f64), nalgebra::convert(0.08050471975634982_f64), nalgebra::convert(-0.3828585674474818_f64)))) * { let (s, c) = (joint_cmds[0] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_0.translation;
-let mut jac = SMatrix::<f64, 6, 1>::zeros();
+let mut jac = SMatrix::<T, 6, 1>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_0, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 1> = jac.transpose() * x;
-joint_cmds[0] += STEP_SIZE * dq[0];
+let dq: SVector<T, 1> = jac.transpose() * x;
+joint_cmds[0] += step_size * dq[0];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[0] = joint_cmds[0].clamp(0.0475_f64, 1.6033_f64);
+joint_cmds[0] = joint_cmds[0].clamp(nalgebra::convert(0.0475_f64), nalgebra::convert(1.6033_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 2 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(-0.0047549, -0.0058191, 0.014132), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893, 0.29085087339109844, -0.08559118145800193, -0.6169580674889091))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 2>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0084399_f64), nalgebra::convert(0.020587_f64), nalgebra::convert(0.028893_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.6822193668878683_f64), nalgebra::convert(-0.6176690399171142_f64), nalgebra::convert(0.08050471975634982_f64), nalgebra::convert(-0.3828585674474818_f64)))) * { let (s, c) = (joint_cmds[0] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0047549_f64), nalgebra::convert(-0.0058191_f64), nalgebra::convert(0.014132_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7262524781813893_f64), nalgebra::convert(0.29085087339109844_f64), nalgebra::convert(-0.08559118145800193_f64), nalgebra::convert(-0.6169580674889091_f64)))) * { let (s, c) = (joint_cmds[1] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_1.translation;
-let mut jac = SMatrix::<f64, 6, 2>::zeros();
+let mut jac = SMatrix::<T, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_1, jac)
@@ -233,40 +233,40 @@ let mut jac = SMatrix::<f64, 6, 2>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 2> = jac.transpose() * x;
-joint_cmds[0] += STEP_SIZE * dq[0];
-joint_cmds[1] += STEP_SIZE * dq[1];
+let dq: SVector<T, 2> = jac.transpose() * x;
+joint_cmds[0] += step_size * dq[0];
+joint_cmds[1] += step_size * dq[1];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[0] = joint_cmds[0].clamp(0.0475_f64, 1.6033_f64);
-joint_cmds[1] = joint_cmds[1].clamp(-0.1387_f64, 0.9324_f64);
+joint_cmds[0] = joint_cmds[0].clamp(nalgebra::convert(0.0475_f64), nalgebra::convert(1.6033_f64));
+joint_cmds[1] = joint_cmds[1].clamp(nalgebra::convert(-0.1387_f64), nalgebra::convert(0.9324_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 3 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(-0.0047549, -0.0058191, 0.014132), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893, 0.29085087339109844, -0.08559118145800193, -0.6169580674889091))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(-0.000266705, 0.0009915016, 0.03466562), UnitQuaternion::from_quaternion(Quaternion::new(0.8157388773627973, 0.01500362433027275, 0.021238187340727802, 0.5778355428790437))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 3>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0084399_f64), nalgebra::convert(0.020587_f64), nalgebra::convert(0.028893_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.6822193668878683_f64), nalgebra::convert(-0.6176690399171142_f64), nalgebra::convert(0.08050471975634982_f64), nalgebra::convert(-0.3828585674474818_f64)))) * { let (s, c) = (joint_cmds[0] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0047549_f64), nalgebra::convert(-0.0058191_f64), nalgebra::convert(0.014132_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7262524781813893_f64), nalgebra::convert(0.29085087339109844_f64), nalgebra::convert(-0.08559118145800193_f64), nalgebra::convert(-0.6169580674889091_f64)))) * { let (s, c) = (joint_cmds[1] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.000266705_f64), nalgebra::convert(0.0009915016_f64), nalgebra::convert(0.03466562_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.8157388773627973_f64), nalgebra::convert(0.01500362433027275_f64), nalgebra::convert(0.021238187340727802_f64), nalgebra::convert(0.5778355428790437_f64)))) * { let (s, c) = (joint_cmds[2] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_2.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<T, 6, 3>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -275,44 +275,44 @@ let mut jac = SMatrix::<f64, 6, 3>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-joint_cmds[0] += STEP_SIZE * dq[0];
-joint_cmds[1] += STEP_SIZE * dq[1];
-joint_cmds[2] += STEP_SIZE * dq[2];
+let dq: SVector<T, 3> = jac.transpose() * x;
+joint_cmds[0] += step_size * dq[0];
+joint_cmds[1] += step_size * dq[1];
+joint_cmds[2] += step_size * dq[2];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[0] = joint_cmds[0].clamp(0.0475_f64, 1.6033_f64);
-joint_cmds[1] = joint_cmds[1].clamp(-0.1387_f64, 0.9324_f64);
-joint_cmds[2] = joint_cmds[2].clamp(-0.4642_f64, 1.5623_f64);
+joint_cmds[0] = joint_cmds[0].clamp(nalgebra::convert(0.0475_f64), nalgebra::convert(1.6033_f64));
+joint_cmds[1] = joint_cmds[1].clamp(nalgebra::convert(-0.1387_f64), nalgebra::convert(0.9324_f64));
+joint_cmds[2] = joint_cmds[2].clamp(nalgebra::convert(-0.4642_f64), nalgebra::convert(1.5623_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 4 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(-0.0047549, -0.0058191, 0.014132), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893, 0.29085087339109844, -0.08559118145800193, -0.6169580674889091))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(-0.000266705, 0.0009915016, 0.03466562), UnitQuaternion::from_quaternion(Quaternion::new(0.8157388773627973, 0.01500362433027275, 0.021238187340727802, 0.5778355428790437))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, 0.0002, 0.0295) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0084399_f64), nalgebra::convert(0.020587_f64), nalgebra::convert(0.028893_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.6822193668878683_f64), nalgebra::convert(-0.6176690399171142_f64), nalgebra::convert(0.08050471975634982_f64), nalgebra::convert(-0.3828585674474818_f64)))) * { let (s, c) = (joint_cmds[0] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0047549_f64), nalgebra::convert(-0.0058191_f64), nalgebra::convert(0.014132_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7262524781813893_f64), nalgebra::convert(0.29085087339109844_f64), nalgebra::convert(-0.08559118145800193_f64), nalgebra::convert(-0.6169580674889091_f64)))) * { let (s, c) = (joint_cmds[1] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.000266705_f64), nalgebra::convert(0.0009915016_f64), nalgebra::convert(0.03466562_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.8157388773627973_f64), nalgebra::convert(0.01500362433027275_f64), nalgebra::convert(0.021238187340727802_f64), nalgebra::convert(0.5778355428790437_f64)))) * { let (s, c) = (joint_cmds[2] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[3] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_3.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -322,47 +322,47 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[0] += STEP_SIZE * dq[0];
-joint_cmds[1] += STEP_SIZE * dq[1];
-joint_cmds[2] += STEP_SIZE * dq[2];
-joint_cmds[3] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[0] += step_size * dq[0];
+joint_cmds[1] += step_size * dq[1];
+joint_cmds[2] += step_size * dq[2];
+joint_cmds[3] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[0] = joint_cmds[0].clamp(0.0475_f64, 1.6033_f64);
-joint_cmds[1] = joint_cmds[1].clamp(-0.1387_f64, 0.9324_f64);
-joint_cmds[2] = joint_cmds[2].clamp(-0.4642_f64, 1.5623_f64);
-joint_cmds[3] = joint_cmds[3].clamp(-0.4699_f64, 1.5568_f64);
+joint_cmds[0] = joint_cmds[0].clamp(nalgebra::convert(0.0475_f64), nalgebra::convert(1.6033_f64));
+joint_cmds[1] = joint_cmds[1].clamp(nalgebra::convert(-0.1387_f64), nalgebra::convert(0.9324_f64));
+joint_cmds[2] = joint_cmds[2].clamp(nalgebra::convert(-0.4642_f64), nalgebra::convert(1.5623_f64));
+joint_cmds[3] = joint_cmds[3].clamp(nalgebra::convert(-0.4699_f64), nalgebra::convert(1.5568_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 5 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(0.0084399, 0.020587, 0.028893), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683, -0.6176690399171142, 0.08050471975634982, -0.3828585674474818))) * { let (s, c) = (joint_cmds[0] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(-0.0047549, -0.0058191, 0.014132), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893, 0.29085087339109844, -0.08559118145800193, -0.6169580674889091))) * { let (s, c) = (joint_cmds[1] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(-0.000266705, 0.0009915016, 0.03466562), UnitQuaternion::from_quaternion(Quaternion::new(0.8157388773627973, 0.01500362433027275, 0.021238187340727802, 0.5778355428790437))) * { let (s, c) = (joint_cmds[2] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, 0.0002, 0.0295) * { let (s, c) = (joint_cmds[3] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_4 = pose_3 * Translation3::new(-0.00105, -0.0002, 0.0313);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0084399_f64), nalgebra::convert(0.020587_f64), nalgebra::convert(0.028893_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.6822193668878683_f64), nalgebra::convert(-0.6176690399171142_f64), nalgebra::convert(0.08050471975634982_f64), nalgebra::convert(-0.3828585674474818_f64)))) * { let (s, c) = (joint_cmds[0] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0047549_f64), nalgebra::convert(-0.0058191_f64), nalgebra::convert(0.014132_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7262524781813893_f64), nalgebra::convert(0.29085087339109844_f64), nalgebra::convert(-0.08559118145800193_f64), nalgebra::convert(-0.6169580674889091_f64)))) * { let (s, c) = (joint_cmds[1] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.000266705_f64), nalgebra::convert(0.0009915016_f64), nalgebra::convert(0.03466562_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.8157388773627973_f64), nalgebra::convert(0.01500362433027275_f64), nalgebra::convert(0.021238187340727802_f64), nalgebra::convert(0.5778355428790437_f64)))) * { let (s, c) = (joint_cmds[2] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[3] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_4 = pose_3 * Translation3::new(nalgebra::convert(-0.00105_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0313_f64));
 let target_position = pose_4.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -372,76 +372,76 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[0] += STEP_SIZE * dq[0];
-joint_cmds[1] += STEP_SIZE * dq[1];
-joint_cmds[2] += STEP_SIZE * dq[2];
-joint_cmds[3] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[0] += step_size * dq[0];
+joint_cmds[1] += step_size * dq[1];
+joint_cmds[2] += step_size * dq[2];
+joint_cmds[3] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[0] = joint_cmds[0].clamp(0.0475_f64, 1.6033_f64);
-joint_cmds[1] = joint_cmds[1].clamp(-0.1387_f64, 0.9324_f64);
-joint_cmds[2] = joint_cmds[2].clamp(-0.4642_f64, 1.5623_f64);
-joint_cmds[3] = joint_cmds[3].clamp(-0.4699_f64, 1.5568_f64);
+joint_cmds[0] = joint_cmds[0].clamp(nalgebra::convert(0.0475_f64), nalgebra::convert(1.6033_f64));
+joint_cmds[1] = joint_cmds[1].clamp(nalgebra::convert(-0.1387_f64), nalgebra::convert(0.9324_f64));
+joint_cmds[2] = joint_cmds[2].clamp(nalgebra::convert(-0.4642_f64), nalgebra::convert(1.5623_f64));
+joint_cmds[3] = joint_cmds[3].clamp(nalgebra::convert(-0.4699_f64), nalgebra::convert(1.5568_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 6 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0058701, 0.029434, 0.091917), UnitQuaternion::from_quaternion(Quaternion::new(0.9916887635847301, -0.058829485633527225, -0.029275462547150216, -0.11061390099139398))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 1>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0058701_f64), nalgebra::convert(0.029434_f64), nalgebra::convert(0.091917_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9916887635847301_f64), nalgebra::convert(-0.058829485633527225_f64), nalgebra::convert(-0.029275462547150216_f64), nalgebra::convert(-0.11061390099139398_f64)))) * { let (s, c) = (joint_cmds[4] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_0.translation;
-let mut jac = SMatrix::<f64, 6, 1>::zeros();
+let mut jac = SMatrix::<T, 6, 1>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_0, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 1> = jac.transpose() * x;
-joint_cmds[4] += STEP_SIZE * dq[0];
+let dq: SVector<T, 1> = jac.transpose() * x;
+joint_cmds[4] += step_size * dq[0];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[4] = joint_cmds[4].clamp(-0.1585_f64, 1.5604_f64);
+joint_cmds[4] = joint_cmds[4].clamp(nalgebra::convert(-0.1585_f64), nalgebra::convert(1.5604_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 7 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0058701, 0.029434, 0.091917), UnitQuaternion::from_quaternion(Quaternion::new(0.9916887635847301, -0.058829485633527225, -0.029275462547150216, -0.11061390099139398))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 2>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0058701_f64), nalgebra::convert(0.029434_f64), nalgebra::convert(0.091917_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9916887635847301_f64), nalgebra::convert(-0.058829485633527225_f64), nalgebra::convert(-0.029275462547150216_f64), nalgebra::convert(-0.11061390099139398_f64)))) * { let (s, c) = (joint_cmds[4] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[5] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_1.translation;
-let mut jac = SMatrix::<f64, 6, 2>::zeros();
+let mut jac = SMatrix::<T, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_1, jac)
@@ -449,40 +449,40 @@ let mut jac = SMatrix::<f64, 6, 2>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 2> = jac.transpose() * x;
-joint_cmds[4] += STEP_SIZE * dq[0];
-joint_cmds[5] += STEP_SIZE * dq[1];
+let dq: SVector<T, 2> = jac.transpose() * x;
+joint_cmds[4] += step_size * dq[0];
+joint_cmds[5] += step_size * dq[1];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[4] = joint_cmds[4].clamp(-0.1585_f64, 1.5604_f64);
-joint_cmds[5] = joint_cmds[5].clamp(-0.37_f64, 0.37_f64);
+joint_cmds[4] = joint_cmds[4].clamp(nalgebra::convert(-0.1585_f64), nalgebra::convert(1.5604_f64));
+joint_cmds[5] = joint_cmds[5].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 8 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0058701, 0.029434, 0.091917), UnitQuaternion::from_quaternion(Quaternion::new(0.9916887635847301, -0.058829485633527225, -0.029275462547150216, -0.11061390099139398))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004750282, 0.04361766), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 3>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0058701_f64), nalgebra::convert(0.029434_f64), nalgebra::convert(0.091917_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9916887635847301_f64), nalgebra::convert(-0.058829485633527225_f64), nalgebra::convert(-0.029275462547150216_f64), nalgebra::convert(-0.11061390099139398_f64)))) * { let (s, c) = (joint_cmds[4] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[5] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004750282_f64), nalgebra::convert(0.04361766_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[6] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_2.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<T, 6, 3>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -491,44 +491,44 @@ let mut jac = SMatrix::<f64, 6, 3>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-joint_cmds[4] += STEP_SIZE * dq[0];
-joint_cmds[5] += STEP_SIZE * dq[1];
-joint_cmds[6] += STEP_SIZE * dq[2];
+let dq: SVector<T, 3> = jac.transpose() * x;
+joint_cmds[4] += step_size * dq[0];
+joint_cmds[5] += step_size * dq[1];
+joint_cmds[6] += step_size * dq[2];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[4] = joint_cmds[4].clamp(-0.1585_f64, 1.5604_f64);
-joint_cmds[5] = joint_cmds[5].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[6] = joint_cmds[6].clamp(-0.4777_f64, 1.5485_f64);
+joint_cmds[4] = joint_cmds[4].clamp(nalgebra::convert(-0.1585_f64), nalgebra::convert(1.5604_f64));
+joint_cmds[5] = joint_cmds[5].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[6] = joint_cmds[6].clamp(nalgebra::convert(-0.4777_f64), nalgebra::convert(1.5485_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 9 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0058701, 0.029434, 0.091917), UnitQuaternion::from_quaternion(Quaternion::new(0.9916887635847301, -0.058829485633527225, -0.029275462547150216, -0.11061390099139398))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004750282, 0.04361766), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[7] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0058701_f64), nalgebra::convert(0.029434_f64), nalgebra::convert(0.091917_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9916887635847301_f64), nalgebra::convert(-0.058829485633527225_f64), nalgebra::convert(-0.029275462547150216_f64), nalgebra::convert(-0.11061390099139398_f64)))) * { let (s, c) = (joint_cmds[4] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[5] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004750282_f64), nalgebra::convert(0.04361766_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[6] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[7] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_3.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -538,47 +538,47 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[4] += STEP_SIZE * dq[0];
-joint_cmds[5] += STEP_SIZE * dq[1];
-joint_cmds[6] += STEP_SIZE * dq[2];
-joint_cmds[7] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[4] += step_size * dq[0];
+joint_cmds[5] += step_size * dq[1];
+joint_cmds[6] += step_size * dq[2];
+joint_cmds[7] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[4] = joint_cmds[4].clamp(-0.1585_f64, 1.5604_f64);
-joint_cmds[5] = joint_cmds[5].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[6] = joint_cmds[6].clamp(-0.4777_f64, 1.5485_f64);
-joint_cmds[7] = joint_cmds[7].clamp(-0.4683_f64, 1.5753_f64);
+joint_cmds[4] = joint_cmds[4].clamp(nalgebra::convert(-0.1585_f64), nalgebra::convert(1.5604_f64));
+joint_cmds[5] = joint_cmds[5].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[6] = joint_cmds[6].clamp(nalgebra::convert(-0.4777_f64), nalgebra::convert(1.5485_f64));
+joint_cmds[7] = joint_cmds[7].clamp(nalgebra::convert(-0.4683_f64), nalgebra::convert(1.5753_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 10 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0058701, 0.029434, 0.091917), UnitQuaternion::from_quaternion(Quaternion::new(0.9916887635847301, -0.058829485633527225, -0.029275462547150216, -0.11061390099139398))) * { let (s, c) = (joint_cmds[4] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[5] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004750282, 0.04361766), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[6] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[7] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_4 = pose_3 * Translation3::new(-0.00105, 0.0002, 0.0267);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0058701_f64), nalgebra::convert(0.029434_f64), nalgebra::convert(0.091917_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9916887635847301_f64), nalgebra::convert(-0.058829485633527225_f64), nalgebra::convert(-0.029275462547150216_f64), nalgebra::convert(-0.11061390099139398_f64)))) * { let (s, c) = (joint_cmds[4] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[5] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004750282_f64), nalgebra::convert(0.04361766_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[6] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[7] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_4 = pose_3 * Translation3::new(nalgebra::convert(-0.00105_f64), nalgebra::convert(0.0002_f64), nalgebra::convert(0.0267_f64));
 let target_position = pose_4.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -588,76 +588,76 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[4] += STEP_SIZE * dq[0];
-joint_cmds[5] += STEP_SIZE * dq[1];
-joint_cmds[6] += STEP_SIZE * dq[2];
-joint_cmds[7] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[4] += step_size * dq[0];
+joint_cmds[5] += step_size * dq[1];
+joint_cmds[6] += step_size * dq[2];
+joint_cmds[7] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[4] = joint_cmds[4].clamp(-0.1585_f64, 1.5604_f64);
-joint_cmds[5] = joint_cmds[5].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[6] = joint_cmds[6].clamp(-0.4777_f64, 1.5485_f64);
-joint_cmds[7] = joint_cmds[7].clamp(-0.4683_f64, 1.5753_f64);
+joint_cmds[4] = joint_cmds[4].clamp(nalgebra::convert(-0.1585_f64), nalgebra::convert(1.5604_f64));
+joint_cmds[5] = joint_cmds[5].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[6] = joint_cmds[6].clamp(nalgebra::convert(-0.4777_f64), nalgebra::convert(1.5485_f64));
+joint_cmds[7] = joint_cmds[7].clamp(nalgebra::convert(-0.4683_f64), nalgebra::convert(1.5753_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 11 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.01046, 0.0074615, 0.089544), UnitQuaternion::from_quaternion(Quaternion::new(0.9990481890991502, -1.2684824867247146e-5, -0.04361916183339305, 0.00029054733912970787))) * { let (s, c) = (joint_cmds[8] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 1>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.01046_f64), nalgebra::convert(0.0074615_f64), nalgebra::convert(0.089544_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9990481890991502_f64), nalgebra::convert(-1.2684824867247146e-5_f64), nalgebra::convert(-0.04361916183339305_f64), nalgebra::convert(0.00029054733912970787_f64)))) * { let (s, c) = (joint_cmds[8] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_0.translation;
-let mut jac = SMatrix::<f64, 6, 1>::zeros();
+let mut jac = SMatrix::<T, 6, 1>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_0, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 1> = jac.transpose() * x;
-joint_cmds[8] += STEP_SIZE * dq[0];
+let dq: SVector<T, 1> = jac.transpose() * x;
+joint_cmds[8] += step_size * dq[0];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[8] = joint_cmds[8].clamp(-0.1644_f64, 1.5516_f64);
+joint_cmds[8] = joint_cmds[8].clamp(nalgebra::convert(-0.1644_f64), nalgebra::convert(1.5516_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 12 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.01046, 0.0074615, 0.089544), UnitQuaternion::from_quaternion(Quaternion::new(0.9990481890991502, -1.2684824867247146e-5, -0.04361916183339305, 0.00029054733912970787))) * { let (s, c) = (joint_cmds[8] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[9] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 2>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.01046_f64), nalgebra::convert(0.0074615_f64), nalgebra::convert(0.089544_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9990481890991502_f64), nalgebra::convert(-1.2684824867247146e-5_f64), nalgebra::convert(-0.04361916183339305_f64), nalgebra::convert(0.00029054733912970787_f64)))) * { let (s, c) = (joint_cmds[8] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[9] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_1.translation;
-let mut jac = SMatrix::<f64, 6, 2>::zeros();
+let mut jac = SMatrix::<T, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_1, jac)
@@ -665,40 +665,40 @@ let mut jac = SMatrix::<f64, 6, 2>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 2> = jac.transpose() * x;
-joint_cmds[8] += STEP_SIZE * dq[0];
-joint_cmds[9] += STEP_SIZE * dq[1];
+let dq: SVector<T, 2> = jac.transpose() * x;
+joint_cmds[8] += step_size * dq[0];
+joint_cmds[9] += step_size * dq[1];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[8] = joint_cmds[8].clamp(-0.1644_f64, 1.5516_f64);
-joint_cmds[9] = joint_cmds[9].clamp(-0.37_f64, 0.37_f64);
+joint_cmds[8] = joint_cmds[8].clamp(nalgebra::convert(-0.1644_f64), nalgebra::convert(1.5516_f64));
+joint_cmds[9] = joint_cmds[9].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 13 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.01046, 0.0074615, 0.089544), UnitQuaternion::from_quaternion(Quaternion::new(0.9990481890991502, -1.2684824867247146e-5, -0.04361916183339305, 0.00029054733912970787))) * { let (s, c) = (joint_cmds[8] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[9] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.00475, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[10] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 3>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.01046_f64), nalgebra::convert(0.0074615_f64), nalgebra::convert(0.089544_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9990481890991502_f64), nalgebra::convert(-1.2684824867247146e-5_f64), nalgebra::convert(-0.04361916183339305_f64), nalgebra::convert(0.00029054733912970787_f64)))) * { let (s, c) = (joint_cmds[8] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[9] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.00475_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[10] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_2.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<T, 6, 3>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -707,44 +707,44 @@ let mut jac = SMatrix::<f64, 6, 3>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-joint_cmds[8] += STEP_SIZE * dq[0];
-joint_cmds[9] += STEP_SIZE * dq[1];
-joint_cmds[10] += STEP_SIZE * dq[2];
+let dq: SVector<T, 3> = jac.transpose() * x;
+joint_cmds[8] += step_size * dq[0];
+joint_cmds[9] += step_size * dq[1];
+joint_cmds[10] += step_size * dq[2];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[8] = joint_cmds[8].clamp(-0.1644_f64, 1.5516_f64);
-joint_cmds[9] = joint_cmds[9].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[10] = joint_cmds[10].clamp(-0.4739_f64, 1.5512_f64);
+joint_cmds[8] = joint_cmds[8].clamp(nalgebra::convert(-0.1644_f64), nalgebra::convert(1.5516_f64));
+joint_cmds[9] = joint_cmds[9].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[10] = joint_cmds[10].clamp(nalgebra::convert(-0.4739_f64), nalgebra::convert(1.5512_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 14 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.01046, 0.0074615, 0.089544), UnitQuaternion::from_quaternion(Quaternion::new(0.9990481890991502, -1.2684824867247146e-5, -0.04361916183339305, 0.00029054733912970787))) * { let (s, c) = (joint_cmds[8] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[9] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.00475, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[10] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[11] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.01046_f64), nalgebra::convert(0.0074615_f64), nalgebra::convert(0.089544_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9990481890991502_f64), nalgebra::convert(-1.2684824867247146e-5_f64), nalgebra::convert(-0.04361916183339305_f64), nalgebra::convert(0.00029054733912970787_f64)))) * { let (s, c) = (joint_cmds[8] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[9] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.00475_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[10] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[11] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_3.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -754,47 +754,47 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[8] += STEP_SIZE * dq[0];
-joint_cmds[9] += STEP_SIZE * dq[1];
-joint_cmds[10] += STEP_SIZE * dq[2];
-joint_cmds[11] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[8] += step_size * dq[0];
+joint_cmds[9] += step_size * dq[1];
+joint_cmds[10] += step_size * dq[2];
+joint_cmds[11] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[8] = joint_cmds[8].clamp(-0.1644_f64, 1.5516_f64);
-joint_cmds[9] = joint_cmds[9].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[10] = joint_cmds[10].clamp(-0.4739_f64, 1.5512_f64);
-joint_cmds[11] = joint_cmds[11].clamp(-0.4684_f64, 1.5745_f64);
+joint_cmds[8] = joint_cmds[8].clamp(nalgebra::convert(-0.1644_f64), nalgebra::convert(1.5516_f64));
+joint_cmds[9] = joint_cmds[9].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[10] = joint_cmds[10].clamp(nalgebra::convert(-0.4739_f64), nalgebra::convert(1.5512_f64));
+joint_cmds[11] = joint_cmds[11].clamp(nalgebra::convert(-0.4684_f64), nalgebra::convert(1.5745_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 15 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.01046, 0.0074615, 0.089544), UnitQuaternion::from_quaternion(Quaternion::new(0.9990481890991502, -1.2684824867247146e-5, -0.04361916183339305, 0.00029054733912970787))) * { let (s, c) = (joint_cmds[8] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.0022, 0.0, 0.004000006), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[9] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.00475, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[10] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[11] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_4 = pose_3 * Translation3::new(-0.001049087, 0.0002010395, 0.0267);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.01046_f64), nalgebra::convert(0.0074615_f64), nalgebra::convert(0.089544_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9990481890991502_f64), nalgebra::convert(-1.2684824867247146e-5_f64), nalgebra::convert(-0.04361916183339305_f64), nalgebra::convert(0.00029054733912970787_f64)))) * { let (s, c) = (joint_cmds[8] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0022_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000006_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[9] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.00475_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[10] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[11] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_4 = pose_3 * Translation3::new(nalgebra::convert(-0.001049087_f64), nalgebra::convert(0.0002010395_f64), nalgebra::convert(0.0267_f64));
 let target_position = pose_4.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -804,76 +804,76 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[8] += STEP_SIZE * dq[0];
-joint_cmds[9] += STEP_SIZE * dq[1];
-joint_cmds[10] += STEP_SIZE * dq[2];
-joint_cmds[11] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[8] += step_size * dq[0];
+joint_cmds[9] += step_size * dq[1];
+joint_cmds[10] += step_size * dq[2];
+joint_cmds[11] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[8] = joint_cmds[8].clamp(-0.1644_f64, 1.5516_f64);
-joint_cmds[9] = joint_cmds[9].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[10] = joint_cmds[10].clamp(-0.4739_f64, 1.5512_f64);
-joint_cmds[11] = joint_cmds[11].clamp(-0.4684_f64, 1.5745_f64);
+joint_cmds[8] = joint_cmds[8].clamp(nalgebra::convert(-0.1644_f64), nalgebra::convert(1.5516_f64));
+joint_cmds[9] = joint_cmds[9].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[10] = joint_cmds[10].clamp(nalgebra::convert(-0.4739_f64), nalgebra::convert(1.5512_f64));
+joint_cmds[11] = joint_cmds[11].clamp(nalgebra::convert(-0.4684_f64), nalgebra::convert(1.5745_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 16 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0076649, -0.013712, 0.084429), UnitQuaternion::from_quaternion(Quaternion::new(0.9977885672599305, 0.04610193435442398, -0.04058837269304493, 0.025400210555943416))) * { let (s, c) = (joint_cmds[12] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 1>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0076649_f64), nalgebra::convert(-0.013712_f64), nalgebra::convert(0.084429_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9977885672599305_f64), nalgebra::convert(0.04610193435442398_f64), nalgebra::convert(-0.04058837269304493_f64), nalgebra::convert(0.025400210555943416_f64)))) * { let (s, c) = (joint_cmds[12] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_0.translation;
-let mut jac = SMatrix::<f64, 6, 1>::zeros();
+let mut jac = SMatrix::<T, 6, 1>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_0, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 1> = jac.transpose() * x;
-joint_cmds[12] += STEP_SIZE * dq[0];
+let dq: SVector<T, 1> = jac.transpose() * x;
+joint_cmds[12] += step_size * dq[0];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[12] = joint_cmds[12].clamp(-0.1554_f64, 1.5585_f64);
+joint_cmds[12] = joint_cmds[12].clamp(nalgebra::convert(-0.1554_f64), nalgebra::convert(1.5585_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 17 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0076649, -0.013712, 0.084429), UnitQuaternion::from_quaternion(Quaternion::new(0.9977885672599305, 0.04610193435442398, -0.04058837269304493, 0.025400210555943416))) * { let (s, c) = (joint_cmds[12] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[13] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 2>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0076649_f64), nalgebra::convert(-0.013712_f64), nalgebra::convert(0.084429_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9977885672599305_f64), nalgebra::convert(0.04610193435442398_f64), nalgebra::convert(-0.04058837269304493_f64), nalgebra::convert(0.025400210555943416_f64)))) * { let (s, c) = (joint_cmds[12] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[13] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_1.translation;
-let mut jac = SMatrix::<f64, 6, 2>::zeros();
+let mut jac = SMatrix::<T, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_1, jac)
@@ -881,40 +881,40 @@ let mut jac = SMatrix::<f64, 6, 2>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 2> = jac.transpose() * x;
-joint_cmds[12] += STEP_SIZE * dq[0];
-joint_cmds[13] += STEP_SIZE * dq[1];
+let dq: SVector<T, 2> = jac.transpose() * x;
+joint_cmds[12] += step_size * dq[0];
+joint_cmds[13] += step_size * dq[1];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[12] = joint_cmds[12].clamp(-0.1554_f64, 1.5585_f64);
-joint_cmds[13] = joint_cmds[13].clamp(-0.37_f64, 0.37_f64);
+joint_cmds[12] = joint_cmds[12].clamp(nalgebra::convert(-0.1554_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[13] = joint_cmds[13].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 18 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0076649, -0.013712, 0.084429), UnitQuaternion::from_quaternion(Quaternion::new(0.9977885672599305, 0.04610193435442398, -0.04058837269304493, 0.025400210555943416))) * { let (s, c) = (joint_cmds[12] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[13] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[14] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 3>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0076649_f64), nalgebra::convert(-0.013712_f64), nalgebra::convert(0.084429_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9977885672599305_f64), nalgebra::convert(0.04610193435442398_f64), nalgebra::convert(-0.04058837269304493_f64), nalgebra::convert(0.025400210555943416_f64)))) * { let (s, c) = (joint_cmds[12] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[13] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[14] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_2.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<T, 6, 3>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -923,44 +923,44 @@ let mut jac = SMatrix::<f64, 6, 3>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-joint_cmds[12] += STEP_SIZE * dq[0];
-joint_cmds[13] += STEP_SIZE * dq[1];
-joint_cmds[14] += STEP_SIZE * dq[2];
+let dq: SVector<T, 3> = jac.transpose() * x;
+joint_cmds[12] += step_size * dq[0];
+joint_cmds[13] += step_size * dq[1];
+joint_cmds[14] += step_size * dq[2];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[12] = joint_cmds[12].clamp(-0.1554_f64, 1.5585_f64);
-joint_cmds[13] = joint_cmds[13].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[14] = joint_cmds[14].clamp(-0.4765_f64, 1.5487_f64);
+joint_cmds[12] = joint_cmds[12].clamp(nalgebra::convert(-0.1554_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[13] = joint_cmds[13].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[14] = joint_cmds[14].clamp(nalgebra::convert(-0.4765_f64), nalgebra::convert(1.5487_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 19 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0076649, -0.013712, 0.084429), UnitQuaternion::from_quaternion(Quaternion::new(0.9977885672599305, 0.04610193435442398, -0.04058837269304493, 0.025400210555943416))) * { let (s, c) = (joint_cmds[12] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[13] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[14] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[15] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0076649_f64), nalgebra::convert(-0.013712_f64), nalgebra::convert(0.084429_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9977885672599305_f64), nalgebra::convert(0.04610193435442398_f64), nalgebra::convert(-0.04058837269304493_f64), nalgebra::convert(0.025400210555943416_f64)))) * { let (s, c) = (joint_cmds[12] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[13] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[14] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[15] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_3.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -970,47 +970,47 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[12] += STEP_SIZE * dq[0];
-joint_cmds[13] += STEP_SIZE * dq[1];
-joint_cmds[14] += STEP_SIZE * dq[2];
-joint_cmds[15] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[12] += step_size * dq[0];
+joint_cmds[13] += step_size * dq[1];
+joint_cmds[14] += step_size * dq[2];
+joint_cmds[15] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[12] = joint_cmds[12].clamp(-0.1554_f64, 1.5585_f64);
-joint_cmds[13] = joint_cmds[13].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[14] = joint_cmds[14].clamp(-0.4765_f64, 1.5487_f64);
-joint_cmds[15] = joint_cmds[15].clamp(-0.4777_f64, 1.5634_f64);
+joint_cmds[12] = joint_cmds[12].clamp(nalgebra::convert(-0.1554_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[13] = joint_cmds[13].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[14] = joint_cmds[14].clamp(nalgebra::convert(-0.4765_f64), nalgebra::convert(1.5487_f64));
+joint_cmds[15] = joint_cmds[15].clamp(nalgebra::convert(-0.4777_f64), nalgebra::convert(1.5634_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 20 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.0076649, -0.013712, 0.084429), UnitQuaternion::from_quaternion(Quaternion::new(0.9977885672599305, 0.04610193435442398, -0.04058837269304493, 0.025400210555943416))) * { let (s, c) = (joint_cmds[12] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[13] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[14] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[15] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_4 = pose_3 * Translation3::new(-0.00105961, 0.0001904508, 0.0267);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.0076649_f64), nalgebra::convert(-0.013712_f64), nalgebra::convert(0.084429_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9977885672599305_f64), nalgebra::convert(0.04610193435442398_f64), nalgebra::convert(-0.04058837269304493_f64), nalgebra::convert(0.025400210555943416_f64)))) * { let (s, c) = (joint_cmds[12] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[13] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[14] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[15] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_4 = pose_3 * Translation3::new(nalgebra::convert(-0.00105961_f64), nalgebra::convert(0.0001904508_f64), nalgebra::convert(0.0267_f64));
 let target_position = pose_4.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -1020,76 +1020,76 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[12] += STEP_SIZE * dq[0];
-joint_cmds[13] += STEP_SIZE * dq[1];
-joint_cmds[14] += STEP_SIZE * dq[2];
-joint_cmds[15] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[12] += step_size * dq[0];
+joint_cmds[13] += step_size * dq[1];
+joint_cmds[14] += step_size * dq[2];
+joint_cmds[15] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[12] = joint_cmds[12].clamp(-0.1554_f64, 1.5585_f64);
-joint_cmds[13] = joint_cmds[13].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[14] = joint_cmds[14].clamp(-0.4765_f64, 1.5487_f64);
-joint_cmds[15] = joint_cmds[15].clamp(-0.4777_f64, 1.5634_f64);
+joint_cmds[12] = joint_cmds[12].clamp(nalgebra::convert(-0.1554_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[13] = joint_cmds[13].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[14] = joint_cmds[14].clamp(nalgebra::convert(-0.4765_f64), nalgebra::convert(1.5487_f64));
+joint_cmds[15] = joint_cmds[15].clamp(nalgebra::convert(-0.4777_f64), nalgebra::convert(1.5634_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 21 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.002268651, -0.03400111, 0.07428134), UnitQuaternion::from_quaternion(Quaternion::new(0.9908692876130022, 0.09931734008761313, -0.03832545015380128, 0.08273621150217035))) * { let (s, c) = (joint_cmds[16] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 1>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.002268651_f64), nalgebra::convert(-0.03400111_f64), nalgebra::convert(0.07428134_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9908692876130022_f64), nalgebra::convert(0.09931734008761313_f64), nalgebra::convert(-0.03832545015380128_f64), nalgebra::convert(0.08273621150217035_f64)))) * { let (s, c) = (joint_cmds[16] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_0.translation;
-let mut jac = SMatrix::<f64, 6, 1>::zeros();
+let mut jac = SMatrix::<T, 6, 1>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_0, jac)
 };
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 1> = jac.transpose() * x;
-joint_cmds[16] += STEP_SIZE * dq[0];
+let dq: SVector<T, 1> = jac.transpose() * x;
+joint_cmds[16] += step_size * dq[0];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[16] = joint_cmds[16].clamp(-0.1626_f64, 1.5585_f64);
+joint_cmds[16] = joint_cmds[16].clamp(nalgebra::convert(-0.1626_f64), nalgebra::convert(1.5585_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 22 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.002268651, -0.03400111, 0.07428134), UnitQuaternion::from_quaternion(Quaternion::new(0.9908692876130022, 0.09931734008761313, -0.03832545015380128, 0.08273621150217035))) * { let (s, c) = (joint_cmds[16] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[17] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 2>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.002268651_f64), nalgebra::convert(-0.03400111_f64), nalgebra::convert(0.07428134_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9908692876130022_f64), nalgebra::convert(0.09931734008761313_f64), nalgebra::convert(-0.03832545015380128_f64), nalgebra::convert(0.08273621150217035_f64)))) * { let (s, c) = (joint_cmds[16] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[17] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_1.translation;
-let mut jac = SMatrix::<f64, 6, 2>::zeros();
+let mut jac = SMatrix::<T, 6, 2>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 (pose_1, jac)
@@ -1097,40 +1097,40 @@ let mut jac = SMatrix::<f64, 6, 2>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 2> = jac.transpose() * x;
-joint_cmds[16] += STEP_SIZE * dq[0];
-joint_cmds[17] += STEP_SIZE * dq[1];
+let dq: SVector<T, 2> = jac.transpose() * x;
+joint_cmds[16] += step_size * dq[0];
+joint_cmds[17] += step_size * dq[1];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[16] = joint_cmds[16].clamp(-0.1626_f64, 1.5585_f64);
-joint_cmds[17] = joint_cmds[17].clamp(-0.37_f64, 0.37_f64);
+joint_cmds[16] = joint_cmds[16].clamp(nalgebra::convert(-0.1626_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[17] = joint_cmds[17].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 23 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.002268651, -0.03400111, 0.07428134), UnitQuaternion::from_quaternion(Quaternion::new(0.9908692876130022, 0.09931734008761313, -0.03832545015380128, 0.08273621150217035))) * { let (s, c) = (joint_cmds[16] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[17] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[18] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 3>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.002268651_f64), nalgebra::convert(-0.03400111_f64), nalgebra::convert(0.07428134_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9908692876130022_f64), nalgebra::convert(0.09931734008761313_f64), nalgebra::convert(-0.03832545015380128_f64), nalgebra::convert(0.08273621150217035_f64)))) * { let (s, c) = (joint_cmds[16] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[17] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[18] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_2.translation;
-let mut jac = SMatrix::<f64, 6, 3>::zeros();
+let mut jac = SMatrix::<T, 6, 3>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -1139,44 +1139,44 @@ let mut jac = SMatrix::<f64, 6, 3>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 3> = jac.transpose() * x;
-joint_cmds[16] += STEP_SIZE * dq[0];
-joint_cmds[17] += STEP_SIZE * dq[1];
-joint_cmds[18] += STEP_SIZE * dq[2];
+let dq: SVector<T, 3> = jac.transpose() * x;
+joint_cmds[16] += step_size * dq[0];
+joint_cmds[17] += step_size * dq[1];
+joint_cmds[18] += step_size * dq[2];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[16] = joint_cmds[16].clamp(-0.1626_f64, 1.5585_f64);
-joint_cmds[17] = joint_cmds[17].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[18] = joint_cmds[18].clamp(-0.4768_f64, 1.549_f64);
+joint_cmds[16] = joint_cmds[16].clamp(nalgebra::convert(-0.1626_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[17] = joint_cmds[17].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[18] = joint_cmds[18].clamp(nalgebra::convert(-0.4768_f64), nalgebra::convert(1.549_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 24 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.002268651, -0.03400111, 0.07428134), UnitQuaternion::from_quaternion(Quaternion::new(0.9908692876130022, 0.09931734008761313, -0.03832545015380128, 0.08273621150217035))) * { let (s, c) = (joint_cmds[16] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[17] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[18] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[19] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.002268651_f64), nalgebra::convert(-0.03400111_f64), nalgebra::convert(0.07428134_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9908692876130022_f64), nalgebra::convert(0.09931734008761313_f64), nalgebra::convert(-0.03832545015380128_f64), nalgebra::convert(0.08273621150217035_f64)))) * { let (s, c) = (joint_cmds[16] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[17] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[18] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[19] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
 let target_position = pose_3.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -1186,47 +1186,47 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[16] += STEP_SIZE * dq[0];
-joint_cmds[17] += STEP_SIZE * dq[1];
-joint_cmds[18] += STEP_SIZE * dq[2];
-joint_cmds[19] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[16] += step_size * dq[0];
+joint_cmds[17] += step_size * dq[1];
+joint_cmds[18] += step_size * dq[2];
+joint_cmds[19] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[16] = joint_cmds[16].clamp(-0.1626_f64, 1.5585_f64);
-joint_cmds[17] = joint_cmds[17].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[18] = joint_cmds[18].clamp(-0.4768_f64, 1.549_f64);
-joint_cmds[19] = joint_cmds[19].clamp(-0.4683_f64, 1.5735_f64);
+joint_cmds[16] = joint_cmds[16].clamp(nalgebra::convert(-0.1626_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[17] = joint_cmds[17].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[18] = joint_cmds[18].clamp(nalgebra::convert(-0.4768_f64), nalgebra::convert(1.549_f64));
+joint_cmds[19] = joint_cmds[19].clamp(nalgebra::convert(-0.4683_f64), nalgebra::convert(1.5735_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 25 => {
-let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
-let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(-0.002268651, -0.03400111, 0.07428134), UnitQuaternion::from_quaternion(Quaternion::new(0.9908692876130022, 0.09931734008761313, -0.03832545015380128, 0.08273621150217035))) * { let (s, c) = (joint_cmds[16] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_0 = pose_0.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(0.002200001, 0.0, 0.004000005), UnitQuaternion::from_quaternion(Quaternion::new(0.7071068967259818, 0.0, 0.0, 0.7071066656470943))) * { let (s, c) = (joint_cmds[17] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_1 = pose_1.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(0.0, 0.004749999, 0.04361769), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688, 0.0, 0.0, -0.707201765128549))) * { let (s, c) = (joint_cmds[18] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_2 = pose_2.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_3 = pose_2 * Translation3::new(0.0, -0.0002, 0.0295) * { let (s, c) = (joint_cmds[19] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0, s, 0.0)) };
-let axis_world_3 = pose_3.rotation * Vector3::new(0.0, 1.0, 0.0);
-let pose_4 = pose_3 * Translation3::new(-0.001044639, 0.0002113095, 0.0267);
+let compute_pose_and_jacobian = |joint_cmds: &[T; 20]| -> (Isometry3<T>, SMatrix<T, 6, 4>) {
+let pose_0 = Isometry3::identity() * Isometry3::from_parts(Translation3::new(nalgebra::convert(-0.002268651_f64), nalgebra::convert(-0.03400111_f64), nalgebra::convert(0.07428134_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.9908692876130022_f64), nalgebra::convert(0.09931734008761313_f64), nalgebra::convert(-0.03832545015380128_f64), nalgebra::convert(0.08273621150217035_f64)))) * { let (s, c) = (joint_cmds[16] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_0 = pose_0.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_1 = pose_0 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.002200001_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.004000005_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7071068967259818_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.7071066656470943_f64)))) * { let (s, c) = (joint_cmds[17] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_1 = pose_1.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_2 = pose_1 * Isometry3::from_parts(Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(0.004749999_f64), nalgebra::convert(0.04361769_f64)), UnitQuaternion::from_quaternion(Quaternion::new(nalgebra::convert(0.7070117844838688_f64), nalgebra::convert(0.0_f64), nalgebra::convert(0.0_f64), nalgebra::convert(-0.707201765128549_f64)))) * { let (s, c) = (joint_cmds[18] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_2 = pose_2.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_3 = pose_2 * Translation3::new(nalgebra::convert(0.0_f64), nalgebra::convert(-0.0002_f64), nalgebra::convert(0.0295_f64)) * { let (s, c) = (joint_cmds[19] * nalgebra::convert(0.5_f64)).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, nalgebra::convert(0.0_f64), s, nalgebra::convert(0.0_f64))) };
+let axis_world_3 = pose_3.rotation * Vector3::new(nalgebra::convert(0.0_f64), nalgebra::convert(1.0_f64), nalgebra::convert(0.0_f64));
+let pose_4 = pose_3 * Translation3::new(nalgebra::convert(-0.001044639_f64), nalgebra::convert(0.0002113095_f64), nalgebra::convert(0.0267_f64));
 let target_position = pose_4.translation;
-let mut jac = SMatrix::<f64, 6, 4>::zeros();
+let mut jac = SMatrix::<T, 6, 4>::zeros();
 { let lin = axis_world_0.cross(&(target_position.vector - pose_0.translation.vector)); let ang = axis_world_0; jac.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_1.cross(&(target_position.vector - pose_1.translation.vector)); let ang = axis_world_1; jac.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_2.cross(&(target_position.vector - pose_2.translation.vector)); let ang = axis_world_2; jac.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -1236,37 +1236,37 @@ let mut jac = SMatrix::<f64, 6, 4>::zeros();
 let (mut current_pose, mut jac) = compute_pose_and_jacobian(&joint_cmds);
 let mut error = compute_error(&current_pose);
 let mut iterations: usize = 0;
-while error.norm() > ERROR_TOLERANCE {
+while error.norm() > error_tolerance {
 if iterations >= MAX_ITERATIONS {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });
 }
 let jjt_damped = jac * jac.transpose() + damping_matrix;
 let x = jjt_damped.cholesky().expect("J*J^T + damping*I is always positive definite for damping > 0").solve(&error);
-let dq: SVector<f64, 4> = jac.transpose() * x;
-joint_cmds[16] += STEP_SIZE * dq[0];
-joint_cmds[17] += STEP_SIZE * dq[1];
-joint_cmds[18] += STEP_SIZE * dq[2];
-joint_cmds[19] += STEP_SIZE * dq[3];
+let dq: SVector<T, 4> = jac.transpose() * x;
+joint_cmds[16] += step_size * dq[0];
+joint_cmds[17] += step_size * dq[1];
+joint_cmds[18] += step_size * dq[2];
+joint_cmds[19] += step_size * dq[3];
 let (pose, new_jac) = compute_pose_and_jacobian(&joint_cmds);
 current_pose = pose;
 jac = new_jac;
 error = compute_error(&current_pose);
 iterations += 1;
 }
-joint_cmds[16] = joint_cmds[16].clamp(-0.1626_f64, 1.5585_f64);
-joint_cmds[17] = joint_cmds[17].clamp(-0.37_f64, 0.37_f64);
-joint_cmds[18] = joint_cmds[18].clamp(-0.4768_f64, 1.549_f64);
-joint_cmds[19] = joint_cmds[19].clamp(-0.4683_f64, 1.5735_f64);
+joint_cmds[16] = joint_cmds[16].clamp(nalgebra::convert(-0.1626_f64), nalgebra::convert(1.5585_f64));
+joint_cmds[17] = joint_cmds[17].clamp(nalgebra::convert(-0.37_f64), nalgebra::convert(0.37_f64));
+joint_cmds[18] = joint_cmds[18].clamp(nalgebra::convert(-0.4768_f64), nalgebra::convert(1.549_f64));
+joint_cmds[19] = joint_cmds[19].clamp(nalgebra::convert(-0.4683_f64), nalgebra::convert(1.5735_f64));
 let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);
 let clamped_error = compute_error(&clamped_pose);
-if clamped_error.norm() > ERROR_TOLERANCE {
+if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
 Ok(joint_cmds)
 }
 _ => {
 let error = compute_error(&Isometry3::identity());
-if error.norm() > ERROR_TOLERANCE {
+if error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
 }
 Ok(joint_cmds)
