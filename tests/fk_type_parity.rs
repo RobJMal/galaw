@@ -5,7 +5,6 @@
 /// precision limit. This protects the generic implementation from bugs that only
 /// surface at specific precisions, and documents the expected precision trade-off
 /// when switching types for performance.
-
 // Third-party
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;

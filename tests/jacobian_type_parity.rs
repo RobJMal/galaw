@@ -3,7 +3,6 @@
 /// Verifies that Jacobian elements are consistent across float types: a lower-precision
 /// type should agree with a higher-precision type within the narrower type's precision
 /// limit. Mirrors fk_type_parity.rs — same approach, applied to the full Jacobian matrix.
-
 // Third-party
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;

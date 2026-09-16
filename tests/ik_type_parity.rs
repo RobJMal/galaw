@@ -6,7 +6,6 @@
 /// target pose within the precision limit of the type used:
 ///
 ///   FK(IK(target)) ≈ target   (within PARITY_TOLERANCE)
-
 // Third-party
 use nalgebra::{Isometry3, Quaternion, Translation3, UnitQuaternion};
 use rand::{RngExt, SeedableRng};
@@ -106,8 +105,7 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
             })
             .collect();
 
-        let solved = match model_f32.compute_ik(target_link_idx, &target_pose_f32, &init_cmds_f32)
-        {
+        let solved = match model_f32.compute_ik(target_link_idx, &target_pose_f32, &init_cmds_f32) {
             Ok(cmds) => cmds,
             Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge {
                 ..

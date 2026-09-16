@@ -52,7 +52,8 @@ fn optimize_axis_angle_rotation_code<T: RealField + Copy + std::fmt::Debug>(
     let neg_one: T = nalgebra::convert(-1.0_f64);
     let (vx, vy, vz) = (vec.x, vec.y, vec.z);
 
-    let aligned: Option<(usize, bool)> = if vy == zero && vz == zero && (vx == one || vx == neg_one) {
+    let aligned: Option<(usize, bool)> = if vy == zero && vz == zero && (vx == one || vx == neg_one)
+    {
         Some((0, vx == one))
     } else if vx == zero && vz == zero && (vy == one || vy == neg_one) {
         Some((1, vy == one))
@@ -171,9 +172,12 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
         );
 
         let mut factors: Vec<String> = vec![parent_var];
-        if let Some(jt_code) =
-            optimize_joint_transform_code(&joint.transform.translation, &joint.transform.rotation, &t_str, &r_str)
-        {
+        if let Some(jt_code) = optimize_joint_transform_code(
+            &joint.transform.translation,
+            &joint.transform.rotation,
+            &t_str,
+            &r_str,
+        ) {
             factors.push(jt_code);
         }
 
@@ -301,13 +305,29 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push(format!(
         "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<{ty}>, initial_joint_cmds: &[{ty}; {n}]) -> Result<[{ty}; {n}], KinematicsError<{ty}>> {{"
     ));
-    out.push(format!("let error_tolerance: {ty} = {};", emit_scalar(1e-5_f64, ty)));
-    out.push(format!("let damping_factor: {ty} = {};", emit_scalar(1e-4_f64, ty)));
-    out.push(format!("let step_size: {ty} = {};", emit_scalar(1.0_f64, ty)));
+    out.push(format!(
+        "let error_tolerance: {ty} = {};",
+        emit_scalar(1e-5_f64, ty)
+    ));
+    out.push(format!(
+        "let damping_factor: {ty} = {};",
+        emit_scalar(1e-4_f64, ty)
+    ));
+    out.push(format!(
+        "let step_size: {ty} = {};",
+        emit_scalar(1.0_f64, ty)
+    ));
     out.push("const MAX_ITERATIONS: usize = 1000;".to_string());
-    out.push(format!("let damping_matrix = Matrix6::<{ty}>::identity() * damping_factor;"));
-    out.push(format!("let compute_error = |current_pose: &Isometry3<{ty}>| -> Vector6<{ty}> {{"));
-    out.push("let error_position = target_pose.translation.vector - current_pose.translation.vector;".to_string());
+    out.push(format!(
+        "let damping_matrix = Matrix6::<{ty}>::identity() * damping_factor;"
+    ));
+    out.push(format!(
+        "let compute_error = |current_pose: &Isometry3<{ty}>| -> Vector6<{ty}> {{"
+    ));
+    out.push(
+        "let error_position = target_pose.translation.vector - current_pose.translation.vector;"
+            .to_string(),
+    );
     out.push("let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();".to_string());
     out.push("Vector6::new(error_position.x, error_position.y, error_position.z, error_rotation.x, error_rotation.y, error_rotation.z)".to_string());
     out.push("};".to_string());
@@ -330,7 +350,11 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
             .iter()
             .filter(|&&ji| galaw_model.joints[ji].cmd_idx.is_some())
             .count();
-        let jc_param = if chain_actuated_count > 0 { "joint_cmds" } else { "_joint_cmds" };
+        let jc_param = if chain_actuated_count > 0 {
+            "joint_cmds"
+        } else {
+            "_joint_cmds"
+        };
 
         out.push(format!("{link_idx} => {{"));
         out.push(format!(
@@ -464,7 +488,11 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
         if actuated_steps.iter().any(|(_, _, _, is_rot)| *is_rot) {
             out.push(format!("let target_position = {pose_var}.translation;"));
         }
-        let jac_mut_kw = if actuated_steps.is_empty() { "" } else { "mut " };
+        let jac_mut_kw = if actuated_steps.is_empty() {
+            ""
+        } else {
+            "mut "
+        };
         out.push(format!(
             "let {jac_mut_kw}jac = SMatrix::<{ty}, 6, {chain_actuated_count}>::zeros();"
         ));
@@ -474,7 +502,9 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
         {
             let (lin_expr, ang_expr) = if *is_rot {
                 (
-                    format!("{axis_var}.cross(&(target_position.vector - {joint_pose_var}.translation.vector))"),
+                    format!(
+                        "{axis_var}.cross(&(target_position.vector - {joint_pose_var}.translation.vector))"
+                    ),
                     axis_var.clone(),
                 )
             } else {
@@ -505,12 +535,18 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
         if !actuated_steps.is_empty() {
             out.push("let jjt_damped = jac * jac.transpose() + damping_matrix;".to_string());
             out.push("let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);".to_string());
-            out.push(format!("let dq: SVector<{ty}, {chain_actuated_count}> = jac.transpose() * x;"));
+            out.push(format!(
+                "let dq: SVector<{ty}, {chain_actuated_count}> = jac.transpose() * x;"
+            ));
             for (local_col, (cmd_idx, _, _, _)) in actuated_steps.iter().enumerate() {
-                out.push(format!("joint_cmds[{cmd_idx}] += step_size * dq[{local_col}];"));
+                out.push(format!(
+                    "joint_cmds[{cmd_idx}] += step_size * dq[{local_col}];"
+                ));
             }
         }
-        out.push(format!("let (pose, {new_jac_b}) = compute_pose_and_jacobian(&joint_cmds);"));
+        out.push(format!(
+            "let (pose, {new_jac_b}) = compute_pose_and_jacobian(&joint_cmds);"
+        ));
         out.push("current_pose = pose;".to_string());
         out.push(format!("{jac_b} = {new_jac_b};"));
         out.push("error = compute_error(&current_pose);".to_string());

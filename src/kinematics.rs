@@ -37,7 +37,10 @@ impl<T: RealField + Copy> GalawModel<T> {
         let mut links: Vec<Isometry3<T>> = vec![Isometry3::identity(); self.links.len()];
 
         for joint in &self.joints {
-            let cmd = joint.cmd_idx.map(|idx| joint_cmds[idx]).unwrap_or(T::zero());
+            let cmd = joint
+                .cmd_idx
+                .map(|idx| joint_cmds[idx])
+                .unwrap_or(T::zero());
 
             // Extracting rotation and translation components
             let rotation = match joint.rot_axis {
@@ -206,7 +209,10 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         for &joint_idx in chain {
             let joint = &self.joints[joint_idx];
-            let cmd = joint.cmd_idx.map(|idx| joint_cmds[idx]).unwrap_or(T::zero());
+            let cmd = joint
+                .cmd_idx
+                .map(|idx| joint_cmds[idx])
+                .unwrap_or(T::zero());
 
             let rotation = match joint.rot_axis {
                 Some(axis) => UnitQuaternion::from_axis_angle(&axis, cmd),
@@ -292,21 +298,19 @@ impl<T: RealField + Copy> GalawModel<T> {
         }
 
         // Helper to compute pose error
-        let compute_error =
-            |current_pose: &Isometry3<T>| -> Result<Vector6<T>, GalawError<T>> {
-                let error_position =
-                    target_pose.translation.vector - current_pose.translation.vector;
-                let rotation_error = target_pose.rotation * current_pose.rotation.inverse();
-                let error_rotation = rotation_error.scaled_axis();
-                Ok(Vector6::new(
-                    error_position.x,
-                    error_position.y,
-                    error_position.z,
-                    error_rotation.x,
-                    error_rotation.y,
-                    error_rotation.z,
-                ))
-            };
+        let compute_error = |current_pose: &Isometry3<T>| -> Result<Vector6<T>, GalawError<T>> {
+            let error_position = target_pose.translation.vector - current_pose.translation.vector;
+            let rotation_error = target_pose.rotation * current_pose.rotation.inverse();
+            let error_rotation = rotation_error.scaled_axis();
+            Ok(Vector6::new(
+                error_position.x,
+                error_position.y,
+                error_position.z,
+                error_rotation.x,
+                error_rotation.y,
+                error_rotation.z,
+            ))
+        };
 
         let mut joint_cmds_candidate = initial_joint_cmds.to_vec();
         let mut chain_poses: Vec<Isometry3<T>> = Vec::with_capacity(chain.len());
