@@ -64,7 +64,7 @@ fn optimize_axis_angle_rotation_code(vec: &Vector3<f64>, cmd_idx: usize) -> Stri
 /// Generates forward kinematics function code.
 fn generate_fk_fn_code(
     urdf_path: &String,
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     // Stores output of generated code
     let mut codegen_output: Vec<String> = Vec::new();
@@ -226,7 +226,7 @@ fn generate_fk_fn_code(
 
 /// Generates Jacobian function code.
 fn generate_jacobian_fn_code(
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut codegen_output: Vec<String> = Vec::new();
 
@@ -321,7 +321,7 @@ fn generate_jacobian_fn_code(
 
 /// Generates inverse-kinematics function code.
 fn generate_ik_fn_code(
-    galaw_model: &GalawModel,
+    galaw_model: &GalawModel<f64>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut codegen_output: Vec<String> = Vec::new();
 
@@ -689,7 +689,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let urdf_path = &args[1];
     let out_path = &args[2];
-    let galaw_model = load_urdf(urdf_path)?;
+    let galaw_model = load_urdf::<f64>(urdf_path)?;
 
     let mut codegen_output = generate_fk_fn_code(urdf_path, &galaw_model)?;
     codegen_output.extend(generate_jacobian_fn_code(&galaw_model)?);

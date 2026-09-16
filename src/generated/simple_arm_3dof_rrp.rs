@@ -46,7 +46,7 @@ use crate::error::KinematicsError;
 /// limits-aware solver would succeed.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 3]) -> Result<[f64; 3], KinematicsError> {
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 3]) -> Result<[f64; 3], KinematicsError<f64>> {
 const ERROR_TOLERANCE: f64 = 1e-5;
 const DAMPING_FACTOR: f64 = 1e-4;
 const STEP_SIZE: f64 = 1.0;
