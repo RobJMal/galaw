@@ -1,7 +1,7 @@
 use galaw::{error::GalawError, load_urdf, types::GalawModel};
 
-fn main() -> Result<(), GalawError> {
-    let model: GalawModel = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+fn main() -> Result<(), GalawError<f64>> {
+    let model: GalawModel<f64> = load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
 
     // Command each actuated joint by name — never by assumed position.
     let mut joint_cmds = vec![0.0; model.num_actuated_joints];

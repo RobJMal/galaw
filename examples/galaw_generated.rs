@@ -1,9 +1,9 @@
 use galaw::{error::GalawError, generated::simple_arm_2dof, load_urdf, types::GalawModel};
 
-fn main() -> Result<(), GalawError> {
+fn main() -> Result<(), GalawError<f64>> {
     // Load the model only to resolve joint/link names to indices.
     // The generated functions themselves take fixed-size arrays and need no GalawModel.
-    let model: GalawModel = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+    let model: GalawModel<f64> = load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
 
     // Command each actuated joint by name (array, not Vec, since the DOF count is known).
     let mut joint_cmds: [f64; 2] = [0.0; 2];
