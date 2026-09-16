@@ -1,8 +1,9 @@
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::str::FromStr;
 
 // Third-party
-use nalgebra::{Isometry3, Translation3, Unit, UnitQuaternion, Vector3};
+use nalgebra::{Isometry3, RealField, Translation3, Unit, UnitQuaternion, Vector3};
 
 // Custom
 use crate::error::{GalawError, ModelTopologyError, UrdfParseError};
@@ -11,17 +12,20 @@ use crate::utils::parse_vec3_str;
 
 // ----- HELPER METHODS -----
 /// Parses the axis information from tag
-fn read_axis(
+fn read_axis<T>(
     node: roxmltree::Node<'_, '_>,
     joint_name: &str,
-) -> Result<Unit<Vector3<f64>>, UrdfParseError> {
+) -> Result<Unit<Vector3<T>>, UrdfParseError>
+where
+    T: RealField + Copy + FromStr<Err = std::num::ParseFloatError>,
+{
     // Extracting axis angles
     let axis_str: &str = node
         .children()
         .find(|n| n.tag_name().name() == "axis")
         .and_then(|n| n.attribute("xyz"))
         .ok_or_else(|| UrdfParseError::MissingAttributeJointAxisXyz(joint_name.to_string()))?;
-    let (axis_x, axis_y, axis_z) = parse_vec3_str(axis_str)?;
+    let (axis_x, axis_y, axis_z) = parse_vec3_str::<T>(axis_str)?;
 
     Ok(Unit::new_normalize(Vector3::new(axis_x, axis_y, axis_z)))
 }
@@ -29,10 +33,13 @@ fn read_axis(
 /// Parses the joint limit information
 ///
 /// Returns (limit_lower, limit_upper)
-fn read_joint_limits(
+fn read_joint_limits<T>(
     node: roxmltree::Node<'_, '_>,
     joint_name: &str,
-) -> Result<(f64, f64), UrdfParseError> {
+) -> Result<(T, T), UrdfParseError>
+where
+    T: RealField + Copy + FromStr<Err = std::num::ParseFloatError>,
+{
     let joint_limit = node
         .children()
         .find(|n| n.tag_name().name() == "limit")
@@ -42,9 +49,9 @@ fn read_joint_limits(
     let limit_lower_str: &str = joint_limit
         .attribute("lower")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitLower(joint_name.to_string()))?;
-    let limit_lower: f64 =
+    let limit_lower: T =
         limit_lower_str
-            .parse::<f64>()
+            .parse::<T>()
             .map_err(|source| UrdfParseError::InvalidNumberFormat {
                 value: limit_lower_str.to_string(),
                 source,
@@ -54,9 +61,9 @@ fn read_joint_limits(
     let limit_upper_str: &str = joint_limit
         .attribute("upper")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointLimitUpper(joint_name.to_string()))?;
-    let limit_upper: f64 =
+    let limit_upper: T =
         limit_upper_str
-            .parse::<f64>()
+            .parse::<T>()
             .map_err(|source| UrdfParseError::InvalidNumberFormat {
                 value: limit_upper_str.to_string(),
                 source,
@@ -75,7 +82,10 @@ fn parse_link(node: roxmltree::Node<'_, '_>) -> Result<Link, UrdfParseError> {
 }
 
 /// Parses <joint> tag into a `Joint`
-fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
+fn parse_joint<T>(node: roxmltree::Node<'_, '_>) -> Result<Joint<T>, UrdfParseError>
+where
+    T: RealField + Copy + FromStr<Err = std::num::ParseFloatError>,
+{
     let name: String = node
         .attribute("name")
         .ok_or(UrdfParseError::MissingAttributeJointName)?
@@ -118,40 +128,40 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
     let xyz_str: &str = joint_origin
         .attribute("xyz")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointOriginXyz(name.clone()))?;
-    let (x, y, z) = parse_vec3_str(xyz_str)?;
+    let (x, y, z) = parse_vec3_str::<T>(xyz_str)?;
     let xyz = Vector3::new(x, y, z);
 
     let rpy_str = joint_origin
         .attribute("rpy")
         .ok_or_else(|| UrdfParseError::MissingAttributeJointOriginRpy(name.clone()))?;
-    let (roll, pitch, yaw) = parse_vec3_str(rpy_str)?;
+    let (roll, pitch, yaw) = parse_vec3_str::<T>(rpy_str)?;
     let rotation = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
 
     let transform = Isometry3::from_parts(Translation3::from(xyz), rotation);
 
     // Extracting axis angles
     let (rot_axis, lin_axis) = match joint_type {
-        JointType::Prismatic => (None, Some(read_axis(node, &name)?)),
-        JointType::Revolute | JointType::Continuous => (Some(read_axis(node, &name)?), None),
+        JointType::Prismatic => (None, Some(read_axis::<T>(node, &name)?)),
+        JointType::Revolute | JointType::Continuous => (Some(read_axis::<T>(node, &name)?), None),
         JointType::Fixed => (None, None),
     };
 
     // Extracting joint limits
     let (limit_lower, limit_upper) = match joint_type {
         JointType::Revolute | JointType::Prismatic => {
-            let (lower, upper) = read_joint_limits(node, &name)?;
+            let (lower, upper) = read_joint_limits::<T>(node, &name)?;
             (Some(lower), Some(upper))
         }
-        // Set to 2*PI since continous and no limits (arbitrarily set)
-        JointType::Continuous => (
-            Some(2.0 * -std::f64::consts::PI),
-            Some(2.0 * std::f64::consts::PI),
-        ),
+        // Set to 2*PI since continuous has no limits (arbitrarily set)
+        JointType::Continuous => {
+            let two_pi: T = nalgebra::convert(2.0 * std::f64::consts::PI);
+            (Some(-two_pi), Some(two_pi))
+        }
         JointType::Fixed => (None, None),
     };
 
     // Creating joint
-    let joint: Joint = Joint {
+    let joint: Joint<T> = Joint {
         name,
         joint_type,
         parent,
@@ -174,12 +184,12 @@ fn parse_joint(node: roxmltree::Node<'_, '_>) -> Result<Joint, UrdfParseError> {
 /// If there is a link that has been revisited, it returns
 /// the index of the link as an error to hint about cycles
 /// in kinematic model.
-fn dfs_visit(
+fn dfs_visit<T: RealField + Copy>(
     link_idx: usize,
-    joints: &[Joint],
+    joints: &[Joint<T>],
     link_lookup: &HashMap<&str, usize>,
     children_by_link: &HashMap<usize, Vec<usize>>,
-    ordered_joints: &mut Vec<Joint>,
+    ordered_joints: &mut Vec<Joint<T>>,
     cmd_counter: &mut usize,
     visited: &mut HashSet<usize>,
 ) -> Result<(), usize> {
@@ -224,8 +234,8 @@ fn dfs_visit(
 }
 
 /// Resolved joints (in DFS order), link name -> index, and joint name -> cmd_idx.
-type ResolvedJoints = (
-    Vec<Joint>,
+type ResolvedJoints<T> = (
+    Vec<Joint<T>>,
     HashMap<String, usize>, // link_name -> cmd_idx
     HashMap<String, usize>, // joint_name -> cmd_idx
     HashMap<usize, usize>,  // link_name -> parent joint_idx
@@ -242,10 +252,10 @@ type ResolvedJoints = (
 ///    interleaved with the other fingers' joints).
 /// 2. `k::Chain` — this project's own ground-truth for correctness testing —
 ///    numbers its DOFs via DFS pre-order (confirmed by reading its source).
-fn resolve_joint_order(
+fn resolve_joint_order<T: RealField + Copy>(
     links: &[Link],
-    joints: &[Joint],
-) -> Result<ResolvedJoints, ModelTopologyError> {
+    joints: &[Joint<T>],
+) -> Result<ResolvedJoints<T>, ModelTopologyError> {
     // Enforcing order to ensure indexing is accurate
     let link_lookup: HashMap<&str, usize> = links
         .iter()
@@ -282,7 +292,7 @@ fn resolve_joint_order(
     };
 
     // Walk the tree from root, resolving parent/child link indices
-    let mut ordered_joints: Vec<Joint> = Vec::with_capacity(joints.len());
+    let mut ordered_joints: Vec<Joint<T>> = Vec::with_capacity(joints.len());
     let mut actuated_joint_counter = 0;
     let mut visited: HashSet<usize> = HashSet::new();
     dfs_visit(
@@ -340,13 +350,16 @@ fn resolve_joint_order(
 /// # Examples
 ///
 /// ```
-/// # fn main() -> Result<(), galaw::error::GalawError> {
-/// let model = galaw::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+/// # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+/// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
 /// assert_eq!(model.name, "simple_arm_2dof");
 /// # Ok(())
 /// # }
 /// ```
-pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
+pub fn load_urdf<T>(urdf_path: &str) -> Result<GalawModel<T>, GalawError<T>>
+where
+    T: RealField + Copy + FromStr<Err = std::num::ParseFloatError> + std::fmt::Display,
+{
     let content: String = fs::read_to_string(urdf_path).map_err(|err| UrdfParseError::Io {
         path: urdf_path.to_string(),
         source: err,
@@ -362,14 +375,14 @@ pub fn load_urdf(urdf_path: &str) -> Result<GalawModel, GalawError> {
         .ok_or(UrdfParseError::MissingAttributeRobotName)?
         .to_string();
     let mut links: Vec<Link> = Vec::new();
-    let mut joints: Vec<Joint> = Vec::new();
+    let mut joints: Vec<Joint<T>> = Vec::new();
 
     for node in doc.descendants() {
         if node.tag_name().name() == "link" {
             let link = parse_link(node)?;
             links.push(link);
         } else if node.tag_name().name() == "joint" {
-            let joint = parse_joint(node)?;
+            let joint = parse_joint::<T>(node)?;
             joints.push(joint);
         }
     }
@@ -407,7 +420,7 @@ mod tests {
             "assets/urdf/custom/simple_arm_2dof.urdf",
             "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
         ] {
-            let model = load_urdf(path).unwrap();
+            let model = load_urdf::<f64>(path).unwrap();
             for link in &model.links {
                 let idx = model.get_link_idx(&link.name).unwrap_or_else(|| {
                     panic!("get_link_idx(\"{}\") returned None in {path}", link.name)
@@ -425,13 +438,16 @@ mod tests {
     /// parent/child link names must match regardless.
     #[test]
     fn joint_resolution_is_independent_of_file_order() {
-        let original = load_urdf("assets/urdf/custom/simple_arm_2dof.urdf").unwrap();
-        let flipped = load_urdf("assets/urdf/custom/simple_arm_2dof_flipped.urdf").unwrap();
+        let original = load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf").unwrap();
+        let flipped = load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof_flipped.urdf").unwrap();
 
         // Resolve a joint's parent/child *link names* (not raw indices —
         // those are expected to differ between the two files, since the
         // links are declared in a different order in each).
-        fn parent_child_names(model: &GalawModel, joint_name: &str) -> (String, String) {
+        fn parent_child_names<T: RealField + Copy>(
+            model: &GalawModel<T>,
+            joint_name: &str,
+        ) -> (String, String) {
             let joint = model.joints.iter().find(|j| j.name == joint_name).unwrap();
             (
                 model.links[joint.parent_link_idx].name.clone(),
@@ -452,7 +468,7 @@ mod tests {
     /// does not have unbounded recursion error.
     #[test]
     fn resolve_joint_order_detects_reachable_cycle() {
-        fn joint(name: &str, parent: &str, child: &str) -> Joint {
+        fn joint(name: &str, parent: &str, child: &str) -> Joint<f64> {
             Joint {
                 name: name.to_string(),
                 joint_type: JointType::Fixed,
