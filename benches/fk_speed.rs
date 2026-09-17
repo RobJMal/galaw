@@ -100,7 +100,6 @@ fn bench_fk(c: &mut Criterion) {
     for &urdf_path in BENCH_URDFS {
         // Setup is NOT timed
         let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
-        let galaw_model_f32 = load_urdf::<f32>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
 
         // Generate commands
@@ -119,11 +118,6 @@ fn bench_fk(c: &mut Criterion) {
                     .collect()
             })
             .collect();
-        let joint_cmds_f32: Vec<Vec<f32>> = joint_cmds
-            .iter()
-            .map(|v| v.iter().map(|&x| x as f32).collect())
-            .collect();
-
         // Group makes galaw vs k show up side-by-side
         let mut group = c.benchmark_group(format!("fk/{}", galaw_model.name));
         group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
@@ -136,20 +130,6 @@ fn bench_fk(c: &mut Criterion) {
                 b.iter(|| {
                     for cmd in cmds {
                         let out = galaw_model.compute_fk(black_box(cmd)).unwrap();
-                        black_box(out);
-                    }
-                });
-            },
-        );
-
-        // ----- galaw-runtime-f32 -----
-        group.bench_with_input(
-            BenchmarkId::new("galaw-runtime-f32", galaw_model.joints.len()),
-            &joint_cmds_f32,
-            |b, cmds| {
-                b.iter(|| {
-                    for cmd in cmds {
-                        let out = galaw_model_f32.compute_fk(black_box(cmd)).unwrap();
                         black_box(out);
                     }
                 });

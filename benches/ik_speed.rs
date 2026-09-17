@@ -93,7 +93,6 @@ fn bench_generated_ik<T: nalgebra::RealField + Copy + Clone + 'static, const N: 
 fn bench_ik(c: &mut Criterion) {
     for &urdf_path in BENCH_URDFS {
         let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
-        let galaw_model_f32 = load_urdf::<f32>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
         let link_idx = target_link(&galaw_model);
         let link_name = &galaw_model.links[link_idx].name;
@@ -106,14 +105,6 @@ fn bench_ik(c: &mut Criterion) {
                 (target, init)
             })
             .collect();
-        let trials_f32: Vec<(Vec<f32>, Vec<f32>)> = trials
-            .iter()
-            .map(|(t, i)| (
-                t.iter().map(|&x| x as f32).collect(),
-                i.iter().map(|&x| x as f32).collect(),
-            ))
-            .collect();
-
         let mut group = c.benchmark_group(format!("ik/{}", galaw_model.name));
         group.throughput(criterion::Throughput::Elements(trials.len() as u64));
 
@@ -126,20 +117,6 @@ fn bench_ik(c: &mut Criterion) {
                     for (target, init) in trials {
                         let pose = galaw_model.compute_fk(target).unwrap()[link_idx];
                         let _ = black_box(galaw_model.compute_ik(link_idx, &pose, black_box(init)));
-                    }
-                });
-            },
-        );
-
-        // ----- galaw-runtime-f32 -----
-        group.bench_with_input(
-            BenchmarkId::new("galaw-runtime-f32", galaw_model.joints.len()),
-            &trials_f32,
-            |b, trials| {
-                b.iter(|| {
-                    for (target, init) in trials {
-                        let pose = galaw_model_f32.compute_fk(target).unwrap()[link_idx];
-                        let _ = black_box(galaw_model_f32.compute_ik(link_idx, &pose, black_box(init)));
                     }
                 });
             },
