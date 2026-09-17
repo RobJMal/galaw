@@ -16,7 +16,11 @@ const N_POSES: usize = 100;
 
 /// Benchmarks a codegen'd `compute_link_jacobians` under the given id.
 /// Generic over T (float type) and R (return type).
-fn bench_generated_jacobian<T: Copy + Clone + std::fmt::Debug + 'static, R: 'static, const N: usize>(
+fn bench_generated_jacobian<
+    T: Copy + Clone + std::fmt::Debug + 'static,
+    R: 'static,
+    const N: usize,
+>(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id_label: &str,
     bench_id: usize,

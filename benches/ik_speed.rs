@@ -64,11 +64,7 @@ fn bench_generated_ik<T: nalgebra::RealField + Copy + Clone + 'static, const N: 
     link_idx: usize,
     bench_id: usize,
     trials: &[(Vec<T>, Vec<T>)],
-    generated_compute_ik: impl Fn(
-        usize,
-        &Isometry3<T>,
-        &[T; N],
-    ) -> Result<[T; N], KinematicsError<T>>,
+    generated_compute_ik: impl Fn(usize, &Isometry3<T>, &[T; N]) -> Result<[T; N], KinematicsError<T>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let trials_arr: Vec<(Vec<T>, [T; N])> = trials
