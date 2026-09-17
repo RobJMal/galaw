@@ -55,27 +55,29 @@ fn target_link(model: &GalawModel<f64>) -> usize {
         .unwrap()
 }
 
-/// Benchmarks a codegen'd `compute_ik` under the "galaw-generated" id.
-fn bench_generated_ik<const N: usize>(
+/// Benchmarks a codegen'd `compute_ik` under the given id.
+/// Generic over T (float type) so the same helper works for f64 and f32.
+fn bench_generated_ik<T: nalgebra::RealField + Copy + Clone + 'static, const N: usize>(
     group: &mut BenchmarkGroup<'_, WallTime>,
-    galaw_model: &GalawModel<f64>,
+    bench_id_label: &str,
+    galaw_model: &GalawModel<T>,
     link_idx: usize,
     bench_id: usize,
-    trials: &[(Vec<f64>, Vec<f64>)],
+    trials: &[(Vec<T>, Vec<T>)],
     generated_compute_ik: impl Fn(
         usize,
-        &Isometry3<f64>,
-        &[f64; N],
-    ) -> Result<[f64; N], KinematicsError<f64>>,
+        &Isometry3<T>,
+        &[T; N],
+    ) -> Result<[T; N], KinematicsError<T>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
-    let trials_arr: Vec<(Vec<f64>, [f64; N])> = trials
+    let trials_arr: Vec<(Vec<T>, [T; N])> = trials
         .iter()
         .map(|(target, init)| (target.clone(), init.clone().try_into().unwrap()))
         .collect();
 
     group.bench_with_input(
-        BenchmarkId::new("galaw-generated", bench_id),
+        BenchmarkId::new(bench_id_label, bench_id),
         &trials_arr,
         |b, trials| {
             b.iter(|| {
@@ -91,6 +93,7 @@ fn bench_generated_ik<const N: usize>(
 fn bench_ik(c: &mut Criterion) {
     for &urdf_path in BENCH_URDFS {
         let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
+        let galaw_model_f32 = load_urdf::<f32>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
         let link_idx = target_link(&galaw_model);
         let link_name = &galaw_model.links[link_idx].name;
@@ -102,6 +105,13 @@ fn bench_ik(c: &mut Criterion) {
                 let init = perturbed_joint_cmds(&galaw_model, &target, &mut rng);
                 (target, init)
             })
+            .collect();
+        let trials_f32: Vec<(Vec<f32>, Vec<f32>)> = trials
+            .iter()
+            .map(|(t, i)| (
+                t.iter().map(|&x| x as f32).collect(),
+                i.iter().map(|&x| x as f32).collect(),
+            ))
             .collect();
 
         let mut group = c.benchmark_group(format!("ik/{}", galaw_model.name));
@@ -121,6 +131,20 @@ fn bench_ik(c: &mut Criterion) {
             },
         );
 
+        // ----- galaw-runtime-f32 -----
+        group.bench_with_input(
+            BenchmarkId::new("galaw-runtime-f32", galaw_model.joints.len()),
+            &trials_f32,
+            |b, trials| {
+                b.iter(|| {
+                    for (target, init) in trials {
+                        let pose = galaw_model_f32.compute_fk(target).unwrap()[link_idx];
+                        let _ = black_box(galaw_model_f32.compute_ik(link_idx, &pose, black_box(init)));
+                    }
+                });
+            },
+        );
+
         // ----- galaw-generated -----
         let mut generated_bench_registered = false;
         macro_rules! bench_ik_if_matches {
@@ -128,6 +152,7 @@ fn bench_ik(c: &mut Criterion) {
                 if urdf_path == $path {
                     bench_generated_ik(
                         &mut group,
+                        "galaw-generated",
                         &galaw_model,
                         link_idx,
                         galaw_model.joints.len(),
