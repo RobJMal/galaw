@@ -1,5 +1,6 @@
 use nalgebra::{
-    DVector, Isometry3, Matrix6, Matrix6xX, Translation3, UnitQuaternion, Vector3, Vector6,
+    DVector, Isometry3, Matrix6, Matrix6xX, RealField, Translation3, UnitQuaternion, Vector3,
+    Vector6,
 };
 
 use crate::{
@@ -7,24 +8,24 @@ use crate::{
     types::GalawModel,
 };
 
-impl GalawModel {
+impl<T: RealField + Copy> GalawModel<T> {
     /// Computes forward kinematics of a model.
     ///
-    /// Returns each link's world-space pose as an `Isometry3<f64>`, indexed
+    /// Returns each link's world-space pose as an `Isometry3<T>`, indexed
     /// the same as [`GalawModel::links`]. `joint_cmds` must have length
     /// [`GalawModel::num_actuated_joints`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> Result<(), galaw::error::GalawError> {
-    /// let model = galaw::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+    /// # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+    /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
     /// let poses = model.compute_fk(&vec![0.0; model.num_actuated_joints])?;
     /// assert_eq!(poses.len(), model.links.len());
     /// # Ok(())
     /// # }
     /// ```
-    pub fn compute_fk(&self, joint_cmds: &[f64]) -> Result<Vec<Isometry3<f64>>, GalawError> {
+    pub fn compute_fk(&self, joint_cmds: &[T]) -> Result<Vec<Isometry3<T>>, GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -33,10 +34,13 @@ impl GalawModel {
             .into());
         }
 
-        let mut links: Vec<Isometry3<f64>> = vec![Isometry3::identity(); self.links.len()];
+        let mut links: Vec<Isometry3<T>> = vec![Isometry3::identity(); self.links.len()];
 
         for joint in &self.joints {
-            let cmd = joint.cmd_idx.map(|idx| joint_cmds[idx]).unwrap_or(0.0);
+            let cmd = joint
+                .cmd_idx
+                .map(|idx| joint_cmds[idx])
+                .unwrap_or(T::zero());
 
             // Extracting rotation and translation components
             let rotation = match joint.rot_axis {
@@ -58,8 +62,8 @@ impl GalawModel {
     /// Computes the Jacobian of every link in a model.
     pub fn compute_link_jacobians(
         &self,
-        joint_cmds: &[f64],
-    ) -> Result<Vec<Matrix6xX<f64>>, GalawError> {
+        joint_cmds: &[T],
+    ) -> Result<Vec<Matrix6xX<T>>, GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -69,7 +73,7 @@ impl GalawModel {
         }
 
         // Set to 0 so only joint ancestors contribute
-        let mut jacobians: Vec<Matrix6xX<f64>> = (0..self.links.len())
+        let mut jacobians: Vec<Matrix6xX<T>> = (0..self.links.len())
             .map(|_| Matrix6xX::zeros(self.num_actuated_joints))
             .collect();
 
@@ -127,9 +131,9 @@ impl GalawModel {
     /// Primarily, this is used for computations where we only need specific links
     pub fn compute_link_jacobian(
         &self,
-        joint_cmds: &[f64],
+        joint_cmds: &[T],
         target_link_idx: usize,
-    ) -> Result<Matrix6xX<f64>, GalawError> {
+    ) -> Result<Matrix6xX<T>, GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -196,16 +200,19 @@ impl GalawModel {
     fn compute_restricted_pose_and_fill_jacobian(
         &self,
         chain: &[usize],
-        joint_cmds: &[f64],
-        chain_poses: &mut Vec<Isometry3<f64>>,
-        jacobian: &mut Matrix6xX<f64>,
-    ) -> Isometry3<f64> {
+        joint_cmds: &[T],
+        chain_poses: &mut Vec<Isometry3<T>>,
+        jacobian: &mut Matrix6xX<T>,
+    ) -> Isometry3<T> {
         chain_poses.clear();
         let mut pose = Isometry3::identity();
 
         for &joint_idx in chain {
             let joint = &self.joints[joint_idx];
-            let cmd = joint.cmd_idx.map(|idx| joint_cmds[idx]).unwrap_or(0.0);
+            let cmd = joint
+                .cmd_idx
+                .map(|idx| joint_cmds[idx])
+                .unwrap_or(T::zero());
 
             let rotation = match joint.rot_axis {
                 Some(axis) => UnitQuaternion::from_axis_angle(&axis, cmd),
@@ -222,7 +229,7 @@ impl GalawModel {
         }
 
         let target_position = pose.translation;
-        jacobian.fill(0.0);
+        jacobian.fill(T::zero());
 
         for (i, &joint_idx) in chain.iter().enumerate() {
             let joint = &self.joints[joint_idx];
@@ -261,13 +268,13 @@ impl GalawModel {
     pub fn compute_ik(
         &self,
         target_link_idx: usize,
-        target_pose: &Isometry3<f64>,
-        initial_joint_cmds: &[f64],
-    ) -> Result<Vec<f64>, GalawError> {
+        target_pose: &Isometry3<T>,
+        initial_joint_cmds: &[T],
+    ) -> Result<Vec<T>, GalawError<T>> {
         // IK solver params
-        const ERROR_TOLERANCE: f64 = 1e-5;
-        const DAMPING_FACTOR: f64 = 1e-4;
-        const STEP_SIZE: f64 = 1.0;
+        let error_tolerance: T = nalgebra::convert(1e-5_f64);
+        let damping_factor: T = nalgebra::convert(1e-4_f64);
+        let step_size: T = nalgebra::convert(1.0_f64);
         const MAX_ITERATIONS: usize = 1000;
 
         // Constructing kinematic chain from root to target
@@ -280,18 +287,18 @@ impl GalawModel {
         chain.reverse();
 
         // Extracting joint limits
-        // Defaulting to 0.0 for safety
-        let mut joint_lower = vec![0.0; self.num_actuated_joints];
-        let mut joint_upper = vec![0.0; self.num_actuated_joints];
+        // Defaulting to T::zero() for safety
+        let mut joint_lower = vec![T::zero(); self.num_actuated_joints];
+        let mut joint_upper = vec![T::zero(); self.num_actuated_joints];
         for joint in &self.joints {
             if let Some(cmd_idx) = joint.cmd_idx {
-                joint_lower[cmd_idx] = joint.limit_lower.unwrap_or(0.0);
-                joint_upper[cmd_idx] = joint.limit_upper.unwrap_or(0.0);
+                joint_lower[cmd_idx] = joint.limit_lower.unwrap_or(T::zero());
+                joint_upper[cmd_idx] = joint.limit_upper.unwrap_or(T::zero());
             }
         }
 
         // Helper to compute pose error
-        let compute_error = |current_pose: &Isometry3<f64>| -> Result<Vector6<f64>, GalawError> {
+        let compute_error = |current_pose: &Isometry3<T>| -> Result<Vector6<T>, GalawError<T>> {
             let error_position = target_pose.translation.vector - current_pose.translation.vector;
             let rotation_error = target_pose.rotation * current_pose.rotation.inverse();
             let error_rotation = rotation_error.scaled_axis();
@@ -306,10 +313,10 @@ impl GalawModel {
         };
 
         let mut joint_cmds_candidate = initial_joint_cmds.to_vec();
-        let mut chain_poses: Vec<Isometry3<f64>> = Vec::with_capacity(chain.len());
-        let damping_matrix = DAMPING_FACTOR * Matrix6::identity();
-        let mut jac: Matrix6xX<f64> = Matrix6xX::zeros(self.num_actuated_joints);
-        let mut dq: DVector<f64> = DVector::zeros(self.num_actuated_joints);
+        let mut chain_poses: Vec<Isometry3<T>> = Vec::with_capacity(chain.len());
+        let damping_matrix = Matrix6::<T>::identity() * damping_factor;
+        let mut jac: Matrix6xX<T> = Matrix6xX::zeros(self.num_actuated_joints);
+        let mut dq: DVector<T> = DVector::zeros(self.num_actuated_joints);
 
         let mut current_pose = self.compute_restricted_pose_and_fill_jacobian(
             &chain,
@@ -321,7 +328,7 @@ impl GalawModel {
         let mut iterations: usize = 0;
 
         // Applies the Levenberg-Marquardt approach
-        while error.norm() > ERROR_TOLERANCE {
+        while error.norm() > error_tolerance {
             if iterations >= MAX_ITERATIONS {
                 return Err(KinematicsError::IkDidNotConverge {
                     iterations,
@@ -337,7 +344,7 @@ impl GalawModel {
                 .solve(&error);
             jac.tr_mul_to(&x, &mut dq);
             for (q, dq_i) in joint_cmds_candidate.iter_mut().zip(dq.iter()) {
-                *q += STEP_SIZE * dq_i;
+                *q += step_size * *dq_i;
             }
 
             current_pose = self.compute_restricted_pose_and_fill_jacobian(
@@ -363,7 +370,7 @@ impl GalawModel {
             &mut jac,
         );
         let clamped_error = compute_error(&clamped_pose)?;
-        if clamped_error.norm() > ERROR_TOLERANCE {
+        if clamped_error.norm() > error_tolerance {
             return Err(KinematicsError::IkDidNotConverge {
                 iterations,
                 final_error: clamped_error.norm(),

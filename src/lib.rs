@@ -7,8 +7,8 @@
 //! `compute_fk` per robot ahead of time (see [`generated`]).
 //!
 //! ```
-//! # fn main() -> Result<(), galaw::error::GalawError> {
-//! let model = galaw::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+//! # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+//! let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
 //! let poses = model.compute_fk(&vec![0.0; model.num_actuated_joints])?;
 //! # Ok(())
 //! # }

@@ -6,7 +6,7 @@
 
 /// The crate-wide error type returned by every public `galaw` function.
 #[derive(Debug, thiserror::Error)]
-pub enum GalawError {
+pub enum GalawError<T: std::fmt::Debug + std::fmt::Display + Copy> {
     /// A URDF file couldn't be read or parsed.
     #[error(transparent)]
     Parse(#[from] UrdfParseError),
@@ -15,7 +15,7 @@ pub enum GalawError {
     ModelTopology(#[from] ModelTopologyError),
     /// A kinematics computation failed.
     #[error(transparent)]
-    Kinematics(#[from] KinematicsError),
+    Kinematics(#[from] KinematicsError<T>),
 }
 
 /// Errors from reading and parsing a URDF file.
@@ -137,7 +137,7 @@ pub enum ModelTopologyError {
 
 /// Errors from computing forward kinematics.
 #[derive(Debug, thiserror::Error)]
-pub enum KinematicsError {
+pub enum KinematicsError<T: std::fmt::Debug + std::fmt::Display + Copy> {
     /// The `joint_cmds` slice's length doesn't match the model's actuated joint count.
     #[error("expected {num_actuated} joint cmds, received {num_input}")]
     JointCmdLengthMismatch {
@@ -155,11 +155,11 @@ pub enum KinematicsError {
         requested: usize,
     },
     /// IK failed to converge
-    #[error("ik didnot not converge within {iterations} iterations. final error: {final_error}")]
+    #[error("ik did not converge within {iterations} iterations. final error: {final_error}")]
     IkDidNotConverge {
         /// Number of iterations
         iterations: usize,
         /// Final error of iterations
-        final_error: f64,
+        final_error: T,
     },
 }

@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Runs `codegen_kinematics` against every URDF under assets/urdf/, writing generated
-# FK code into src/generated/. Continues past failures and reports a summary,
-# since not every robot is expected to succeed yet (see codegen_kinematics.rs's
-# hardcoded "base_link" root-link assumption).
+# Usage: codegen_all_urdfs.sh <type>
+#   <type>  Rust float type for generated code, e.g. f32 or f64
+#
+# Runs `codegen_kinematics` against every URDF under assets/urdf/, writing
+# generated code into src/generated/.
 set -euo pipefail
+
+TYPE=${1:?'Usage: codegen_all_urdfs.sh <type>  (e.g. f32 or f64)'}
 
 cd "$(git rev-parse --show-toplevel)"
 
@@ -52,7 +55,7 @@ while IFS= read -r -d '' urdf; do
     out="$OUT_DIR/${name}.rs"
 
     echo "==> $urdf -> $out"
-    if "$BIN" "$urdf" "$out"; then
+    if "$BIN" "$urdf" "$out" "$TYPE"; then
         ok_count=$((ok_count + 1))
         module_names+=("$name")
         urdf_paths+=("$urdf")

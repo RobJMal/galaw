@@ -4,7 +4,6 @@ use std::hint::black_box; // Prevents compiler from optimizing away code since w
 // Third-Party
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
-use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use sysinfo::System;
@@ -55,25 +54,24 @@ fn system_specs() -> String {
     )
 }
 
-/// Benchmarks a codegen'd `compute_fk` under the "galaw-generated" id, in the
-/// same `group` as the "galaw-runtime"/"k" entries the caller registers alongside it.
-/// Generic over N/M since each robot's generated `compute_fk` bakes in a
-/// different array size (`[f64; N] -> [Isometry3<f64>; M]`) - see the same
-/// pattern in tests/fk_correctness.rs's `check_generated_matches_dynamic`.
-fn bench_generated<const N: usize, const M: usize>(
+/// Benchmarks a codegen'd `compute_fk` under the given bench id.
+/// Generic over T (float type) and R (return type) so the same helper
+/// works for both f64 and f32 generated functions.
+fn bench_generated<T: Copy + Clone + std::fmt::Debug + 'static, R: 'static, const N: usize>(
     group: &mut BenchmarkGroup<'_, WallTime>,
+    bench_id_label: &str,
     bench_id: usize,
-    joint_cmds: &[Vec<f64>],
-    generated_compute_fk: impl Fn(&[f64; N]) -> [Isometry3<f64>; M],
+    joint_cmds: &[Vec<T>],
+    generated_compute_fk: impl Fn(&[T; N]) -> R,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
-    let joint_cmds_arr: Vec<[f64; N]> = joint_cmds
+    let joint_cmds_arr: Vec<[T; N]> = joint_cmds
         .iter()
         .map(|c| c.clone().try_into().unwrap())
         .collect();
 
     group.bench_with_input(
-        BenchmarkId::new("galaw-generated", bench_id),
+        BenchmarkId::new(bench_id_label, bench_id),
         &joint_cmds_arr,
         |b, cmds| {
             b.iter(|| {
@@ -101,7 +99,7 @@ fn bench_fk(c: &mut Criterion) {
 
     for &urdf_path in BENCH_URDFS {
         // Setup is NOT timed
-        let galaw_model = load_urdf(urdf_path).unwrap();
+        let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
 
         // Generate commands
@@ -120,7 +118,6 @@ fn bench_fk(c: &mut Criterion) {
                     .collect()
             })
             .collect();
-
         // Group makes galaw vs k show up side-by-side
         let mut group = c.benchmark_group(format!("fk/{}", galaw_model.name));
         group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
@@ -153,6 +150,7 @@ fn bench_fk(c: &mut Criterion) {
                 if urdf_path == $path {
                     bench_generated(
                         &mut group,
+                        "galaw-generated",
                         galaw_model.joints.len(),
                         &joint_cmds,
                         $compute_fk,

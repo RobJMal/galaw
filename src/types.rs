@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use nalgebra::{Isometry3, Unit, Vector3};
+use nalgebra::{Isometry3, RealField, Unit, Vector3};
 
 /// A rigid body in the robot's kinematic tree.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -38,7 +38,7 @@ impl std::str::FromStr for JointType {
 
 /// A connection between two [`Link`]s.
 #[derive(Debug, Clone)]
-pub struct Joint {
+pub struct Joint<T> {
     /// The joint's name, from the URDF's `<joint name="...">` attribute.
     pub name: String,
     /// The kind of motion this joint allows.
@@ -52,28 +52,28 @@ pub struct Joint {
     /// Index of the child link in [`GalawModel::links`].
     pub child_link_idx: usize,
     /// Fixed offset from the parent link to this joint's origin, from the URDF's `<origin>`.
-    pub transform: Isometry3<f64>,
+    pub transform: Isometry3<T>,
     /// Translation axis, for [`JointType::Prismatic`] joints. `None` otherwise.
-    pub lin_axis: Option<Unit<Vector3<f64>>>, // Option since Unit doesn't allow zero-vector
+    pub lin_axis: Option<Unit<Vector3<T>>>, // Option since Unit doesn't allow zero-vector
     /// Rotation axis, for [`JointType::Revolute`]/[`JointType::Continuous`] joints. `None` otherwise.
-    pub rot_axis: Option<Unit<Vector3<f64>>>, // Option since Unit doesn't allow zero-vector
+    pub rot_axis: Option<Unit<Vector3<T>>>, // Option since Unit doesn't allow zero-vector
     /// Lower joint limit. `None` for joints without a limit.
-    pub limit_lower: Option<f64>,
+    pub limit_lower: Option<T>,
     /// Upper joint limit. `None` for joints without a limit.
-    pub limit_upper: Option<f64>,
+    pub limit_upper: Option<T>,
     /// Index into the `joint_cmds` slice passed to `compute_fk`. `None` for [`JointType::Fixed`] joints, which take no command.
     pub cmd_idx: Option<usize>,
 }
 
 /// A parsed robot model, ready for forward-kinematics computation.
 #[derive(Debug)]
-pub struct GalawModel {
+pub struct GalawModel<T> {
     /// The robot's name, from the URDF's `<robot name="...">` attribute.
     pub name: String,
     /// All links in the robot, in URDF file declaration order.
     pub links: Vec<Link>,
     /// All joints in the robot, ordered via DFS pre-order from the root (see `resolve_joint_order`).
-    pub joints: Vec<Joint>,
+    pub joints: Vec<Joint<T>>,
     /// Maps a link's name to its index in [`GalawModel::links`].
     pub link_name_to_idx: HashMap<String, usize>,
     /// Maps an actuated joint's name to its `cmd_idx` (its position in a `joint_cmds` slice).
@@ -84,14 +84,14 @@ pub struct GalawModel {
     pub num_actuated_joints: usize,
 }
 
-impl GalawModel {
+impl<T: RealField + Copy> GalawModel<T> {
     /// Looks up a link's index in [`GalawModel::links`] by name.
     ///
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> Result<(), galaw::error::GalawError> {
-    /// let model = galaw::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+    /// # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+    /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
     /// assert!(model.get_link_idx("base_link").is_some());
     /// # Ok(())
     /// # }
@@ -105,8 +105,8 @@ impl GalawModel {
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> Result<(), galaw::error::GalawError> {
-    /// let model = galaw::load_urdf("assets/urdf/custom/simple_arm_2dof.urdf")?;
+    /// # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+    /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
     /// assert!(model.get_joint_idx("shoulder_joint").is_some());
     /// # Ok(())
     /// # }

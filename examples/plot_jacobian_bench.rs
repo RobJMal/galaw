@@ -77,7 +77,7 @@ fn manifest_dir() -> PathBuf {
 }
 
 fn robot_info(urdf_path: &str) -> Result<RobotInfo, Box<dyn Error>> {
-    let model = load_urdf(urdf_path)?;
+    let model = load_urdf::<f64>(urdf_path)?;
     Ok(RobotInfo {
         name: model.name.clone(),
         group: format!("jacobian_{}", model.name),

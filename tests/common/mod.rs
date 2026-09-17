@@ -65,14 +65,14 @@ pub fn assert_galaw_transform_close(a: &Isometry3<f64>, b: &Isometry3<f64>, test
 ///
 /// Mainly done because k_chain is stateful and thus we'll need to
 /// instantiate it for each test.
-pub fn setup_kinematic_models(urdf_path: &str) -> (GalawModel, k::Chain<f64>) {
-    let galaw_model = load_urdf(urdf_path).unwrap();
+pub fn setup_kinematic_models(urdf_path: &str) -> (GalawModel<f64>, k::Chain<f64>) {
+    let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
     let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
     (galaw_model, k_chain)
 }
 
 /// Generates zero joint commands.
-pub fn zero_joint_cmds(model: &GalawModel) -> Vec<f64> {
+pub fn zero_joint_cmds(model: &GalawModel<f64>) -> Vec<f64> {
     model
         .joints
         .iter()
@@ -85,7 +85,7 @@ pub fn zero_joint_cmds(model: &GalawModel) -> Vec<f64> {
 }
 
 /// Generates random joint commands.
-pub fn random_joint_cmds(model: &GalawModel, rng: &mut ChaCha8Rng) -> Vec<f64> {
+pub fn random_joint_cmds(model: &GalawModel<f64>, rng: &mut ChaCha8Rng) -> Vec<f64> {
     model
         .joints
         .iter()

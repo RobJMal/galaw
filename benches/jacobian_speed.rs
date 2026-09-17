@@ -4,7 +4,6 @@ use std::hint::black_box;
 // Third-party
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
-use nalgebra::SMatrix;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
@@ -15,21 +14,27 @@ use galaw::{fixtures::BENCH_URDFS, load_urdf};
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
 
-/// Benchmarks a codegen'd `compute_link_jacobians` under the "galaw-generated" id.
-fn bench_generated_jacobian<const N: usize, const M: usize>(
+/// Benchmarks a codegen'd `compute_link_jacobians` under the given id.
+/// Generic over T (float type) and R (return type).
+fn bench_generated_jacobian<
+    T: Copy + Clone + std::fmt::Debug + 'static,
+    R: 'static,
+    const N: usize,
+>(
     group: &mut BenchmarkGroup<'_, WallTime>,
+    bench_id_label: &str,
     bench_id: usize,
-    joint_cmds: &[Vec<f64>],
-    generated_compute_link_jacobians: impl Fn(&[f64; N]) -> [SMatrix<f64, 6, N>; M],
+    joint_cmds: &[Vec<T>],
+    generated_compute_link_jacobians: impl Fn(&[T; N]) -> R,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
-    let joint_cmds_arr: Vec<[f64; N]> = joint_cmds
+    let joint_cmds_arr: Vec<[T; N]> = joint_cmds
         .iter()
         .map(|c| c.clone().try_into().unwrap())
         .collect();
 
     group.bench_with_input(
-        BenchmarkId::new("galaw-generated", bench_id),
+        BenchmarkId::new(bench_id_label, bench_id),
         &joint_cmds_arr,
         |b, cmds| {
             b.iter(|| {
@@ -44,7 +49,7 @@ fn bench_generated_jacobian<const N: usize, const M: usize>(
 
 fn bench_jacobian(c: &mut Criterion) {
     for &urdf_path in BENCH_URDFS {
-        let galaw_model = load_urdf(urdf_path).unwrap();
+        let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
         let k_chain = k::Chain::<f64>::from_urdf_file(urdf_path).unwrap();
 
         let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
@@ -61,7 +66,6 @@ fn bench_jacobian(c: &mut Criterion) {
                     .collect()
             })
             .collect();
-
         let mut group = c.benchmark_group(format!("jacobian/{}", galaw_model.name));
         group.throughput(criterion::Throughput::Elements(
             (joint_cmds.len() * galaw_model.links.len()) as u64,
@@ -88,6 +92,7 @@ fn bench_jacobian(c: &mut Criterion) {
                 if urdf_path == $path {
                     bench_generated_jacobian(
                         &mut group,
+                        "galaw-generated",
                         galaw_model.joints.len(),
                         &joint_cmds,
                         galaw::generated::$module::compute_link_jacobians,

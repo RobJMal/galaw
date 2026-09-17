@@ -1,29 +1,33 @@
 use std::env::args;
+use std::str::FromStr;
 
 // Third-party
-use nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
+use nalgebra::{Isometry3, RealField, Translation3, UnitQuaternion, Vector3};
 
 // Custom
 use galaw::{load_urdf, types::GalawModel};
 
-// ----- HELPER METHODS -----
-/// Simplify the fixed origin transform.
-///
-/// Skip the quaternion multiply when rotation component is identity.
-/// Skip the vector rotation and addition when translation component
-/// is zero.
-fn optimize_joint_transform_code(
-    joint_transform_t: &Translation3<f64>,
-    joint_transform_r: &UnitQuaternion<f64>,
+/// Emits a scalar literal for `val` with the given type suffix, e.g. `0.5_f32`.
+fn emit_scalar<T: std::fmt::Debug + Copy>(val: T, type_name: &str) -> String {
+    format!("{val:?}_{type_name}")
+}
+
+/// Returns `None` when the transform is identity, otherwise the minimal
+/// expression needed (translation-only, rotation-only, or full isometry).
+fn optimize_joint_transform_code<T: RealField + Copy>(
+    joint_transform_t: &Translation3<T>,
+    joint_transform_r: &UnitQuaternion<T>,
     joint_transform_t_str: &str,
     joint_transform_r_str: &str,
 ) -> Option<String> {
+    let zero: T = nalgebra::convert(0.0_f64);
+    let one: T = nalgebra::convert(1.0_f64);
     let t_is_zero =
-        joint_transform_t.x == 0.0 && joint_transform_t.y == 0.0 && joint_transform_t.z == 0.0;
-    let r_is_identity = joint_transform_r.w == 1.0
-        && joint_transform_r.i == 0.0
-        && joint_transform_r.j == 0.0
-        && joint_transform_r.k == 0.0;
+        joint_transform_t.x == zero && joint_transform_t.y == zero && joint_transform_t.z == zero;
+    let r_is_identity = joint_transform_r.w == one
+        && joint_transform_r.i == zero
+        && joint_transform_r.j == zero
+        && joint_transform_r.k == zero;
 
     match (t_is_zero, r_is_identity) {
         (true, true) => None,
@@ -36,96 +40,82 @@ fn optimize_joint_transform_code(
     }
 }
 
-// Bypasses axis-vector multiply when rotation axis is signed basis vector.
-fn optimize_axis_angle_rotation_code(vec: &Vector3<f64>, cmd_idx: usize) -> String {
-    let aligned = match (vec.x, vec.y, vec.z) {
-        (x, 0.0, 0.0) if x == 1.0 || x == -1.0 => Some((0, x)),
-        (0.0, y, 0.0) if y == 1.0 || y == -1.0 => Some((1, y)),
-        (0.0, 0.0, z) if z == 1.0 || z == -1.0 => Some((2, z)),
-        _ => None,
+/// Uses a direct sin/cos split when the axis is a signed basis vector,
+/// avoiding the general axis-angle multiply.
+fn optimize_axis_angle_rotation_code<T: RealField + Copy + std::fmt::Debug>(
+    vec: &Vector3<T>,
+    cmd_idx: usize,
+    type_name: &str,
+) -> String {
+    let zero: T = nalgebra::convert(0.0_f64);
+    let one: T = nalgebra::convert(1.0_f64);
+    let neg_one: T = nalgebra::convert(-1.0_f64);
+    let (vx, vy, vz) = (vec.x, vec.y, vec.z);
+
+    let aligned: Option<(usize, bool)> = if vy == zero && vz == zero && (vx == one || vx == neg_one)
+    {
+        Some((0, vx == one))
+    } else if vx == zero && vz == zero && (vy == one || vy == neg_one) {
+        Some((1, vy == one))
+    } else if vx == zero && vy == zero && (vz == one || vz == neg_one) {
+        Some((2, vz == one))
+    } else {
+        None
     };
 
+    let half: T = nalgebra::convert(0.5_f64);
+    let zero_str = emit_scalar(zero, type_name);
+    let half_str = emit_scalar(half, type_name);
+
     match aligned {
-        Some((slot, sign)) => {
-            let mut components = ["0.0", "0.0", "0.0"];
-            components[slot] = if sign > 0.0 { "s" } else { "-s" };
+        Some((slot, is_positive)) => {
+            let mut components = [zero_str.as_str(), zero_str.as_str(), zero_str.as_str()];
+            components[slot] = if is_positive { "s" } else { "-s" };
             format!(
-                "{{ let (s, c) = (joint_cmds[{}] * 0.5).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, {}, {}, {})) }}",
-                cmd_idx, components[0], components[1], components[2]
+                "{{ let (s, c) = (joint_cmds[{cmd_idx}] * {half_str}).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, {}, {}, {})) }}",
+                components[0], components[1], components[2]
             )
         }
         None => format!(
-            "UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new({:?}, {:?}, {:?})), joint_cmds[{}])",
-            vec.x, vec.y, vec.z, cmd_idx
+            "UnitQuaternion::from_axis_angle(&Unit::new_unchecked(Vector3::new({}, {}, {})), joint_cmds[{cmd_idx}])",
+            emit_scalar(vec.x, type_name),
+            emit_scalar(vec.y, type_name),
+            emit_scalar(vec.z, type_name),
         ),
     }
 }
 
-/// Generates forward kinematics function code.
-fn generate_fk_fn_code(
-    urdf_path: &String,
-    galaw_model: &GalawModel,
+fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
+    urdf_path: &str,
+    galaw_model: &GalawModel<T>,
+    type_name: &str,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    // Stores output of generated code
-    let mut codegen_output: Vec<String> = Vec::new();
+    let mut out: Vec<String> = Vec::new();
 
-    // Header comment so nobody mistakes this for hand-written code
-    let header_comment: String = format!(
-        "// Auto-generated by `codegen_kinematics` from {}. Do not edit by hand.",
-        urdf_path
-    );
-    codegen_output.push(header_comment);
-
-    // Modules/libraries that are imported
-    let attribute_import_code: String = "#[allow(unused_imports)]".to_string();
-    codegen_output.push(attribute_import_code);
-    // Also skip formatting on the import itself, otherwise cargo fmt
-    // reorders it every time this file gets regenerated.
-    let rustfmt_skip_import_code: String = "#[rustfmt::skip]".to_string();
-    codegen_output.push(rustfmt_skip_import_code);
-    let import_code: String =
+    out.push(format!(
+        "// Auto-generated by `codegen_kinematics` from {urdf_path}. Do not edit by hand."
+    ));
+    out.push("#[allow(unused_imports)]".to_string());
+    out.push("#[rustfmt::skip]".to_string());
+    out.push(
         "use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3};"
-            .to_string();
-    codegen_output.push(import_code);
-
-    // Doc comment on the generated function itself, since `generated/` is
-    // exempt from #[warn(missing_docs)] (nothing hand-written to document)
-    // but the function is still real public API consumers call directly.
-    codegen_output.push(format!(
-        "/// Computes forward kinematics for the robot described by `{}`.",
-        urdf_path
-    ));
-    codegen_output.push("///".to_string());
-    codegen_output.push(format!(
-        "/// Generated ahead of time by `codegen_kinematics`, fixed to this robot's shape: \
-         takes {} actuated joint commands, returns {} link poses.",
-        galaw_model.num_actuated_joints,
-        galaw_model.links.len(),
-    ));
-
-    // URDFs don't have perfect casing, which can conflict with Rust. Want
-    // to silence it.
-    let lint_attribute_code: String = "#[allow(non_snake_case)]".to_string();
-    codegen_output.push(lint_attribute_code);
-
-    // Marking function with inline for additional optimization
-    let inline_attribute_code: String = "#[inline]".to_string();
-    codegen_output.push(inline_attribute_code);
-
-    // Ensures that `cargo fmt` doesn't affect codegen'd files. Not
-    // needed since these are not manually maintained.
-    let rustfmt_skip_code: String = "#[rustfmt::skip]".to_string();
-    codegen_output.push(rustfmt_skip_code);
-
-    // Function header code
-    let fn_header_code: String = format!(
-        "pub fn compute_fk(joint_cmds: &[f64; {}]) -> [Isometry3<f64>; {}] {{",
-        galaw_model.num_actuated_joints,
-        galaw_model.links.len(),
+            .to_string(),
     );
-    codegen_output.push(fn_header_code);
+    out.push(format!(
+        "/// Forward kinematics for `{urdf_path}`: {} joints → {} link poses.",
+        galaw_model.num_actuated_joints,
+        galaw_model.links.len(),
+    ));
+    out.push("#[allow(non_snake_case)]".to_string());
+    out.push("#[inline]".to_string());
+    out.push("#[rustfmt::skip]".to_string());
+    out.push(format!(
+        "pub fn compute_fk(joint_cmds: &[{ty}; {n}]) -> [Isometry3<{ty}>; {m}] {{",
+        ty = type_name,
+        n = galaw_model.num_actuated_joints,
+        m = galaw_model.links.len(),
+    ));
 
-    // Programmatically find the root link (has no parents based on joints)
     let child_indices: std::collections::HashSet<usize> = galaw_model
         .joints
         .iter()
@@ -133,136 +123,120 @@ fn generate_fk_fn_code(
         .collect();
     let root_link_idx = (0..galaw_model.links.len())
         .find(|idx| !child_indices.contains(idx))
-        .ok_or("could not find root link (no link without a parent joint)")?;
-    let root_link_var: String = format!("link_{}", galaw_model.links[root_link_idx].name);
-    let root_link_var_code: String = format!("let {} = Isometry3::identity();", root_link_var);
-    codegen_output.push(root_link_var_code);
+        .ok_or("could not find root link")?;
+    let root_link_var = format!("link_{}", galaw_model.links[root_link_idx].name);
+    out.push(format!("let {root_link_var} = Isometry3::identity();"));
 
-    // Keeps track of the generated variables
     let mut link_vars_by_idx: Vec<Option<String>> = vec![None; galaw_model.links.len()];
-    link_vars_by_idx[root_link_idx] = Some(root_link_var.clone());
+    link_vars_by_idx[root_link_idx] = Some(root_link_var);
 
     for joint in galaw_model.joints.iter() {
-        let link_name_var: String = format!("link_{}", joint.child);
-        let parent_var: String = format!("link_{}", joint.parent);
+        let link_name_var = format!("link_{}", joint.child);
+        let parent_var = format!("link_{}", joint.parent);
 
-        // Using Unit::new_unchecked since already normalized in parser.rs
-        let rotation: String = match joint.rot_axis {
-            Some(axis) => {
-                optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap())
-            }
+        let rotation = match joint.rot_axis {
+            Some(axis) => optimize_axis_angle_rotation_code(
+                &axis.into_inner(),
+                joint.cmd_idx.unwrap(),
+                type_name,
+            ),
             None => "UnitQuaternion::identity()".to_string(),
         };
-        let translation: String = match joint.lin_axis {
+        let translation = match joint.lin_axis {
             Some(axis) => {
                 let vec = axis.into_inner();
-                let axis_vec_str: String =
-                    format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
                 format!(
-                    "Translation3::from({} * joint_cmds[{}])",
-                    axis_vec_str,
-                    joint.cmd_idx.unwrap()
+                    "Translation3::from(Vector3::new({}, {}, {}) * joint_cmds[{}])",
+                    emit_scalar(vec.x, type_name),
+                    emit_scalar(vec.y, type_name),
+                    emit_scalar(vec.z, type_name),
+                    joint.cmd_idx.unwrap(),
                 )
-                .to_string()
             }
             None => "Translation3::identity()".to_string(),
         };
-        let joint_transform_t = &joint.transform.translation;
-        let joint_transform_t_str: String = format!(
-            "Translation3::new({:?}, {:?}, {:?})",
-            joint_transform_t.x, joint_transform_t.y, joint_transform_t.z
-        )
-        .to_string();
-        let joint_transform_r = &joint.transform.rotation;
-        let joint_transform_r_str: String = format!(
-            "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
-            joint_transform_r.w, joint_transform_r.i, joint_transform_r.j, joint_transform_r.k
-        )
-        .to_string();
+        let jt = &joint.transform.translation;
+        let jr = &joint.transform.rotation;
+        let t_str = format!(
+            "Translation3::new({}, {}, {})",
+            emit_scalar(jt.x, type_name),
+            emit_scalar(jt.y, type_name),
+            emit_scalar(jt.z, type_name),
+        );
+        let r_str = format!(
+            "UnitQuaternion::from_quaternion(Quaternion::new({}, {}, {}, {}))",
+            emit_scalar(jr.w, type_name),
+            emit_scalar(jr.i, type_name),
+            emit_scalar(jr.j, type_name),
+            emit_scalar(jr.k, type_name),
+        );
 
         let mut factors: Vec<String> = vec![parent_var];
-        if let Some(jt) = optimize_joint_transform_code(
-            joint_transform_t,
-            joint_transform_r,
-            &joint_transform_t_str,
-            &joint_transform_r_str,
+        if let Some(jt_code) = optimize_joint_transform_code(
+            &joint.transform.translation,
+            &joint.transform.rotation,
+            &t_str,
+            &r_str,
         ) {
-            factors.push(jt);
+            factors.push(jt_code);
         }
 
-        let is_fixed_joint = joint.rot_axis.is_none() && joint.lin_axis.is_none();
-        let is_revolute_continous_joint = joint.rot_axis.is_some() && joint.lin_axis.is_none();
-        let is_prismatic_joint = joint.lin_axis.is_some() && joint.rot_axis.is_none();
+        let is_fixed = joint.rot_axis.is_none() && joint.lin_axis.is_none();
+        let is_revolute = joint.rot_axis.is_some() && joint.lin_axis.is_none();
+        let is_prismatic = joint.lin_axis.is_some() && joint.rot_axis.is_none();
 
-        if is_revolute_continous_joint {
+        if is_revolute {
             factors.push(rotation);
-        } else if is_prismatic_joint {
+        } else if is_prismatic {
             factors.push(translation);
-        } else if !is_fixed_joint {
-            factors.push(format!(
-                "Isometry3::from_parts({}, {})",
-                translation, rotation
-            ));
+        } else if !is_fixed {
+            factors.push(format!("Isometry3::from_parts({translation}, {rotation})"));
         }
 
-        let code_line: String = format!("let {} = {};", link_name_var, factors.join(" * "));
-        link_vars_by_idx[joint.child_link_idx] = Some(link_name_var.clone());
-        codegen_output.push(code_line);
+        out.push(format!("let {link_name_var} = {};", factors.join(" * ")));
+        link_vars_by_idx[joint.child_link_idx] = Some(link_name_var);
     }
 
-    // Putting the link_vars in order in the return array
-    let mut ordered_link_vars: Vec<String> = Vec::new();
-    for var in &link_vars_by_idx {
-        ordered_link_vars.push(var.clone().unwrap());
-    }
-    let fn_return_code: String = format!("[{}]", ordered_link_vars.join(", "));
-    codegen_output.push(fn_return_code);
+    let ordered: Vec<String> = link_vars_by_idx.into_iter().map(|v| v.unwrap()).collect();
+    out.push(format!("[{}]", ordered.join(", ")));
+    out.push("}".to_string());
 
-    let fn_closer_code: String = "}".to_string();
-    codegen_output.push(fn_closer_code);
-
-    Ok(codegen_output)
+    Ok(out)
 }
 
-/// Generates Jacobian function code.
-fn generate_jacobian_fn_code(
-    galaw_model: &GalawModel,
+fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
+    galaw_model: &GalawModel<T>,
+    type_name: &str,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let mut codegen_output: Vec<String> = Vec::new();
+    let mut out: Vec<String> = Vec::new();
 
-    // Imports
-    codegen_output.push("use nalgebra::{SMatrix, Vector6};".to_string());
-
-    // Including function attributes
-    codegen_output.push("#[allow(non_snake_case)]".to_string());
-    codegen_output.push("#[rustfmt::skip]".to_string());
-
-    // function signature
-    codegen_output.push(format!(
-        "pub fn compute_link_jacobians(joint_cmds: &[f64; {}]) -> [SMatrix<f64, 6, {}>; {}] {{",
-        galaw_model.num_actuated_joints,
-        galaw_model.num_actuated_joints,
-        galaw_model.links.len(),
+    out.push("use nalgebra::{SMatrix, Vector6};".to_string());
+    out.push("#[allow(non_snake_case)]".to_string());
+    out.push("#[rustfmt::skip]".to_string());
+    out.push(format!(
+        "pub fn compute_link_jacobians(joint_cmds: &[{ty}; {n}]) -> [SMatrix<{ty}, 6, {n}>; {m}] {{",
+        ty = type_name,
+        n = galaw_model.num_actuated_joints,
+        m = galaw_model.links.len(),
     ));
-    codegen_output.push("let links = compute_fk(joint_cmds);".to_string());
+    out.push("let links = compute_fk(joint_cmds);".to_string());
 
-    // ---- Main logic ----
-    // Each actuated joint's axis in world frame, computed once regardless
-    // of how many links it's an ancestor of.
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let Some(_) = joint.cmd_idx else { continue };
-        let local_axis = joint
+        let axis = joint
             .rot_axis
             .or(joint.lin_axis)
             .expect("actuated joint has an axis")
             .into_inner();
-        codegen_output.push(format!(
-            "let axis_world_{0} = links[{1}].rotation * Vector3::new({2:?}, {3:?}, {4:?});",
-            joint_idx, joint.child_link_idx, local_axis.x, local_axis.y, local_axis.z
+        out.push(format!(
+            "let axis_world_{joint_idx} = links[{}].rotation * Vector3::new({}, {}, {});",
+            joint.child_link_idx,
+            emit_scalar(axis.x, type_name),
+            emit_scalar(axis.y, type_name),
+            emit_scalar(axis.z, type_name),
         ));
     }
 
-    // Each link's ancestor joints
     let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); galaw_model.links.len()];
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
@@ -272,179 +246,152 @@ fn generate_jacobian_fn_code(
         ancestors_by_link[joint.child_link_idx] = ancestors;
     }
 
-    // Jacobian vars declaration
     let mut jacobian_vars: Vec<String> = Vec::with_capacity(galaw_model.links.len());
     for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
-        let jacobian_var = format!("jacobian_{}", galaw_model.links[link_idx].name);
-
-        let mut_keyword = if ancestors.is_empty() { "" } else { "mut " };
-        codegen_output.push(format!(
-            "let {}{} = SMatrix::<f64, 6, {}>::zeros();",
-            mut_keyword, jacobian_var, galaw_model.num_actuated_joints
+        let jac_var = format!("jacobian_{}", galaw_model.links[link_idx].name);
+        let mut_kw = if ancestors.is_empty() { "" } else { "mut " };
+        out.push(format!(
+            "let {mut_kw}{jac_var} = SMatrix::<{}, 6, {}>::zeros();",
+            type_name, galaw_model.num_actuated_joints
         ));
 
-        // Filling out the matrix
         for &joint_idx in ancestors {
             let joint = &galaw_model.joints[joint_idx];
             let cmd_idx = joint.cmd_idx.unwrap();
-
             let (lin_expr, ang_expr) = if joint.rot_axis.is_some() {
                 (
                     format!(
-                        "axis_world_{0}.cross(&(links[{1}].translation.vector - links[{2}].translation.vector))",
-                        joint_idx, link_idx, joint.child_link_idx
+                        "axis_world_{joint_idx}.cross(&(links[{link_idx}].translation.vector - links[{}].translation.vector))",
+                        joint.child_link_idx
                     ),
-                    format!("axis_world_{0}", joint_idx),
+                    format!("axis_world_{joint_idx}"),
                 )
             } else {
                 (
-                    format!("axis_world_{0}", joint_idx),
+                    format!("axis_world_{joint_idx}"),
                     "Vector3::zeros()".to_string(),
                 )
             };
-
-            codegen_output.push(format!(
-                "{{ let lin = {lin_expr}; let ang = {ang_expr}; {jacobian_var}.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
+            out.push(format!(
+                "{{ let lin = {lin_expr}; let ang = {ang_expr}; {jac_var}.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
             ));
         }
 
-        jacobian_vars.push(jacobian_var);
+        jacobian_vars.push(jac_var);
     }
 
-    codegen_output.push(format!("[{}]", jacobian_vars.join(", ")));
+    out.push(format!("[{}]", jacobian_vars.join(", ")));
+    out.push("}".to_string());
 
-    // function closing bracket
-    codegen_output.push("}".to_string());
-
-    Ok(codegen_output)
+    Ok(out)
 }
 
-/// Generates inverse-kinematics function code.
-fn generate_ik_fn_code(
-    galaw_model: &GalawModel,
+fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
+    galaw_model: &GalawModel<T>,
+    type_name: &str,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let mut codegen_output: Vec<String> = Vec::new();
-
-    codegen_output.push("use nalgebra::{SVector, Matrix6};".to_string());
-    codegen_output.push("use crate::error::KinematicsError;".to_string());
-
+    let mut out: Vec<String> = Vec::new();
+    let ty = type_name;
     let n = galaw_model.num_actuated_joints;
 
-    codegen_output.push(format!(
-        "/// Computes inverse kinematics for the robot described by `{}`.
-///
-/// The returned commands are clamped into each joint's limits. If the clamped
-/// configuration no longer reaches `target_pose` within tolerance, returns
-/// [`KinematicsError::IkDidNotConverge`]. This is a deliberately simple baseline
-/// with no null-space handling, so it can fail on redundant chains where a
-/// limits-aware solver would succeed.",
+    out.push("use nalgebra::{SVector, Matrix6};".to_string());
+    out.push("use crate::error::KinematicsError;".to_string());
+    out.push(format!(
+        "/// Inverse kinematics for `{}`. Joints are clamped to their limits after solving.",
         galaw_model.name
     ));
-    codegen_output.push("#[allow(non_snake_case)]".to_string());
-    codegen_output.push("#[rustfmt::skip]".to_string());
-    codegen_output.push(format!(
-        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; {}]) -> Result<[f64; {}], KinematicsError> {{",
-        n, n
+    out.push("#[allow(non_snake_case)]".to_string());
+    out.push("#[rustfmt::skip]".to_string());
+    out.push(format!(
+        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<{ty}>, initial_joint_cmds: &[{ty}; {n}]) -> Result<[{ty}; {n}], KinematicsError<{ty}>> {{"
     ));
-    codegen_output.push("const ERROR_TOLERANCE: f64 = 1e-5;".to_string());
-    codegen_output.push("const DAMPING_FACTOR: f64 = 1e-4;".to_string());
-    codegen_output.push("const STEP_SIZE: f64 = 1.0;".to_string());
-    codegen_output.push("const MAX_ITERATIONS: usize = 1000;".to_string());
-
-    // Loop-invariant, so computed once instead of every LM iteration.
-    codegen_output.push("let damping_matrix = DAMPING_FACTOR * Matrix6::identity();".to_string());
-
-    // Chain-independent, so hoisted above the match instead of duplicated per arm.
-    codegen_output
-        .push("let compute_error = |current_pose: &Isometry3<f64>| -> Vector6<f64> {".to_string());
-    codegen_output.push(
+    out.push(format!(
+        "let error_tolerance: {ty} = {};",
+        emit_scalar(1e-5_f64, ty)
+    ));
+    out.push(format!(
+        "let damping_factor: {ty} = {};",
+        emit_scalar(1e-4_f64, ty)
+    ));
+    out.push(format!(
+        "let step_size: {ty} = {};",
+        emit_scalar(1.0_f64, ty)
+    ));
+    out.push("const MAX_ITERATIONS: usize = 1000;".to_string());
+    out.push(format!(
+        "let damping_matrix = Matrix6::<{ty}>::identity() * damping_factor;"
+    ));
+    out.push(format!(
+        "let compute_error = |current_pose: &Isometry3<{ty}>| -> Vector6<{ty}> {{"
+    ));
+    out.push(
         "let error_position = target_pose.translation.vector - current_pose.translation.vector;"
             .to_string(),
     );
-    codegen_output.push(
-        "let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();"
-            .to_string(),
-    );
-    codegen_output.push(
-        "Vector6::new(error_position.x, error_position.y, error_position.z, error_rotation.x, error_rotation.y, error_rotation.z)"
-            .to_string(),
-    );
-    codegen_output.push("};".to_string());
-
-    codegen_output.push("let mut joint_cmds = *initial_joint_cmds;".to_string());
-    codegen_output.push("match target_link_idx {".to_string());
+    out.push("let error_rotation = (target_pose.rotation * current_pose.rotation.inverse()).scaled_axis();".to_string());
+    out.push("Vector6::new(error_position.x, error_position.y, error_position.z, error_rotation.x, error_rotation.y, error_rotation.z)".to_string());
+    out.push("};".to_string());
+    out.push("let mut joint_cmds = *initial_joint_cmds;".to_string());
+    out.push("match target_link_idx {".to_string());
 
     for link_idx in 0..galaw_model.links.len() {
-        // Walk the chain from root to this link (same approach as
-        // `GalawModel::compute_ik`), so it can be baked in below.
         let mut chain: Vec<usize> = Vec::new();
-        let mut walk_link_idx = link_idx;
-        while let Some(&joint_idx) = galaw_model.link_idx_to_parent_joint_idx.get(&walk_link_idx) {
-            chain.push(joint_idx);
-            walk_link_idx = galaw_model.joints[joint_idx].parent_link_idx;
+        let mut walk = link_idx;
+        while let Some(&ji) = galaw_model.link_idx_to_parent_joint_idx.get(&walk) {
+            chain.push(ji);
+            walk = galaw_model.joints[ji].parent_link_idx;
         }
         chain.reverse();
-
-        // Empty only for the root link — the `_` arm below covers it.
         if chain.is_empty() {
             continue;
         }
 
-        codegen_output.push(format!("{} => {{", link_idx));
-
-        // Jacobian is sized to this chain's own actuated joints, not `n` —
-        // most links only touch a fraction of the model's total DOF.
         let chain_actuated_count = chain
             .iter()
-            .filter(|&&joint_idx| galaw_model.joints[joint_idx].cmd_idx.is_some())
+            .filter(|&&ji| galaw_model.joints[ji].cmd_idx.is_some())
             .count();
-        // An all-fixed chain never emits a `joint_cmds[cmd_idx]` reference,
-        // so avoid an unused-variable warning on the closure param.
-        let joint_cmds_param = if chain_actuated_count > 0 {
+        let jc_param = if chain_actuated_count > 0 {
             "joint_cmds"
         } else {
             "_joint_cmds"
         };
 
-        codegen_output.push(format!(
-            "let compute_pose_and_jacobian = |{}: &[f64; {}]| -> (Isometry3<f64>, SMatrix<f64, 6, {}>) {{",
-            joint_cmds_param, n, chain_actuated_count
+        out.push(format!("{link_idx} => {{"));
+        out.push(format!(
+            "let compute_pose_and_jacobian = |{jc_param}: &[{ty}; {n}]| -> (Isometry3<{ty}>, SMatrix<{ty}, 6, {chain_actuated_count}>) {{"
         ));
 
         let mut pose_var = "Isometry3::identity()".to_string();
-        // (cmd_idx, pose var at this joint, world-frame axis var, is rotational)
         let mut actuated_steps: Vec<(usize, String, String, bool)> = Vec::new();
-
         let mut pose_step: usize = 0;
         let mut i = 0;
+
         while i < chain.len() {
             let joint = &galaw_model.joints[chain[i]];
 
             if joint.rot_axis.is_none() && joint.lin_axis.is_none() {
-                // Consecutive fixed joints don't depend on joint_cmds, so
-                // multiply their transforms together here (at codegen time)
-                // into one constant, instead of one runtime multiply each.
-                let mut combined = Isometry3::identity();
+                let mut combined: Isometry3<T> = Isometry3::identity();
                 let mut j = i;
                 while j < chain.len() {
-                    let run_joint = &galaw_model.joints[chain[j]];
-                    if run_joint.rot_axis.is_some() || run_joint.lin_axis.is_some() {
+                    let rj = &galaw_model.joints[chain[j]];
+                    if rj.rot_axis.is_some() || rj.lin_axis.is_some() {
                         break;
                     }
-                    combined *= run_joint.transform;
+                    combined *= rj.transform;
                     j += 1;
                 }
-
                 let t_str = format!(
-                    "Translation3::new({:?}, {:?}, {:?})",
-                    combined.translation.x, combined.translation.y, combined.translation.z
+                    "Translation3::new({}, {}, {})",
+                    emit_scalar(combined.translation.x, ty),
+                    emit_scalar(combined.translation.y, ty),
+                    emit_scalar(combined.translation.z, ty),
                 );
                 let r_str = format!(
-                    "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
-                    combined.rotation.w,
-                    combined.rotation.i,
-                    combined.rotation.j,
-                    combined.rotation.k
+                    "UnitQuaternion::from_quaternion(Quaternion::new({}, {}, {}, {}))",
+                    emit_scalar(combined.rotation.w, ty),
+                    emit_scalar(combined.rotation.i, ty),
+                    emit_scalar(combined.rotation.j, ty),
+                    emit_scalar(combined.rotation.k, ty),
                 );
                 if let Some(constant) = optimize_joint_transform_code(
                     &combined.translation,
@@ -452,256 +399,243 @@ fn generate_ik_fn_code(
                     &t_str,
                     &r_str,
                 ) {
-                    let new_pose_var = format!("pose_{}", pose_step);
+                    let new_var = format!("pose_{pose_step}");
                     pose_step += 1;
-                    codegen_output.push(format!(
-                        "let {} = {} * {};",
-                        new_pose_var, pose_var, constant
-                    ));
-                    pose_var = new_pose_var;
+                    out.push(format!("let {new_var} = {pose_var} * {constant};"));
+                    pose_var = new_var;
                 }
                 i = j;
                 continue;
             }
 
-            // Actuated joint: still one at a time, since its motion depends
-            // on joint_cmds at call time, not just codegen-time constants.
-            let rotation: String = match joint.rot_axis {
-                Some(axis) => {
-                    optimize_axis_angle_rotation_code(&axis.into_inner(), joint.cmd_idx.unwrap())
-                }
+            let rotation = match joint.rot_axis {
+                Some(axis) => optimize_axis_angle_rotation_code(
+                    &axis.into_inner(),
+                    joint.cmd_idx.unwrap(),
+                    ty,
+                ),
                 None => "UnitQuaternion::identity()".to_string(),
             };
-            let translation: String = match joint.lin_axis {
+            let translation = match joint.lin_axis {
                 Some(axis) => {
                     let vec = axis.into_inner();
-                    let axis_vec_str: String =
-                        format!("Vector3::new({:?}, {:?}, {:?})", vec.x, vec.y, vec.z);
                     format!(
-                        "Translation3::from({} * joint_cmds[{}])",
-                        axis_vec_str,
-                        joint.cmd_idx.unwrap()
+                        "Translation3::from(Vector3::new({}, {}, {}) * joint_cmds[{}])",
+                        emit_scalar(vec.x, ty),
+                        emit_scalar(vec.y, ty),
+                        emit_scalar(vec.z, ty),
+                        joint.cmd_idx.unwrap(),
                     )
                 }
                 None => "Translation3::identity()".to_string(),
             };
-            let joint_transform_t = &joint.transform.translation;
-            let joint_transform_t_str: String = format!(
-                "Translation3::new({:?}, {:?}, {:?})",
-                joint_transform_t.x, joint_transform_t.y, joint_transform_t.z
+            let jt = &joint.transform.translation;
+            let jr = &joint.transform.rotation;
+            let t_str = format!(
+                "Translation3::new({}, {}, {})",
+                emit_scalar(jt.x, ty),
+                emit_scalar(jt.y, ty),
+                emit_scalar(jt.z, ty),
             );
-            let joint_transform_r = &joint.transform.rotation;
-            let joint_transform_r_str: String = format!(
-                "UnitQuaternion::from_quaternion(Quaternion::new({:?}, {:?}, {:?}, {:?}))",
-                joint_transform_r.w, joint_transform_r.i, joint_transform_r.j, joint_transform_r.k
+            let r_str = format!(
+                "UnitQuaternion::from_quaternion(Quaternion::new({}, {}, {}, {}))",
+                emit_scalar(jr.w, ty),
+                emit_scalar(jr.i, ty),
+                emit_scalar(jr.j, ty),
+                emit_scalar(jr.k, ty),
             );
 
             let mut factors: Vec<String> = vec![pose_var.clone()];
-            if let Some(jt) = optimize_joint_transform_code(
-                joint_transform_t,
-                joint_transform_r,
-                &joint_transform_t_str,
-                &joint_transform_r_str,
+            if let Some(jt_code) = optimize_joint_transform_code(
+                &joint.transform.translation,
+                &joint.transform.rotation,
+                &t_str,
+                &r_str,
             ) {
-                factors.push(jt);
+                factors.push(jt_code);
             }
 
-            let is_revolute_continous_joint = joint.rot_axis.is_some() && joint.lin_axis.is_none();
-            let is_prismatic_joint = joint.lin_axis.is_some() && joint.rot_axis.is_none();
-
-            if is_revolute_continous_joint {
+            let is_revolute = joint.rot_axis.is_some() && joint.lin_axis.is_none();
+            let is_prismatic = joint.lin_axis.is_some() && joint.rot_axis.is_none();
+            if is_revolute {
                 factors.push(rotation);
-            } else if is_prismatic_joint {
+            } else if is_prismatic {
                 factors.push(translation);
             } else {
-                factors.push(format!(
-                    "Isometry3::from_parts({}, {})",
-                    translation, rotation
-                ));
+                factors.push(format!("Isometry3::from_parts({translation}, {rotation})"));
             }
 
-            let new_pose_var = format!("pose_{}", pose_step);
+            let new_var = format!("pose_{pose_step}");
             let this_step = pose_step;
             pose_step += 1;
-            codegen_output.push(format!("let {} = {};", new_pose_var, factors.join(" * ")));
-            pose_var = new_pose_var.clone();
+            out.push(format!("let {new_var} = {};", factors.join(" * ")));
+            pose_var = new_var.clone();
 
-            let cmd_idx = joint.cmd_idx.unwrap(); // actuated, so always Some
-            let local_axis = joint
-                .rot_axis
-                .or(joint.lin_axis)
-                .expect("actuated joint has an axis")
-                .into_inner();
-            let axis_var = format!("axis_world_{}", this_step);
-            codegen_output.push(format!(
-                "let {} = {}.rotation * Vector3::new({:?}, {:?}, {:?});",
-                axis_var, new_pose_var, local_axis.x, local_axis.y, local_axis.z
+            let cmd_idx = joint.cmd_idx.unwrap();
+            let axis = joint.rot_axis.or(joint.lin_axis).unwrap().into_inner();
+            let axis_var = format!("axis_world_{this_step}");
+            out.push(format!(
+                "let {axis_var} = {new_var}.rotation * Vector3::new({}, {}, {});",
+                emit_scalar(axis.x, ty),
+                emit_scalar(axis.y, ty),
+                emit_scalar(axis.z, ty),
             ));
-            actuated_steps.push((
-                cmd_idx,
-                new_pose_var.clone(),
-                axis_var,
-                joint.rot_axis.is_some(),
-            ));
+            actuated_steps.push((cmd_idx, new_var, axis_var, joint.rot_axis.is_some()));
 
             i += 1;
         }
 
-        // Only a rotational joint's column needs the cross product below —
-        // skip emitting `target_position` otherwise, or it'd go unused.
-        let chain_has_rotational_actuated_joint =
-            actuated_steps.iter().any(|(_, _, _, is_rot)| *is_rot);
-        if chain_has_rotational_actuated_joint {
-            codegen_output.push(format!("let target_position = {}.translation;", pose_var));
+        if actuated_steps.iter().any(|(_, _, _, is_rot)| *is_rot) {
+            out.push(format!("let target_position = {pose_var}.translation;"));
         }
-        // Same reasoning for `mut`: no actuated joint means no `set_column` call.
-        let jac_mut_keyword = if actuated_steps.is_empty() {
+        let jac_mut_kw = if actuated_steps.is_empty() {
             ""
         } else {
             "mut "
         };
-        codegen_output.push(format!(
-            "let {}jac = SMatrix::<f64, 6, {}>::zeros();",
-            jac_mut_keyword, chain_actuated_count
+        out.push(format!(
+            "let {jac_mut_kw}jac = SMatrix::<{ty}, 6, {chain_actuated_count}>::zeros();"
         ));
 
-        // Column index is this step's position within the chain, not its
-        // global cmd_idx — jac is only chain_actuated_count wide now.
         for (local_col, (_cmd_idx, joint_pose_var, axis_var, is_rot)) in
             actuated_steps.iter().enumerate()
         {
             let (lin_expr, ang_expr) = if *is_rot {
                 (
                     format!(
-                        "{}.cross(&(target_position.vector - {}.translation.vector))",
-                        axis_var, joint_pose_var
+                        "{axis_var}.cross(&(target_position.vector - {joint_pose_var}.translation.vector))"
                     ),
                     axis_var.clone(),
                 )
             } else {
                 (axis_var.clone(), "Vector3::zeros()".to_string())
             };
-            codegen_output.push(format!(
+            out.push(format!(
                 "{{ let lin = {lin_expr}; let ang = {ang_expr}; jac.set_column({local_col}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
             ));
         }
 
-        codegen_output.push(format!("({}, jac)", pose_var));
-        codegen_output.push("};".to_string());
+        out.push(format!("({pose_var}, jac)"));
+        out.push("};".to_string());
 
-        // LM loop is identical across arms (only `n` varies), so it isn't unrolled.
-        // `jac`/`new_jac` only get read inside the `if !actuated_steps.is_empty()`
-        // block below, so when it's empty, underscore-prefix them too — otherwise
-        // they'd be dead stores every loop iteration.
-        let (jac_binding, new_jac_binding) = if actuated_steps.is_empty() {
+        let (jac_b, new_jac_b) = if actuated_steps.is_empty() {
             ("_jac", "_new_jac")
         } else {
             ("jac", "new_jac")
         };
-        codegen_output.push(format!(
-            "let (mut current_pose, mut {}) = compute_pose_and_jacobian(&joint_cmds);",
-            jac_binding
+        out.push(format!(
+            "let (mut current_pose, mut {jac_b}) = compute_pose_and_jacobian(&joint_cmds);"
         ));
-        codegen_output.push("let mut error = compute_error(&current_pose);".to_string());
-        codegen_output.push("let mut iterations: usize = 0;".to_string());
-        codegen_output.push("while error.norm() > ERROR_TOLERANCE {".to_string());
-        codegen_output.push("if iterations >= MAX_ITERATIONS {".to_string());
-        codegen_output.push(
-            "return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });"
-                .to_string(),
-        );
-        codegen_output.push("}".to_string());
-        // No actuated joints in this chain means jac is always zero, so the
-        // whole solve is a no-op (and every binding here would be unused) —
-        // skip straight to the next pose/error recompute below.
+        out.push("let mut error = compute_error(&current_pose);".to_string());
+        out.push("let mut iterations: usize = 0;".to_string());
+        out.push("while error.norm() > error_tolerance {".to_string());
+        out.push("if iterations >= MAX_ITERATIONS {".to_string());
+        out.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: error.norm() });".to_string());
+        out.push("}".to_string());
         if !actuated_steps.is_empty() {
-            codegen_output
-                .push("let jjt_damped = jac * jac.transpose() + damping_matrix;".to_string());
-            codegen_output.push(
-                "let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);"
-                    .to_string(),
-            );
-            codegen_output.push(format!(
-                "let dq: SVector<f64, {}> = jac.transpose() * x;",
-                chain_actuated_count
+            out.push("let jjt_damped = jac * jac.transpose() + damping_matrix;".to_string());
+            out.push("let x = jjt_damped.cholesky().expect(\"J*J^T + damping*I is always positive definite for damping > 0\").solve(&error);".to_string());
+            out.push(format!(
+                "let dq: SVector<{ty}, {chain_actuated_count}> = jac.transpose() * x;"
             ));
-            // dq is chain-local (see jac above), so scatter each entry back
-            // to its actuated joint's own global cmd_idx individually.
             for (local_col, (cmd_idx, _, _, _)) in actuated_steps.iter().enumerate() {
-                codegen_output.push(format!(
-                    "joint_cmds[{}] += STEP_SIZE * dq[{}];",
-                    cmd_idx, local_col
+                out.push(format!(
+                    "joint_cmds[{cmd_idx}] += step_size * dq[{local_col}];"
                 ));
             }
         }
-        codegen_output.push(format!(
-            "let (pose, {}) = compute_pose_and_jacobian(&joint_cmds);",
-            new_jac_binding
+        out.push(format!(
+            "let (pose, {new_jac_b}) = compute_pose_and_jacobian(&joint_cmds);"
         ));
-        codegen_output.push("current_pose = pose;".to_string());
-        codegen_output.push(format!("{} = {};", jac_binding, new_jac_binding));
-        codegen_output.push("error = compute_error(&current_pose);".to_string());
-        codegen_output.push("iterations += 1;".to_string());
-        codegen_output.push("}".to_string());
-        // Clamp each actuated chain joint to its limits, then re-verify FK.
-        for &joint_idx in &chain {
-            let joint = &galaw_model.joints[joint_idx];
+        out.push("current_pose = pose;".to_string());
+        out.push(format!("{jac_b} = {new_jac_b};"));
+        out.push("error = compute_error(&current_pose);".to_string());
+        out.push("iterations += 1;".to_string());
+        out.push("}".to_string());
+
+        for &ji in &chain {
+            let joint = &galaw_model.joints[ji];
             if let Some(cmd_idx) = joint.cmd_idx {
-                let lo = joint.limit_lower.unwrap_or(f64::NEG_INFINITY);
-                let hi = joint.limit_upper.unwrap_or(f64::INFINITY);
-                // Use {:?} so integer-valued limits emit `0.0` not `0` (valid f64 literal).
-                codegen_output.push(format!(
-                    "joint_cmds[{cmd_idx}] = joint_cmds[{cmd_idx}].clamp({lo:?}_f64, {hi:?}_f64);"
+                let lo_str = joint
+                    .limit_lower
+                    .map(|v| emit_scalar(v, ty))
+                    .unwrap_or_else(|| format!("{ty}::NEG_INFINITY"));
+                let hi_str = joint
+                    .limit_upper
+                    .map(|v| emit_scalar(v, ty))
+                    .unwrap_or_else(|| format!("{ty}::INFINITY"));
+                out.push(format!(
+                    "joint_cmds[{cmd_idx}] = joint_cmds[{cmd_idx}].clamp({lo_str}, {hi_str});",
                 ));
             }
         }
-        codegen_output
-            .push("let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);".to_string());
-        codegen_output.push("let clamped_error = compute_error(&clamped_pose);".to_string());
-        codegen_output.push("if clamped_error.norm() > ERROR_TOLERANCE {".to_string());
-        codegen_output.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });".to_string());
-        codegen_output.push("}".to_string());
-        codegen_output.push("Ok(joint_cmds)".to_string());
-        codegen_output.push("}".to_string()); // closes this match arm
+        out.push("let (clamped_pose, _) = compute_pose_and_jacobian(&joint_cmds);".to_string());
+        out.push("let clamped_error = compute_error(&clamped_pose);".to_string());
+        out.push("if clamped_error.norm() > error_tolerance {".to_string());
+        out.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });".to_string());
+        out.push("}".to_string());
+        out.push("Ok(joint_cmds)".to_string());
+        out.push("}".to_string());
     }
 
-    // Root link / out-of-range index: pose is identity and the Jacobian is
-    // always zero, so joint_cmds can never move — just check once.
-    codegen_output.push("_ => {".to_string());
-    codegen_output.push("let error = compute_error(&Isometry3::identity());".to_string());
-    codegen_output.push("if error.norm() > ERROR_TOLERANCE {".to_string());
-    codegen_output.push(
-        "return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });"
-            .to_string(),
-    );
-    codegen_output.push("}".to_string());
-    codegen_output.push("Ok(joint_cmds)".to_string());
-    codegen_output.push("}".to_string()); // closes fallback arm
+    out.push("_ => {".to_string());
+    out.push("let error = compute_error(&Isometry3::identity());".to_string());
+    out.push("if error.norm() > error_tolerance {".to_string());
+    out.push("return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });".to_string());
+    out.push("}".to_string());
+    out.push("Ok(joint_cmds)".to_string());
+    out.push("}".to_string());
+    out.push("}".to_string()); // match
+    out.push("}".to_string()); // fn
 
-    codegen_output.push("}".to_string()); // closes match
-    codegen_output.push("}".to_string()); // closes fn
+    Ok(out)
+}
 
-    Ok(codegen_output)
+fn run_codegen<T>(
+    urdf_path: &str,
+    out_path: &str,
+    type_name: &str,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    T: RealField
+        + Copy
+        + std::fmt::Debug
+        + std::fmt::Display
+        + FromStr<Err = std::num::ParseFloatError>,
+{
+    let galaw_model = load_urdf::<T>(urdf_path)?;
+
+    let mut codegen_output = generate_fk_fn_code(urdf_path, &galaw_model, type_name)?;
+    codegen_output.extend(generate_jacobian_fn_code(&galaw_model, type_name)?);
+    codegen_output.extend(generate_ik_fn_code(&galaw_model, type_name)?);
+
+    if let Some(parent_dir) = std::path::Path::new(out_path).parent() {
+        std::fs::create_dir_all(parent_dir)?;
+    }
+    std::fs::write(out_path, codegen_output.join("\n"))?;
+    println!("Generated code has been written to: {out_path}");
+
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = args().collect();
+    if args.len() != 4 {
+        eprintln!("Usage: codegen_kinematics <urdf_path> <out_path> <type>");
+        eprintln!("  <type>  Rust float type for generated code, e.g. f32 or f64");
+        std::process::exit(1);
+    }
 
     let urdf_path = &args[1];
     let out_path = &args[2];
-    let galaw_model = load_urdf(urdf_path)?;
+    let type_name = &args[3];
 
-    let mut codegen_output = generate_fk_fn_code(urdf_path, &galaw_model)?;
-    codegen_output.extend(generate_jacobian_fn_code(&galaw_model)?);
-    codegen_output.extend(generate_ik_fn_code(&galaw_model)?);
-    let codegen: String = codegen_output.join("\n");
-
-    // Creating directory if it's missing
-    if let Some(parent_dir) = std::path::Path::new(out_path).parent() {
-        std::fs::create_dir_all(parent_dir)?
+    match type_name.as_str() {
+        "f32" => run_codegen::<f32>(urdf_path, out_path, type_name),
+        "f64" => run_codegen::<f64>(urdf_path, out_path, type_name),
+        other => {
+            eprintln!("Unsupported type '{other}'. Supported types: f32, f64");
+            std::process::exit(1);
+        }
     }
-    std::fs::write(out_path, codegen)?;
-    println!("Generated code has been written to: {}", out_path);
-
-    Ok(())
 }
