@@ -236,9 +236,12 @@ fn dfs_visit<T: RealField + Copy>(
 /// Resolved joints (in DFS order), link name -> index, and joint name -> cmd_idx.
 type ResolvedJoints<T> = (
     Vec<Joint<T>>,
-    HashMap<String, usize>, // link_name -> cmd_idx
+    HashMap<String, usize>, // link_name -> link_idx
     HashMap<String, usize>, // joint_name -> cmd_idx
-    HashMap<usize, usize>,  // link_name -> parent joint_idx
+    Vec<Vec<usize>>,        // ancestors_by_link
+    Vec<Vec<usize>>,        // chain_by_link
+    Vec<T>,                 // joint_limit_lower (indexed by cmd_idx)
+    Vec<T>,                 // joint_limit_upper (indexed by cmd_idx)
 );
 
 /// Resolves joint order for downstream functions.
@@ -328,17 +331,39 @@ fn resolve_joint_order<T: RealField + Copy>(
         .filter_map(|j| j.cmd_idx.map(|idx| (j.name.clone(), idx)))
         .collect();
 
-    let link_idx_to_parent_joint_idx: HashMap<usize, usize> = ordered_joints
-        .iter()
-        .enumerate()
-        .map(|(joint_idx, j)| (j.child_link_idx, joint_idx))
-        .collect();
+    // Precompute per-link ancestor tables. Joints are in DFS pre-order,
+    // so each parent link's lists are complete before its children are processed.
+    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); links.len()];
+    let mut chain_by_link: Vec<Vec<usize>> = vec![Vec::new(); links.len()];
+    for (joint_idx, joint) in ordered_joints.iter().enumerate() {
+        let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
+        if joint.cmd_idx.is_some() {
+            ancestors.push(joint_idx);
+        }
+        ancestors_by_link[joint.child_link_idx] = ancestors;
+
+        let mut chain = chain_by_link[joint.parent_link_idx].clone();
+        chain.push(joint_idx);
+        chain_by_link[joint.child_link_idx] = chain;
+    }
+
+    let mut joint_limit_lower = vec![T::zero(); actuated_joint_counter];
+    let mut joint_limit_upper = vec![T::zero(); actuated_joint_counter];
+    for joint in &ordered_joints {
+        if let Some(cmd_idx) = joint.cmd_idx {
+            joint_limit_lower[cmd_idx] = joint.limit_lower.unwrap_or(T::zero());
+            joint_limit_upper[cmd_idx] = joint.limit_upper.unwrap_or(T::zero());
+        }
+    }
 
     Ok((
         ordered_joints,
         link_name_to_idx,
         joint_name_to_idx,
-        link_idx_to_parent_joint_idx,
+        ancestors_by_link,
+        chain_by_link,
+        joint_limit_lower,
+        joint_limit_upper,
     ))
 }
 
@@ -387,13 +412,15 @@ where
         }
     }
 
-    let (ordered_joints, link_name_to_idx, joint_name_to_idx, link_idx_to_parent_joint_idx) =
-        resolve_joint_order(&links, &joints)?;
-
-    let num_actuated_joints = ordered_joints
-        .iter()
-        .filter(|j| j.cmd_idx.is_some())
-        .count();
+    let (
+        ordered_joints,
+        link_name_to_idx,
+        joint_name_to_idx,
+        ancestors_by_link,
+        chain_by_link,
+        joint_limit_lower,
+        joint_limit_upper,
+    ) = resolve_joint_order(&links, &joints)?;
 
     Ok(GalawModel {
         name: robot_name,
@@ -401,8 +428,11 @@ where
         link_name_to_idx,
         joints: ordered_joints,
         joint_name_to_idx,
-        link_idx_to_parent_joint_idx,
-        num_actuated_joints,
+        num_actuated_joints: joint_limit_lower.len(),
+        ancestors_by_link,
+        chain_by_link,
+        joint_limit_lower,
+        joint_limit_upper,
     })
 }
 
