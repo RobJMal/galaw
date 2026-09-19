@@ -9,6 +9,46 @@ use crate::{
 };
 
 impl<T: RealField + Copy> GalawModel<T> {
+    /// Fills columns of `jacobian` for each joint in `ancestors`.
+    #[inline]
+    fn fill_jacobian_columns(
+        &self,
+        links: &[Isometry3<T>],
+        ancestors: &[usize],
+        target_position: &Translation3<T>,
+        jacobian: &mut Matrix6xX<T>,
+    ) {
+        for &joint_idx in ancestors {
+            let joint = &self.joints[joint_idx];
+            let cmd_idx = joint.cmd_idx.unwrap();
+
+            let joint_position = links[joint.child_link_idx].translation;
+            let local_axis = joint
+                .rot_axis
+                .or(joint.lin_axis)
+                .expect("actuated joint has an axis");
+            let joint_motion_axis =
+                (links[joint.child_link_idx].rotation * local_axis).into_inner();
+
+            let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
+                (
+                    joint_motion_axis
+                        .cross(&(target_position.vector - joint_position.vector)),
+                    joint_motion_axis,
+                )
+            } else {
+                (joint_motion_axis, Vector3::zeros())
+            };
+
+            jacobian.set_column(
+                cmd_idx,
+                &Vector6::new(
+                    lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
+                ),
+            );
+        }
+    }
+
     /// Computes forward kinematics of a model.
     ///
     /// Returns each link's world-space pose as an `Isometry3<T>`, indexed
@@ -80,37 +120,12 @@ impl<T: RealField + Copy> GalawModel<T> {
         let links = self.compute_fk(joint_cmds)?;
 
         for (link_idx, ancestors) in self.ancestors_by_link.iter().enumerate() {
-            let joint_position_target = links[link_idx].translation;
-
-            for &joint_idx in ancestors {
-                let joint = &self.joints[joint_idx];
-                let cmd_idx = joint.cmd_idx.unwrap();
-
-                let joint_position = links[joint.child_link_idx].translation;
-                let local_axis = joint
-                    .rot_axis
-                    .or(joint.lin_axis)
-                    .expect("actuated joint has an axis");
-                let joint_motion_axis =
-                    (links[joint.child_link_idx].rotation * local_axis).into_inner();
-
-                let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
-                    (
-                        joint_motion_axis
-                            .cross(&(joint_position_target.vector - joint_position.vector)),
-                        joint_motion_axis,
-                    )
-                } else {
-                    (joint_motion_axis, Vector3::zeros())
-                };
-
-                jacobians[link_idx].set_column(
-                    cmd_idx,
-                    &Vector6::new(
-                        lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
-                    ),
-                );
-            }
+            self.fill_jacobian_columns(
+                &links,
+                ancestors,
+                &links[link_idx].translation,
+                &mut jacobians[link_idx],
+            );
         }
 
         Ok(jacobians)
@@ -142,36 +157,12 @@ impl<T: RealField + Copy> GalawModel<T> {
         let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
 
         let links = self.compute_fk(joint_cmds)?;
-        let target_position = links[target_link_idx].translation;
-
-        for &joint_idx in &self.ancestors_by_link[target_link_idx] {
-            let joint = &self.joints[joint_idx];
-            let cmd_idx = joint.cmd_idx.unwrap();
-
-            let joint_position = links[joint.child_link_idx].translation;
-            let local_axis = joint
-                .rot_axis
-                .or(joint.lin_axis)
-                .expect("actuated joint has an axis");
-            let joint_motion_axis =
-                (links[joint.child_link_idx].rotation * local_axis).into_inner();
-
-            let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
-                (
-                    joint_motion_axis.cross(&(target_position.vector - joint_position.vector)),
-                    joint_motion_axis,
-                )
-            } else {
-                (joint_motion_axis, Vector3::zeros())
-            };
-
-            jacobian.set_column(
-                cmd_idx,
-                &Vector6::new(
-                    lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
-                ),
-            );
-        }
+        self.fill_jacobian_columns(
+            &links,
+            &self.ancestors_by_link[target_link_idx],
+            &links[target_link_idx].translation,
+            &mut jacobian,
+        );
 
         Ok(jacobian)
     }
