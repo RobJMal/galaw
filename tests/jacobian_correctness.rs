@@ -128,7 +128,7 @@ fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
 }
 
 /// Runs correctness check generated `compute_link_jacobians` against the runtime version.
-fn check_generated_jacobian_matches_dynamic<const N: usize, const M: usize>(
+fn check_generated_jacobian_matches_runtime<const N: usize, const M: usize>(
     urdf_path: &str,
     generated_compute_link_jacobians: impl Fn(&[f64; N], &mut [SMatrix<f64, 6, N>; M]),
 ) -> TestResult {
@@ -218,8 +218,8 @@ macro_rules! jacobian_codegen_correctness_test {
             use super::*;
 
             #[test]
-            fn matches_dynamic() -> TestResult {
-                check_generated_jacobian_matches_dynamic(
+            fn matches_runtime() -> TestResult {
+                check_generated_jacobian_matches_runtime(
                     $path,
                     galaw::generated::$module::compute_link_jacobians,
                 )

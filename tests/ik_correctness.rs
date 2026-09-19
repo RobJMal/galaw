@@ -156,7 +156,7 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
     Ok(())
 }
 
-/// Compares a codegen'd `compute_ik` against the dynamic `GalawModel::compute_ik`.
+/// Compares a codegen'd `compute_ik` against the runtime `GalawModel::compute_ik`.
 fn check_generated_matches_runtime<const N: usize>(
     urdf_path: &str,
     generated_compute_ik: impl Fn(

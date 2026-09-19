@@ -73,7 +73,7 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
 /// itself producing a shared trait. The dynamic path is the ground truth here
 /// (already checked against `k` above), so this only needs to confirm the
 /// generated code agrees with it.
-fn check_generated_matches_dynamic<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
+fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     urdf_path: &str,
     generated_compute_fk: impl Fn(&[f64; NUM_JOINTS], &mut [Isometry3<f64>; NUM_LINKS]),
 ) -> TestResult {
@@ -126,8 +126,8 @@ macro_rules! codegen_correctness_test {
             use super::*;
 
             #[test]
-            fn matches_dynamic() -> TestResult {
-                check_generated_matches_dynamic($path, $compute_fk)
+            fn matches_runtime() -> TestResult {
+                check_generated_matches_runtime($path, $compute_fk)
             }
         }
     };
