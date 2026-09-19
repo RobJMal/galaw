@@ -154,6 +154,14 @@ pub enum KinematicsError<T: std::fmt::Debug + std::fmt::Display + Copy> {
         /// The out-of-range index that was requested.
         requested: usize,
     },
+    /// The `out` buffer's length doesn't match the model's link count.
+    #[error("expected {expected} output slots, received {actual}")]
+    OutLengthMismatch {
+        /// Expected number of output slots (model's link count).
+        expected: usize,
+        /// Number of output slots actually provided.
+        actual: usize,
+    },
     /// IK failed to converge
     #[error("ik did not converge within {iterations} iterations. final error: {final_error}")]
     IkDidNotConverge {

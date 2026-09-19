@@ -104,10 +104,17 @@ impl<T: RealField + Copy> GalawModel<T> {
     }
 
     /// Computes the Jacobian of every link in a model.
+    ///
+    /// `jacobians` must have length [`GalawModel::links`]`.len()`, with each matrix
+    /// pre-allocated to `6 × num_actuated_joints` and pre-zeroed. Only ancestor
+    /// columns are written per link, so a buffer initialized with
+    /// `Matrix6xX::zeros(num_actuated_joints)` can be reused across calls without
+    /// re-zeroing, provided the model topology is unchanged.
     pub fn compute_link_jacobians(
         &self,
         joint_cmds: &[T],
-    ) -> Result<Vec<Matrix6xX<T>>, GalawError<T>> {
+        jacobians: &mut [Matrix6xX<T>],
+    ) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -115,11 +122,13 @@ impl<T: RealField + Copy> GalawModel<T> {
             }
             .into());
         }
-
-        // Set to 0 so only joint ancestors contribute
-        let mut jacobians: Vec<Matrix6xX<T>> = (0..self.links.len())
-            .map(|_| Matrix6xX::zeros(self.num_actuated_joints))
-            .collect();
+        if jacobians.len() != self.links.len() {
+            return Err(KinematicsError::OutLengthMismatch {
+                expected: self.links.len(),
+                actual: jacobians.len(),
+            }
+            .into());
+        }
 
         let mut links = vec![Isometry3::identity(); self.links.len()];
         self.compute_fk(joint_cmds, &mut links)?;
@@ -133,17 +142,20 @@ impl<T: RealField + Copy> GalawModel<T> {
             );
         }
 
-        Ok(jacobians)
+        Ok(())
     }
 
     /// Computes the Jacobian for a single link of a model.
     ///
-    /// Primarily, this is used for computations where we only need specific links
+    /// Primarily, this is used for computations where we only need specific links.
+    /// `jacobian` must be pre-allocated to `6 × num_actuated_joints` and pre-zeroed.
+    /// Only ancestor columns are written, so the buffer can be reused across calls.
     pub fn compute_link_jacobian(
         &self,
         joint_cmds: &[T],
         target_link_idx: usize,
-    ) -> Result<Matrix6xX<T>, GalawError<T>> {
+        jacobian: &mut Matrix6xX<T>,
+    ) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -159,18 +171,16 @@ impl<T: RealField + Copy> GalawModel<T> {
             .into());
         }
 
-        let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
-
         let mut links = vec![Isometry3::identity(); self.links.len()];
         self.compute_fk(joint_cmds, &mut links)?;
         self.fill_jacobian_columns(
             &links,
             &self.ancestors_by_link[target_link_idx],
             &links[target_link_idx].translation,
-            &mut jacobian,
+            jacobian,
         );
 
-        Ok(jacobian)
+        Ok(())
     }
 
     /// Computes the pose of one link along a precomputed chain, and fills

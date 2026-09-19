@@ -17,18 +17,19 @@ poses[2] = link_forearm;
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_link_jacobians(joint_cmds: &[f64; 2]) -> [SMatrix<f64, 6, 2>; 3] {
+pub fn compute_link_jacobians(joint_cmds: &[f64; 2], jacobians: &mut [SMatrix<f64, 6, 2>; 3]) {
 let mut links = [Isometry3::identity(); 3];
 compute_fk(joint_cmds, &mut links);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
-let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
-let mut jacobian_upper_arm = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_upper_arm.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_forearm = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_0.cross(&(links[2].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_forearm.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_forearm.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-[jacobian_base_link, jacobian_upper_arm, jacobian_forearm]
+jacobians[0].fill(0.0_f64);
+let mut jac_1 = SMatrix::<f64, 6, 2>::zeros();
+{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[1] = jac_1;
+let mut jac_2 = SMatrix::<f64, 6, 2>::zeros();
+{ let lin = axis_world_0.cross(&(links[2].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jac_2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[2] = jac_2;
 }
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
