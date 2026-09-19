@@ -9,6 +9,45 @@ use crate::{
 };
 
 impl<T: RealField + Copy> GalawModel<T> {
+    /// Fills columns of `jacobian` for each joint in `ancestors`.
+    #[inline]
+    fn fill_jacobian_columns(
+        &self,
+        links: &[Isometry3<T>],
+        ancestors: &[usize],
+        target_position: &Translation3<T>,
+        jacobian: &mut Matrix6xX<T>,
+    ) {
+        for &joint_idx in ancestors {
+            let joint = &self.joints[joint_idx];
+            let cmd_idx = joint.cmd_idx.unwrap();
+
+            let joint_position = links[joint.child_link_idx].translation;
+            let local_axis = joint
+                .rot_axis
+                .or(joint.lin_axis)
+                .expect("actuated joint has an axis");
+            let joint_motion_axis =
+                (links[joint.child_link_idx].rotation * local_axis).into_inner();
+
+            let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
+                (
+                    joint_motion_axis.cross(&(target_position.vector - joint_position.vector)),
+                    joint_motion_axis,
+                )
+            } else {
+                (joint_motion_axis, Vector3::zeros())
+            };
+
+            jacobian.set_column(
+                cmd_idx,
+                &Vector6::new(
+                    lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
+                ),
+            );
+        }
+    }
+
     /// Computes forward kinematics of a model.
     ///
     /// Computes forward kinematics of a model, writing each link's world-space
@@ -82,51 +121,16 @@ impl<T: RealField + Copy> GalawModel<T> {
             .map(|_| Matrix6xX::zeros(self.num_actuated_joints))
             .collect();
 
-        // Construct each links' ancestor joints
-        let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); self.links.len()];
-        for (joint_idx, joint) in self.joints.iter().enumerate() {
-            let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
-            if joint.cmd_idx.is_some() {
-                ancestors.push(joint_idx);
-            }
-            ancestors_by_link[joint.child_link_idx] = ancestors;
-        }
-
         let mut links = vec![Isometry3::identity(); self.links.len()];
         self.compute_fk(joint_cmds, &mut links)?;
 
-        for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
-            let joint_position_target = links[link_idx].translation;
-
-            for &joint_idx in ancestors {
-                let joint = &self.joints[joint_idx];
-                let cmd_idx = joint.cmd_idx.unwrap();
-
-                let joint_position = links[joint.child_link_idx].translation;
-                let local_axis = joint
-                    .rot_axis
-                    .or(joint.lin_axis)
-                    .expect("actuated joint has an axis");
-                let joint_motion_axis =
-                    (links[joint.child_link_idx].rotation * local_axis).into_inner();
-
-                let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
-                    (
-                        joint_motion_axis
-                            .cross(&(joint_position_target.vector - joint_position.vector)),
-                        joint_motion_axis,
-                    )
-                } else {
-                    (joint_motion_axis, Vector3::zeros())
-                };
-
-                jacobians[link_idx].set_column(
-                    cmd_idx,
-                    &Vector6::new(
-                        lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
-                    ),
-                );
-            }
+        for (link_idx, ancestors) in self.ancestors_by_link.iter().enumerate() {
+            self.fill_jacobian_columns(
+                &links,
+                ancestors,
+                &links[link_idx].translation,
+                &mut jacobians[link_idx],
+            );
         }
 
         Ok(jacobians)
@@ -159,41 +163,13 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         let mut links = vec![Isometry3::identity(); self.links.len()];
         self.compute_fk(joint_cmds, &mut links)?;
-        let target_position = links[target_link_idx].translation;
 
-        let mut current_link_idx = target_link_idx;
-        while let Some(&joint_idx) = self.link_idx_to_parent_joint_idx.get(&current_link_idx) {
-            let joint = &self.joints[joint_idx];
-            current_link_idx = joint.parent_link_idx;
-
-            let Some(cmd_idx) = joint.cmd_idx else {
-                continue;
-            };
-
-            let joint_position = links[joint.child_link_idx].translation;
-            let local_axis = joint
-                .rot_axis
-                .or(joint.lin_axis)
-                .expect("actuated joint has an axis");
-            let joint_motion_axis =
-                (links[joint.child_link_idx].rotation * local_axis).into_inner();
-
-            let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
-                (
-                    joint_motion_axis.cross(&(target_position.vector - joint_position.vector)),
-                    joint_motion_axis,
-                )
-            } else {
-                (joint_motion_axis, Vector3::zeros())
-            };
-
-            jacobian.set_column(
-                cmd_idx,
-                &Vector6::new(
-                    lin_vel.x, lin_vel.y, lin_vel.z, ang_vel.x, ang_vel.y, ang_vel.z,
-                ),
-            );
-        }
+        self.fill_jacobian_columns(
+            &links,
+            &self.ancestors_by_link[target_link_idx],
+            &links[target_link_idx].translation,
+            &mut jacobian,
+        );
 
         Ok(jacobian)
     }
@@ -284,25 +260,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         let step_size: T = nalgebra::convert(1.0_f64);
         const MAX_ITERATIONS: usize = 1000;
 
-        // Constructing kinematic chain from root to target
-        let mut chain: Vec<usize> = Vec::new();
-        let mut walk_link_idx = target_link_idx;
-        while let Some(&joint_idx) = self.link_idx_to_parent_joint_idx.get(&walk_link_idx) {
-            chain.push(joint_idx);
-            walk_link_idx = self.joints[joint_idx].parent_link_idx;
-        }
-        chain.reverse();
-
-        // Extracting joint limits
-        // Defaulting to T::zero() for safety
-        let mut joint_lower = vec![T::zero(); self.num_actuated_joints];
-        let mut joint_upper = vec![T::zero(); self.num_actuated_joints];
-        for joint in &self.joints {
-            if let Some(cmd_idx) = joint.cmd_idx {
-                joint_lower[cmd_idx] = joint.limit_lower.unwrap_or(T::zero());
-                joint_upper[cmd_idx] = joint.limit_upper.unwrap_or(T::zero());
-            }
-        }
+        let chain = &self.chain_by_link[target_link_idx];
 
         // Helper to compute pose error
         let compute_error = |current_pose: &Isometry3<T>| -> Result<Vector6<T>, GalawError<T>> {
@@ -326,7 +284,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         let mut dq: DVector<T> = DVector::zeros(self.num_actuated_joints);
 
         let mut current_pose = self.compute_restricted_pose_and_fill_jacobian(
-            &chain,
+            chain,
             &joint_cmds_candidate,
             &mut chain_poses,
             &mut jac,
@@ -355,7 +313,7 @@ impl<T: RealField + Copy> GalawModel<T> {
             }
 
             current_pose = self.compute_restricted_pose_and_fill_jacobian(
-                &chain,
+                chain,
                 &joint_cmds_candidate,
                 &mut chain_poses,
                 &mut jac,
@@ -367,11 +325,11 @@ impl<T: RealField + Copy> GalawModel<T> {
         // Clamped converged solution to joint limits
         // No null-space steering
         for (i, cmd) in joint_cmds_candidate.iter_mut().enumerate() {
-            *cmd = cmd.clamp(joint_lower[i], joint_upper[i]);
+            *cmd = cmd.clamp(self.joint_limit_lower[i], self.joint_limit_upper[i]);
         }
 
         let clamped_pose = self.compute_restricted_pose_and_fill_jacobian(
-            &chain,
+            chain,
             &joint_cmds_candidate,
             &mut chain_poses,
             &mut jac,
