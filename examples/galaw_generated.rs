@@ -1,5 +1,5 @@
-use nalgebra::{Isometry3, SMatrix};
 use galaw::{error::GalawError, generated::simple_arm_2dof, load_urdf, types::GalawModel};
+use nalgebra::{Isometry3, SMatrix};
 
 fn main() -> Result<(), GalawError<f64>> {
     // Load the model only to resolve joint/link names to indices.
@@ -31,7 +31,8 @@ fn main() -> Result<(), GalawError<f64>> {
     println!("forearm pose: {:?}", poses[forearm_idx]);
 
     // --- Jacobian ---
-    let mut jacobians: [SMatrix<f64, 6, NUM_JOINTS>; NUM_LINKS] = std::array::from_fn(|_| SMatrix::zeros());
+    let mut jacobians: [SMatrix<f64, 6, NUM_JOINTS>; NUM_LINKS] =
+        std::array::from_fn(|_| SMatrix::zeros());
     simple_arm_2dof::compute_link_jacobians(&joint_cmds, &mut jacobians);
     println!("\n=== Jacobian ===");
     println!("forearm jacobian:\n{}", jacobians[forearm_idx]);
@@ -41,7 +42,12 @@ fn main() -> Result<(), GalawError<f64>> {
     let target_pose = poses[forearm_idx];
     let init_joint_cmds: [f64; 2] = [0.0; 2];
     let mut solved_joint_cmds = [0.0f64; NUM_JOINTS];
-    simple_arm_2dof::compute_ik(forearm_idx, &target_pose, &init_joint_cmds, &mut solved_joint_cmds)?;
+    simple_arm_2dof::compute_ik(
+        forearm_idx,
+        &target_pose,
+        &init_joint_cmds,
+        &mut solved_joint_cmds,
+    )?;
     println!("\n=== IK ===");
     println!("target pose:       {:?}", target_pose);
     println!("solved joint cmds: {:?}", solved_joint_cmds);

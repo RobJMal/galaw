@@ -57,7 +57,11 @@ fn system_specs() -> String {
 
 /// Benchmarks a codegen'd `compute_fk` under the given bench id.
 /// Generic over T (float type), NUM_JOINTS, and NUM_LINKS.
-fn bench_generated<T: nalgebra::RealField + Copy + Clone + std::fmt::Debug + 'static, const NUM_JOINTS: usize, const NUM_LINKS: usize>(
+fn bench_generated<
+    T: nalgebra::RealField + Copy + Clone + std::fmt::Debug + 'static,
+    const NUM_JOINTS: usize,
+    const NUM_LINKS: usize,
+>(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id_label: &str,
     bench_id: usize,

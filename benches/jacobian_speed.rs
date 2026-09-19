@@ -26,7 +26,10 @@ fn bench_generated_jacobian<
     bench_id_label: &str,
     bench_id: usize,
     joint_cmds: &[Vec<FloatType>],
-    generated_compute_link_jacobians: impl Fn(&[FloatType; NUM_JOINTS], &mut [SMatrix<FloatType, 6, NUM_JOINTS>; NUM_LINKS]),
+    generated_compute_link_jacobians: impl Fn(
+        &[FloatType; NUM_JOINTS],
+        &mut [SMatrix<FloatType, 6, NUM_JOINTS>; NUM_LINKS],
+    ),
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let joint_cmds_arr: Vec<[FloatType; NUM_JOINTS]> = joint_cmds
@@ -38,7 +41,8 @@ fn bench_generated_jacobian<
         BenchmarkId::new(bench_id_label, bench_id),
         &joint_cmds_arr,
         |b, cmds| {
-            let mut jacobians: [SMatrix<FloatType, 6, NUM_JOINTS>; NUM_LINKS] = std::array::from_fn(|_| SMatrix::zeros());
+            let mut jacobians: [SMatrix<FloatType, 6, NUM_JOINTS>; NUM_LINKS] =
+                std::array::from_fn(|_| SMatrix::zeros());
             b.iter(|| {
                 for cmd in cmds {
                     generated_compute_link_jacobians(black_box(cmd), &mut jacobians);
@@ -83,7 +87,9 @@ fn bench_jacobian(c: &mut Criterion) {
                 let mut jacobians = vec![Matrix6xX::zeros(num_actuated); num_links];
                 b.iter(|| {
                     for cmd in cmds {
-                        galaw_model.compute_link_jacobians(black_box(cmd), &mut jacobians).unwrap();
+                        galaw_model
+                            .compute_link_jacobians(black_box(cmd), &mut jacobians)
+                            .unwrap();
                     }
                     black_box(&jacobians);
                 });

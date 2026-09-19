@@ -67,7 +67,12 @@ fn bench_generated_ik<
     link_idx: usize,
     bench_id: usize,
     trials: &[(Vec<FloatType>, Vec<FloatType>)],
-    generated_compute_ik: impl Fn(usize, &Isometry3<FloatType>, &[FloatType; NUM_JOINTS], &mut [FloatType; NUM_JOINTS]) -> Result<(), KinematicsError<FloatType>>,
+    generated_compute_ik: impl Fn(
+        usize,
+        &Isometry3<FloatType>,
+        &[FloatType; NUM_JOINTS],
+        &mut [FloatType; NUM_JOINTS],
+    ) -> Result<(), KinematicsError<FloatType>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let trials_arr: Vec<(Vec<FloatType>, [FloatType; NUM_JOINTS])> = trials
@@ -85,7 +90,12 @@ fn bench_generated_ik<
                 for (target, init) in trials {
                     galaw_model.compute_fk(target, &mut fk_poses).unwrap();
                     let pose = fk_poses[link_idx];
-                    let _ = black_box(generated_compute_ik(link_idx, &pose, black_box(init), &mut solved));
+                    let _ = black_box(generated_compute_ik(
+                        link_idx,
+                        &pose,
+                        black_box(init),
+                        &mut solved,
+                    ));
                 }
             });
         },
@@ -121,7 +131,12 @@ fn bench_ik(c: &mut Criterion) {
                     for (target, init) in trials {
                         galaw_model.compute_fk(target, &mut fk_poses).unwrap();
                         let pose = fk_poses[link_idx];
-                        let _ = black_box(galaw_model.compute_ik(link_idx, &pose, black_box(init), &mut solved));
+                        let _ = black_box(galaw_model.compute_ik(
+                            link_idx,
+                            &pose,
+                            black_box(init),
+                            &mut solved,
+                        ));
                     }
                 });
             },

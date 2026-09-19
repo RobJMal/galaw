@@ -220,7 +220,10 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
     ));
-    out.push(format!("let mut links = [Isometry3::identity(); {m}];", m = galaw_model.links.len()));
+    out.push(format!(
+        "let mut links = [Isometry3::identity(); {m}];",
+        m = galaw_model.links.len()
+    ));
     out.push("compute_fk(joint_cmds, &mut links);".to_string());
 
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {

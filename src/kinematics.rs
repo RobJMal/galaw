@@ -66,7 +66,11 @@ impl<T: RealField + Copy> GalawModel<T> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn compute_fk(&self, joint_cmds: &[T], poses: &mut [Isometry3<T>]) -> Result<(), GalawError<T>> {
+    pub fn compute_fk(
+        &self,
+        joint_cmds: &[T],
+        poses: &mut [Isometry3<T>],
+    ) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -76,7 +80,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         }
 
         // Root link is identity since it serves as global base frame and is not
-        // set by the joint loop. Therefore, it needs to be set. 
+        // set by the joint loop. Therefore, it needs to be set.
         let root_idx = self.joints.first().map_or(0, |j| j.parent_link_idx);
         poses[root_idx] = Isometry3::identity();
 

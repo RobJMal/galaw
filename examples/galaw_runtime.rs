@@ -36,7 +36,12 @@ fn main() -> Result<(), GalawError<f64>> {
     let target_pose = poses[forearm_idx];
     let init_joint_cmds = vec![0.0; model.num_actuated_joints];
     let mut solved_joint_cmds = vec![0.0f64; model.num_actuated_joints];
-    model.compute_ik(forearm_idx, &target_pose, &init_joint_cmds, &mut solved_joint_cmds)?;
+    model.compute_ik(
+        forearm_idx,
+        &target_pose,
+        &init_joint_cmds,
+        &mut solved_joint_cmds,
+    )?;
     let mut solved_poses = vec![Isometry3::identity(); model.links.len()];
     model.compute_fk(&solved_joint_cmds, &mut solved_poses)?;
     println!("\n=== IK ===");

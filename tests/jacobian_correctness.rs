@@ -34,7 +34,8 @@ fn assert_galaw_jacobian_matches_finite_difference(
     galaw_model: &GalawModel<f64>,
     joint_cmds: &[f64],
 ) -> TestResult {
-    let mut jacobians = vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
+    let mut jacobians =
+        vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
     galaw_model.compute_link_jacobians(joint_cmds, &mut jacobians)?;
 
     for joint in &galaw_model.joints {
@@ -83,7 +84,8 @@ fn asssert_galaw_jacobian_matches_k(
     k_chain.set_joint_positions(joint_cmds)?;
     k_chain.update_transforms();
 
-    let mut galaw_jacobian = vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
+    let mut galaw_jacobian =
+        vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
     galaw_model.compute_link_jacobians(joint_cmds, &mut galaw_jacobian)?;
 
     for (target_link_idx, link) in galaw_model.links.iter().enumerate() {
@@ -134,8 +136,10 @@ fn check_generated_jacobian_matches_runtime<const N: usize, const M: usize>(
 ) -> TestResult {
     let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
 
-    let mut dynamic_jacobians = vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
-    let mut generated_jacobians: [SMatrix<f64, 6, N>; M] = std::array::from_fn(|_| SMatrix::zeros());
+    let mut dynamic_jacobians =
+        vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
+    let mut generated_jacobians: [SMatrix<f64, 6, N>; M] =
+        std::array::from_fn(|_| SMatrix::zeros());
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {

@@ -34,9 +34,11 @@ fn check_jacobian_f32_f64_parity(urdf_path: &str) -> TestResult {
             .collect();
         let cmds_f32: Vec<f32> = cmds_f64.iter().map(|&v| v as f32).collect();
 
-        let mut jacs_f64 = vec![Matrix6xX::zeros(model_f64.num_actuated_joints); model_f64.links.len()];
+        let mut jacs_f64 =
+            vec![Matrix6xX::zeros(model_f64.num_actuated_joints); model_f64.links.len()];
         model_f64.compute_link_jacobians(&cmds_f64, &mut jacs_f64)?;
-        let mut jacs_f32 = vec![Matrix6xX::zeros(model_f32.num_actuated_joints); model_f32.links.len()];
+        let mut jacs_f32 =
+            vec![Matrix6xX::zeros(model_f32.num_actuated_joints); model_f32.links.len()];
         model_f32.compute_link_jacobians(&cmds_f32, &mut jacs_f32)?;
 
         for link_idx in 0..model_f64.links.len() {
