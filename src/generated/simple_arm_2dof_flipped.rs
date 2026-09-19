@@ -36,7 +36,7 @@ use crate::error::KinematicsError;
 /// Inverse kinematics for `simple_arm_2dof_flipped`. Joints are clamped to their limits after solving.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 2]) -> Result<[f64; 2], KinematicsError<f64>> {
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 2], joint_cmds_out: &mut [f64; 2]) -> Result<(), KinematicsError<f64>> {
 let error_tolerance: f64 = 1e-5_f64;
 let damping_factor: f64 = 0.0001_f64;
 let step_size: f64 = 1.0_f64;
@@ -86,7 +86,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 1 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 2]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -120,14 +121,16 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 _ => {
 let error = compute_error(&Isometry3::identity());
 if error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 }
 }

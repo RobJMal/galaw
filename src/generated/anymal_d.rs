@@ -462,7 +462,7 @@ use crate::error::KinematicsError;
 /// Inverse kinematics for `anymal-D`. Joints are clamped to their limits after solving.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 14]) -> Result<[f64; 14], KinematicsError<f64>> {
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 14], joint_cmds_out: &mut [f64; 14]) -> Result<(), KinematicsError<f64>> {
 let error_tolerance: f64 = 1e-5_f64;
 let damping_factor: f64 = 0.0001_f64;
 let step_size: f64 = 1.0_f64;
@@ -498,7 +498,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 2 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -524,7 +525,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 3 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -549,7 +551,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 4 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -574,7 +577,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 5 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -600,7 +604,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 6 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -626,7 +631,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 7 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -652,7 +658,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 8 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -678,7 +685,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 9 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -704,7 +712,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 10 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -730,7 +739,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 11 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -756,7 +766,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 12 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -782,7 +793,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 13 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -808,7 +820,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 14 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -834,7 +847,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 15 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -860,7 +874,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 16 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -886,7 +901,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 17 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -912,7 +928,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 18 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -938,7 +955,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 19 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -964,7 +982,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 20 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -990,7 +1009,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 21 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1016,7 +1036,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 22 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1042,7 +1063,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 23 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1068,7 +1090,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 24 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1094,7 +1117,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 25 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1120,7 +1144,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 26 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1146,7 +1171,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 27 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1172,7 +1198,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 28 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1198,7 +1225,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 29 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1223,7 +1251,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 30 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1249,7 +1278,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 31 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1275,7 +1305,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 32 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1301,7 +1332,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 33 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1327,7 +1359,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 34 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1353,7 +1386,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 35 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1379,7 +1413,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 36 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1405,7 +1440,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 37 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1431,7 +1467,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 38 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1457,7 +1494,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 39 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1483,7 +1521,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 40 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1509,7 +1548,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 41 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1535,7 +1575,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 42 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1561,7 +1602,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 43 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -1587,7 +1629,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 44 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -1622,7 +1665,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 45 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -1657,7 +1701,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 46 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -1693,7 +1738,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 47 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -1734,7 +1780,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 48 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -1775,7 +1822,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 49 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -1817,7 +1865,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 50 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -1859,7 +1908,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 51 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -1906,7 +1956,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 52 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -1954,7 +2005,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 53 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2002,7 +2054,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 54 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -2028,7 +2081,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 55 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2063,7 +2117,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 56 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2098,7 +2153,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 57 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2134,7 +2190,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 58 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2175,7 +2232,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 59 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2216,7 +2274,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 60 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2258,7 +2317,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 61 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2300,7 +2360,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 62 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2347,7 +2408,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 63 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2395,7 +2457,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 64 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2443,7 +2506,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 65 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -2469,7 +2533,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 66 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2504,7 +2569,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 67 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2540,7 +2606,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 68 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2576,7 +2643,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 69 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2617,7 +2685,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 70 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2658,7 +2727,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 71 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2700,7 +2770,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 72 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -2742,7 +2813,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 73 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2789,7 +2861,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 74 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2837,7 +2910,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 75 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -2885,7 +2959,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 76 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -2911,7 +2986,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 77 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2946,7 +3022,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 78 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -2982,7 +3059,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 79 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -3018,7 +3096,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 80 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3059,7 +3138,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 81 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3100,7 +3180,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 82 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3142,7 +3223,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 83 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3184,7 +3266,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 84 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -3231,7 +3314,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 85 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -3279,7 +3363,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 86 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -3327,7 +3412,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 87 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -3353,7 +3439,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 88 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -3388,7 +3475,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 89 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3428,7 +3516,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 90 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3468,7 +3557,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 91 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3509,7 +3599,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 92 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3550,7 +3641,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 93 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3591,7 +3683,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 94 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -3632,7 +3725,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 95 => {
 let compute_pose_and_jacobian = |_joint_cmds: &[f64; 14]| -> (Isometry3<f64>, SMatrix<f64, 6, 0>) {
@@ -3658,14 +3752,16 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 _ => {
 let error = compute_error(&Isometry3::identity());
 if error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 }
 }

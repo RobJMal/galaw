@@ -306,7 +306,7 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("#[allow(non_snake_case)]".to_string());
     out.push("#[rustfmt::skip]".to_string());
     out.push(format!(
-        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<{ty}>, initial_joint_cmds: &[{ty}; {n}]) -> Result<[{ty}; {n}], KinematicsError<{ty}>> {{"
+        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<{ty}>, initial_joint_cmds: &[{ty}; {n}], joint_cmds_out: &mut [{ty}; {n}]) -> Result<(), KinematicsError<{ty}>> {{"
     ));
     out.push(format!(
         "let error_tolerance: {ty} = {};",
@@ -571,7 +571,8 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
         out.push("if clamped_error.norm() > error_tolerance {".to_string());
         out.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });".to_string());
         out.push("}".to_string());
-        out.push("Ok(joint_cmds)".to_string());
+        out.push("*joint_cmds_out = joint_cmds;".to_string());
+        out.push("Ok(())".to_string());
         out.push("}".to_string());
     }
 
@@ -580,7 +581,8 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("if error.norm() > error_tolerance {".to_string());
     out.push("return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });".to_string());
     out.push("}".to_string());
-    out.push("Ok(joint_cmds)".to_string());
+    out.push("*joint_cmds_out = joint_cmds;".to_string());
+    out.push("Ok(())".to_string());
     out.push("}".to_string());
     out.push("}".to_string()); // match
     out.push("}".to_string()); // fn

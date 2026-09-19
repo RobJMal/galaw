@@ -83,17 +83,17 @@ fn assert_galaw_ik_correctness(
     galaw_model.compute_fk(target_joint_cmd, &mut fk_poses)?;
     let target_link_pose = fk_poses[target_link_idx];
 
-    let solved_joint_cmds =
-        match galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd) {
-            Ok(cmds) => cmds,
-            Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge {
-                ..
-            })) => {
-                eprintln!("[skip] IK did not converge after clamping");
-                return Ok(());
-            }
-            Err(e) => return Err(e.into()),
-        };
+    let mut solved_joint_cmds = vec![0.0f64; galaw_model.num_actuated_joints];
+    match galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd, &mut solved_joint_cmds) {
+        Ok(()) => {}
+        Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge {
+            ..
+        })) => {
+            eprintln!("[skip] IK did not converge after clamping");
+            return Ok(());
+        }
+        Err(e) => return Err(e.into()),
+    };
 
     // Joint commands must be within joint limits
     for (joint, &cmd) in galaw_model
@@ -163,7 +163,8 @@ fn check_generated_matches_runtime<const N: usize>(
         usize,
         &Isometry3<f64>,
         &[f64; N],
-    ) -> Result<[f64; N], KinematicsError<f64>>,
+        &mut [f64; N],
+    ) -> Result<(), KinematicsError<f64>>,
 ) -> TestResult {
     let (galaw_model, _) = setup_kinematic_models(urdf_path);
 
@@ -190,15 +191,15 @@ fn check_generated_matches_runtime<const N: usize>(
         let target_pose = fk_poses[target_link_idx];
 
         let init_joint_cmd_arr: [f64; N] = init_joint_cmd.try_into().unwrap();
-        let solved_joint_cmds =
-            match generated_compute_ik(target_link_idx, &target_pose, &init_joint_cmd_arr) {
-                Ok(cmds) => cmds,
-                Err(KinematicsError::IkDidNotConverge { .. }) => {
-                    eprintln!("[skip] generated IK did not converge after clamping");
-                    continue;
-                }
-                Err(e) => return Err(e.into()),
-            };
+        let mut solved_joint_cmds = [0.0f64; N];
+        match generated_compute_ik(target_link_idx, &target_pose, &init_joint_cmd_arr, &mut solved_joint_cmds) {
+            Ok(()) => {}
+            Err(KinematicsError::IkDidNotConverge { .. }) => {
+                eprintln!("[skip] generated IK did not converge after clamping");
+                continue;
+            }
+            Err(e) => return Err(e.into()),
+        };
         galaw_model.compute_fk(&solved_joint_cmds, &mut fk_poses)?;
         let solved_pose = fk_poses[target_link_idx];
 

@@ -257,12 +257,24 @@ impl<T: RealField + Copy> GalawModel<T> {
     }
 
     /// Computes inverse kinematics of a model.
+    ///
+    /// Writes the solved joint commands into `joint_cmds_out`. `joint_cmds_out` must have
+    /// length [`GalawModel::num_actuated_joints`].
     pub fn compute_ik(
         &self,
         target_link_idx: usize,
         target_pose: &Isometry3<T>,
         initial_joint_cmds: &[T],
-    ) -> Result<Vec<T>, GalawError<T>> {
+        joint_cmds_out: &mut [T],
+    ) -> Result<(), GalawError<T>> {
+        if joint_cmds_out.len() != self.num_actuated_joints {
+            return Err(KinematicsError::OutLengthMismatch {
+                expected: self.num_actuated_joints,
+                actual: joint_cmds_out.len(),
+            }
+            .into());
+        }
+
         // IK solver params
         let error_tolerance: T = nalgebra::convert(1e-5_f64);
         let damping_factor: T = nalgebra::convert(1e-4_f64);
@@ -352,6 +364,7 @@ impl<T: RealField + Copy> GalawModel<T> {
             .into());
         }
 
-        Ok(joint_cmds_candidate)
+        joint_cmds_out.copy_from_slice(&joint_cmds_candidate);
+        Ok(())
     }
 }

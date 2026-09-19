@@ -56,18 +56,21 @@ fn target_link(model: &GalawModel<f64>) -> usize {
 }
 
 /// Benchmarks a codegen'd `compute_ik` under the given id.
-/// Generic over T (float type) so the same helper works for f64 and f32.
-fn bench_generated_ik<T: nalgebra::RealField + Copy + Clone + 'static, const N: usize>(
+/// Generic over FloatType and NUM_JOINTS (DOF count).
+fn bench_generated_ik<
+    FloatType: nalgebra::RealField + Copy + Clone + Default + 'static,
+    const NUM_JOINTS: usize,
+>(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id_label: &str,
-    galaw_model: &GalawModel<T>,
+    galaw_model: &GalawModel<FloatType>,
     link_idx: usize,
     bench_id: usize,
-    trials: &[(Vec<T>, Vec<T>)],
-    generated_compute_ik: impl Fn(usize, &Isometry3<T>, &[T; N]) -> Result<[T; N], KinematicsError<T>>,
+    trials: &[(Vec<FloatType>, Vec<FloatType>)],
+    generated_compute_ik: impl Fn(usize, &Isometry3<FloatType>, &[FloatType; NUM_JOINTS], &mut [FloatType; NUM_JOINTS]) -> Result<(), KinematicsError<FloatType>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
-    let trials_arr: Vec<(Vec<T>, [T; N])> = trials
+    let trials_arr: Vec<(Vec<FloatType>, [FloatType; NUM_JOINTS])> = trials
         .iter()
         .map(|(target, init)| (target.clone(), init.clone().try_into().unwrap()))
         .collect();
@@ -76,10 +79,13 @@ fn bench_generated_ik<T: nalgebra::RealField + Copy + Clone + 'static, const N: 
         BenchmarkId::new(bench_id_label, bench_id),
         &trials_arr,
         |b, trials| {
+            let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
+            let mut solved: [FloatType; NUM_JOINTS] = std::array::from_fn(|_| FloatType::default());
             b.iter(|| {
                 for (target, init) in trials {
-                    let pose = galaw_model.compute_fk(target).unwrap()[link_idx];
-                    let _ = black_box(generated_compute_ik(link_idx, &pose, black_box(init)));
+                    galaw_model.compute_fk(target, &mut fk_poses).unwrap();
+                    let pose = fk_poses[link_idx];
+                    let _ = black_box(generated_compute_ik(link_idx, &pose, black_box(init), &mut solved));
                 }
             });
         },
@@ -109,10 +115,13 @@ fn bench_ik(c: &mut Criterion) {
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &trials,
             |b, trials| {
+                let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
+                let mut solved = vec![0.0f64; galaw_model.num_actuated_joints];
                 b.iter(|| {
                     for (target, init) in trials {
-                        let pose = galaw_model.compute_fk(target).unwrap()[link_idx];
-                        let _ = black_box(galaw_model.compute_ik(link_idx, &pose, black_box(init)));
+                        galaw_model.compute_fk(target, &mut fk_poses).unwrap();
+                        let pose = fk_poses[link_idx];
+                        let _ = black_box(galaw_model.compute_ik(link_idx, &pose, black_box(init), &mut solved));
                     }
                 });
             },
