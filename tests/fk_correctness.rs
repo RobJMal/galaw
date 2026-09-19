@@ -25,7 +25,8 @@ fn assert_galaw_fk_matches_k(
 ) -> TestResult {
     eprintln!("[input] joint_cmd = {:?}", joint_cmd);
 
-    let galaw_result = galaw_model.compute_fk(joint_cmd)?;
+    let mut galaw_result = vec![Isometry3::identity(); galaw_model.links.len()];
+    galaw_model.compute_fk(joint_cmd, &mut galaw_result)?;
     k_chain.set_joint_positions(joint_cmd)?;
     k_chain.update_transforms();
 
@@ -77,6 +78,7 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
     generated_compute_fk: impl Fn(&[f64; N]) -> [Isometry3<f64>; M],
 ) -> TestResult {
     let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
+    let mut dynamic_links = vec![Isometry3::identity(); galaw_model.links.len()];
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
@@ -90,7 +92,7 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
             })
             .collect();
 
-        let dynamic_links = galaw_model.compute_fk(&joint_cmds)?;
+        galaw_model.compute_fk(&joint_cmds, &mut dynamic_links)?;
 
         let joint_cmds_arr: [f64; N] = joint_cmds.clone().try_into().unwrap();
         let generated_links = generated_compute_fk(&joint_cmds_arr);

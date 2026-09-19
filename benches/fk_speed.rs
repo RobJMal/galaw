@@ -4,6 +4,7 @@ use std::hint::black_box; // Prevents compiler from optimizing away code since w
 // Third-Party
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
+use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use sysinfo::System;
@@ -123,15 +124,17 @@ fn bench_fk(c: &mut Criterion) {
         group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
 
         // ----- galaw-runtime -----
+        let n_links = galaw_model.links.len();
         group.bench_with_input(
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
+                let mut out = vec![Isometry3::identity(); n_links];
                 b.iter(|| {
                     for cmd in cmds {
-                        let out = galaw_model.compute_fk(black_box(cmd)).unwrap();
-                        black_box(out);
+                        galaw_model.compute_fk(black_box(cmd), &mut out).unwrap();
                     }
+                    black_box(&out);
                 });
             },
         );

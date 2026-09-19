@@ -11,21 +11,23 @@ use crate::{
 impl<T: RealField + Copy> GalawModel<T> {
     /// Computes forward kinematics of a model.
     ///
-    /// Returns each link's world-space pose as an `Isometry3<T>`, indexed
-    /// the same as [`GalawModel::links`]. `joint_cmds` must have length
-    /// [`GalawModel::num_actuated_joints`].
+    /// Computes forward kinematics of a model, writing each link's world-space
+    /// pose into `poses`. `poses` must have length [`GalawModel::links`]`.len()`.
+    /// `joint_cmds` must have length [`GalawModel::num_actuated_joints`].
     ///
     /// # Examples
     ///
     /// ```
     /// # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+    /// use nalgebra::Isometry3;
     /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
-    /// let poses = model.compute_fk(&vec![0.0; model.num_actuated_joints])?;
+    /// let mut poses = vec![Isometry3::identity(); model.links.len()];
+    /// model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut poses)?;
     /// assert_eq!(poses.len(), model.links.len());
     /// # Ok(())
     /// # }
     /// ```
-    pub fn compute_fk(&self, joint_cmds: &[T]) -> Result<Vec<Isometry3<T>>, GalawError<T>> {
+    pub fn compute_fk(&self, joint_cmds: &[T], poses: &mut [Isometry3<T>]) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
                 num_actuated: self.num_actuated_joints,
@@ -34,7 +36,10 @@ impl<T: RealField + Copy> GalawModel<T> {
             .into());
         }
 
-        let mut links: Vec<Isometry3<T>> = vec![Isometry3::identity(); self.links.len()];
+        // Root link is identity since it serves as global base frame and is not
+        // set by the joint loop. Therefore, it needs to be set. 
+        let root_idx = self.joints.first().map_or(0, |j| j.parent_link_idx);
+        poses[root_idx] = Isometry3::identity();
 
         for joint in &self.joints {
             let cmd = joint
@@ -53,10 +58,10 @@ impl<T: RealField + Copy> GalawModel<T> {
             };
 
             let joint_local = joint.transform * Isometry3::from_parts(translation, rotation);
-            links[joint.child_link_idx] = links[joint.parent_link_idx] * joint_local;
+            poses[joint.child_link_idx] = poses[joint.parent_link_idx] * joint_local;
         }
 
-        Ok(links)
+        Ok(())
     }
 
     /// Computes the Jacobian of every link in a model.
@@ -87,7 +92,8 @@ impl<T: RealField + Copy> GalawModel<T> {
             ancestors_by_link[joint.child_link_idx] = ancestors;
         }
 
-        let links = self.compute_fk(joint_cmds)?;
+        let mut links = vec![Isometry3::identity(); self.links.len()];
+        self.compute_fk(joint_cmds, &mut links)?;
 
         for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
             let joint_position_target = links[link_idx].translation;
@@ -151,7 +157,8 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         let mut jacobian = Matrix6xX::zeros(self.num_actuated_joints);
 
-        let links = self.compute_fk(joint_cmds)?;
+        let mut links = vec![Isometry3::identity(); self.links.len()];
+        self.compute_fk(joint_cmds, &mut links)?;
         let target_position = links[target_link_idx].translation;
 
         let mut current_link_idx = target_link_idx;
