@@ -335,13 +335,7 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("match target_link_idx {".to_string());
 
     for link_idx in 0..galaw_model.links.len() {
-        let mut chain: Vec<usize> = Vec::new();
-        let mut walk = link_idx;
-        while let Some(&ji) = galaw_model.link_idx_to_parent_joint_idx.get(&walk) {
-            chain.push(ji);
-            walk = galaw_model.joints[ji].parent_link_idx;
-        }
-        chain.reverse();
+        let chain = &galaw_model.chain_by_link[link_idx];
         if chain.is_empty() {
             continue;
         }
@@ -553,7 +547,7 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
         out.push("iterations += 1;".to_string());
         out.push("}".to_string());
 
-        for &ji in &chain {
+        for &ji in chain {
             let joint = &galaw_model.joints[ji];
             if let Some(cmd_idx) = joint.cmd_idx {
                 let lo_str = joint
