@@ -79,7 +79,9 @@ fn assert_galaw_ik_correctness(
         target_joint_cmd
     );
 
-    let target_link_pose = galaw_model.compute_fk(target_joint_cmd)?[target_link_idx];
+    let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
+    galaw_model.compute_fk(target_joint_cmd, &mut fk_poses)?;
+    let target_link_pose = fk_poses[target_link_idx];
 
     let solved_joint_cmds =
         match galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd) {
@@ -109,7 +111,8 @@ fn assert_galaw_ik_correctness(
         }
     }
 
-    let solved_link_poses = galaw_model.compute_fk(&solved_joint_cmds)?[target_link_idx];
+    galaw_model.compute_fk(&solved_joint_cmds, &mut fk_poses)?;
+    let solved_link_poses = fk_poses[target_link_idx];
     assert_galaw_transform_close(&target_link_pose, &solved_link_poses, &TEST_TOLERANCE);
 
     Ok(())
@@ -182,7 +185,9 @@ fn check_generated_matches_runtime<const N: usize>(
             target_joint_cmd
         );
 
-        let target_pose = galaw_model.compute_fk(&target_joint_cmd)?[target_link_idx];
+        let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
+        galaw_model.compute_fk(&target_joint_cmd, &mut fk_poses)?;
+        let target_pose = fk_poses[target_link_idx];
 
         let init_joint_cmd_arr: [f64; N] = init_joint_cmd.try_into().unwrap();
         let solved_joint_cmds =
@@ -194,7 +199,8 @@ fn check_generated_matches_runtime<const N: usize>(
                 }
                 Err(e) => return Err(e.into()),
             };
-        let solved_pose = galaw_model.compute_fk(&solved_joint_cmds)?[target_link_idx];
+        galaw_model.compute_fk(&solved_joint_cmds, &mut fk_poses)?;
+        let solved_pose = fk_poses[target_link_idx];
 
         assert_galaw_transform_close(&target_pose, &solved_pose, &TEST_TOLERANCE);
     }

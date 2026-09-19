@@ -1,4 +1,4 @@
-use nalgebra::SMatrix;
+use nalgebra::{Isometry3, SMatrix};
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
@@ -46,8 +46,10 @@ fn assert_galaw_jacobian_matches_finite_difference(
         let mut minus = joint_cmds.to_vec();
         minus[cmd_idx] -= FD_EPS;
 
-        let links_plus = galaw_model.compute_fk(&plus)?;
-        let links_minus = galaw_model.compute_fk(&minus)?;
+        let mut links_plus = vec![Isometry3::identity(); galaw_model.links.len()];
+        galaw_model.compute_fk(&plus, &mut links_plus)?;
+        let mut links_minus = vec![Isometry3::identity(); galaw_model.links.len()];
+        galaw_model.compute_fk(&minus, &mut links_minus)?;
 
         for link_idx in 0..galaw_model.links.len() {
             let linear = (links_plus[link_idx].translation.vector

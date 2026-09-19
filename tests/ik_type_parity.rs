@@ -87,7 +87,9 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
 
         // Compute target pose in f64 then cast to f32 so the IK operates entirely
         // in f32, matching real usage (no f64 ground-truth leaking in).
-        let target_pose_f64 = model_f64.compute_fk(&target_cmds_f64)?[target_link_idx];
+        let mut fk_poses_f64 = vec![Isometry3::identity(); model_f64.links.len()];
+        model_f64.compute_fk(&target_cmds_f64, &mut fk_poses_f64)?;
+        let target_pose_f64 = fk_poses_f64[target_link_idx];
         let target_pose_f32 = iso_f64_to_f32(&target_pose_f64);
 
         // Perturb target joint cmds to form initial conditions.
@@ -116,7 +118,9 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
             Err(e) => return Err(e.into()),
         };
 
-        let achieved = model_f32.compute_fk(&solved)?[target_link_idx];
+        let mut fk_poses_f32 = vec![Isometry3::identity(); model_f32.links.len()];
+        model_f32.compute_fk(&solved, &mut fk_poses_f32)?;
+        let achieved = fk_poses_f32[target_link_idx];
 
         // Translation
         let t = &achieved.translation;
