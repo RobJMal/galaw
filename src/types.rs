@@ -84,6 +84,8 @@ pub struct GalawModel<T> {
     pub num_actuated_joints: usize,
     /// For each link index, ordered actuated ancestor joint indices (into [`GalawModel::joints`]).
     pub ancestors_by_link: Vec<Vec<usize>>,
+    /// For each link index, ordered joint indices (into [`GalawModel::joints`]) on the root-to-link path.
+    pub chain_by_link: Vec<Vec<usize>>,
 }
 
 impl<T: RealField + Copy> GalawModel<T> {

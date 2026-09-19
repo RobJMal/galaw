@@ -144,14 +144,9 @@ impl<T: RealField + Copy> GalawModel<T> {
         let links = self.compute_fk(joint_cmds)?;
         let target_position = links[target_link_idx].translation;
 
-        let mut current_link_idx = target_link_idx;
-        while let Some(&joint_idx) = self.link_idx_to_parent_joint_idx.get(&current_link_idx) {
+        for &joint_idx in &self.ancestors_by_link[target_link_idx] {
             let joint = &self.joints[joint_idx];
-            current_link_idx = joint.parent_link_idx;
-
-            let Some(cmd_idx) = joint.cmd_idx else {
-                continue;
-            };
+            let cmd_idx = joint.cmd_idx.unwrap();
 
             let joint_position = links[joint.child_link_idx].translation;
             let local_axis = joint
@@ -267,14 +262,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         let step_size: T = nalgebra::convert(1.0_f64);
         const MAX_ITERATIONS: usize = 1000;
 
-        // Constructing kinematic chain from root to target
-        let mut chain: Vec<usize> = Vec::new();
-        let mut walk_link_idx = target_link_idx;
-        while let Some(&joint_idx) = self.link_idx_to_parent_joint_idx.get(&walk_link_idx) {
-            chain.push(joint_idx);
-            walk_link_idx = self.joints[joint_idx].parent_link_idx;
-        }
-        chain.reverse();
+        let chain = &self.chain_by_link[target_link_idx];
 
         // Extracting joint limits
         // Defaulting to T::zero() for safety
@@ -309,7 +297,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         let mut dq: DVector<T> = DVector::zeros(self.num_actuated_joints);
 
         let mut current_pose = self.compute_restricted_pose_and_fill_jacobian(
-            &chain,
+            chain,
             &joint_cmds_candidate,
             &mut chain_poses,
             &mut jac,
@@ -338,7 +326,7 @@ impl<T: RealField + Copy> GalawModel<T> {
             }
 
             current_pose = self.compute_restricted_pose_and_fill_jacobian(
-                &chain,
+                chain,
                 &joint_cmds_candidate,
                 &mut chain_poses,
                 &mut jac,
@@ -354,7 +342,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         }
 
         let clamped_pose = self.compute_restricted_pose_and_fill_jacobian(
-            &chain,
+            chain,
             &joint_cmds_candidate,
             &mut chain_poses,
             &mut jac,
