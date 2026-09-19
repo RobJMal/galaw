@@ -32,8 +32,7 @@ impl<T: RealField + Copy> GalawModel<T> {
 
             let (lin_vel, ang_vel) = if joint.rot_axis.is_some() {
                 (
-                    joint_motion_axis
-                        .cross(&(target_position.vector - joint_position.vector)),
+                    joint_motion_axis.cross(&(target_position.vector - joint_position.vector)),
                     joint_motion_axis,
                 )
             } else {
