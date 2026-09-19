@@ -240,6 +240,8 @@ type ResolvedJoints<T> = (
     HashMap<String, usize>, // joint_name -> cmd_idx
     Vec<Vec<usize>>,        // ancestors_by_link
     Vec<Vec<usize>>,        // chain_by_link
+    Vec<T>,                 // joint_limit_lower (indexed by cmd_idx)
+    Vec<T>,                 // joint_limit_upper (indexed by cmd_idx)
 );
 
 /// Resolves joint order for downstream functions.
@@ -345,12 +347,23 @@ fn resolve_joint_order<T: RealField + Copy>(
         chain_by_link[joint.child_link_idx] = chain;
     }
 
+    let mut joint_limit_lower = vec![T::zero(); actuated_joint_counter];
+    let mut joint_limit_upper = vec![T::zero(); actuated_joint_counter];
+    for joint in &ordered_joints {
+        if let Some(cmd_idx) = joint.cmd_idx {
+            joint_limit_lower[cmd_idx] = joint.limit_lower.unwrap_or(T::zero());
+            joint_limit_upper[cmd_idx] = joint.limit_upper.unwrap_or(T::zero());
+        }
+    }
+
     Ok((
         ordered_joints,
         link_name_to_idx,
         joint_name_to_idx,
         ancestors_by_link,
         chain_by_link,
+        joint_limit_lower,
+        joint_limit_upper,
     ))
 }
 
@@ -405,12 +418,9 @@ where
         joint_name_to_idx,
         ancestors_by_link,
         chain_by_link,
+        joint_limit_lower,
+        joint_limit_upper,
     ) = resolve_joint_order(&links, &joints)?;
-
-    let num_actuated_joints = ordered_joints
-        .iter()
-        .filter(|j| j.cmd_idx.is_some())
-        .count();
 
     Ok(GalawModel {
         name: robot_name,
@@ -418,9 +428,11 @@ where
         link_name_to_idx,
         joints: ordered_joints,
         joint_name_to_idx,
-        num_actuated_joints,
+        num_actuated_joints: joint_limit_lower.len(),
         ancestors_by_link,
         chain_by_link,
+        joint_limit_lower,
+        joint_limit_upper,
     })
 }
 

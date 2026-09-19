@@ -255,17 +255,6 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         let chain = &self.chain_by_link[target_link_idx];
 
-        // Extracting joint limits
-        // Defaulting to T::zero() for safety
-        let mut joint_lower = vec![T::zero(); self.num_actuated_joints];
-        let mut joint_upper = vec![T::zero(); self.num_actuated_joints];
-        for joint in &self.joints {
-            if let Some(cmd_idx) = joint.cmd_idx {
-                joint_lower[cmd_idx] = joint.limit_lower.unwrap_or(T::zero());
-                joint_upper[cmd_idx] = joint.limit_upper.unwrap_or(T::zero());
-            }
-        }
-
         // Helper to compute pose error
         let compute_error = |current_pose: &Isometry3<T>| -> Result<Vector6<T>, GalawError<T>> {
             let error_position = target_pose.translation.vector - current_pose.translation.vector;
@@ -329,7 +318,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         // Clamped converged solution to joint limits
         // No null-space steering
         for (i, cmd) in joint_cmds_candidate.iter_mut().enumerate() {
-            *cmd = cmd.clamp(joint_lower[i], joint_upper[i]);
+            *cmd = cmd.clamp(self.joint_limit_lower[i], self.joint_limit_upper[i]);
         }
 
         let clamped_pose = self.compute_restricted_pose_and_fill_jacobian(

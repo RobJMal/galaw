@@ -84,6 +84,10 @@ pub struct GalawModel<T> {
     pub ancestors_by_link: Vec<Vec<usize>>,
     /// For each link index, ordered joint indices (into [`GalawModel::joints`]) on the root-to-link path.
     pub chain_by_link: Vec<Vec<usize>>,
+    /// Lower joint limit for each actuated joint, indexed by `cmd_idx`. Defaults to `T::zero()` if unset.
+    pub joint_limit_lower: Vec<T>,
+    /// Upper joint limit for each actuated joint, indexed by `cmd_idx`. Defaults to `T::zero()` if unset.
+    pub joint_limit_upper: Vec<T>,
 }
 
 impl<T: RealField + Copy> GalawModel<T> {
