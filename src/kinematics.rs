@@ -77,19 +77,9 @@ impl<T: RealField + Copy> GalawModel<T> {
             .map(|_| Matrix6xX::zeros(self.num_actuated_joints))
             .collect();
 
-        // Construct each links' ancestor joints
-        let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); self.links.len()];
-        for (joint_idx, joint) in self.joints.iter().enumerate() {
-            let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
-            if joint.cmd_idx.is_some() {
-                ancestors.push(joint_idx);
-            }
-            ancestors_by_link[joint.child_link_idx] = ancestors;
-        }
-
         let links = self.compute_fk(joint_cmds)?;
 
-        for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
+        for (link_idx, ancestors) in self.ancestors_by_link.iter().enumerate() {
             let joint_position_target = links[link_idx].translation;
 
             for &joint_idx in ancestors {

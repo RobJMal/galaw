@@ -239,6 +239,7 @@ type ResolvedJoints<T> = (
     HashMap<String, usize>, // link_name -> cmd_idx
     HashMap<String, usize>, // joint_name -> cmd_idx
     HashMap<usize, usize>,  // link_name -> parent joint_idx
+    Vec<Vec<usize>>,        // ancestors_by_link
 );
 
 /// Resolves joint order for downstream functions.
@@ -334,11 +335,23 @@ fn resolve_joint_order<T: RealField + Copy>(
         .map(|(joint_idx, j)| (j.child_link_idx, joint_idx))
         .collect();
 
+    // Precompute ancestor joint indices for each link. Joints are in DFS pre-order,
+    // so each parent link's ancestor list is complete before its children are processed.
+    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); links.len()];
+    for (joint_idx, joint) in ordered_joints.iter().enumerate() {
+        let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
+        if joint.cmd_idx.is_some() {
+            ancestors.push(joint_idx);
+        }
+        ancestors_by_link[joint.child_link_idx] = ancestors;
+    }
+
     Ok((
         ordered_joints,
         link_name_to_idx,
         joint_name_to_idx,
         link_idx_to_parent_joint_idx,
+        ancestors_by_link,
     ))
 }
 
@@ -387,8 +400,13 @@ where
         }
     }
 
-    let (ordered_joints, link_name_to_idx, joint_name_to_idx, link_idx_to_parent_joint_idx) =
-        resolve_joint_order(&links, &joints)?;
+    let (
+        ordered_joints,
+        link_name_to_idx,
+        joint_name_to_idx,
+        link_idx_to_parent_joint_idx,
+        ancestors_by_link,
+    ) = resolve_joint_order(&links, &joints)?;
 
     let num_actuated_joints = ordered_joints
         .iter()
@@ -403,6 +421,7 @@ where
         joint_name_to_idx,
         link_idx_to_parent_joint_idx,
         num_actuated_joints,
+        ancestors_by_link,
     })
 }
 

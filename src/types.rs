@@ -82,6 +82,8 @@ pub struct GalawModel<T> {
     pub link_idx_to_parent_joint_idx: HashMap<usize, usize>,
     /// Number of actuated (non-`Fixed`) joints — the expected length of a `joint_cmds` slice.
     pub num_actuated_joints: usize,
+    /// For each link index, ordered actuated ancestor joint indices (into [`GalawModel::joints`]).
+    pub ancestors_by_link: Vec<Vec<usize>>,
 }
 
 impl<T: RealField + Copy> GalawModel<T> {
