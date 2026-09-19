@@ -6,6 +6,7 @@
 /// surface at specific precisions, and documents the expected precision trade-off
 /// when switching types for performance.
 // Third-party
+use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
@@ -24,6 +25,9 @@ fn check_fk_f32_f64_parity(urdf_path: &str) -> TestResult {
     let model_f32 = load_urdf::<f32>(urdf_path)?;
     let model_f64 = load_urdf::<f64>(urdf_path)?;
 
+    let mut links_f64: Vec<Isometry3<f64>> = vec![Isometry3::identity(); model_f64.links.len()];
+    let mut links_f32: Vec<Isometry3<f32>> = vec![Isometry3::identity(); model_f32.links.len()];
+
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
         // Generate joint commands as f64, then narrow to f32 for the f32 model.
@@ -38,8 +42,8 @@ fn check_fk_f32_f64_parity(urdf_path: &str) -> TestResult {
             .collect();
         let cmds_f32: Vec<f32> = cmds_f64.iter().map(|&v| v as f32).collect();
 
-        let links_f64 = model_f64.compute_fk(&cmds_f64)?;
-        let links_f32 = model_f32.compute_fk(&cmds_f32)?;
+        model_f64.compute_fk(&cmds_f64, &mut links_f64)?;
+        model_f32.compute_fk(&cmds_f32, &mut links_f32)?;
 
         for i in 0..model_f64.links.len() {
             let t32 = &links_f32[i].translation;

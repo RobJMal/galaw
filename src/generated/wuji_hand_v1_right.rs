@@ -6,7 +6,7 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 20]) -> [Isometry3<f64>; 26] {
+pub fn compute_fk(joint_cmds: &[f64; 20], poses: &mut [Isometry3<f64>; 26]) {
 let link_right_palm_link = Isometry3::identity();
 let link_right_finger1_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(0.0084399_f64, 0.020587_f64, 0.028893_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683_f64, -0.6176690399171142_f64, 0.08050471975634982_f64, -0.3828585674474818_f64))) * { let (s, c) = (joint_cmds[0] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
 let link_right_finger1_link2 = link_right_finger1_link1 * Isometry3::from_parts(Translation3::new(-0.0047549_f64, -0.0058191_f64, 0.014132_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893_f64, 0.29085087339109844_f64, -0.08559118145800193_f64, -0.6169580674889091_f64))) * { let (s, c) = (joint_cmds[1] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
@@ -33,13 +33,39 @@ let link_right_finger5_link2 = link_right_finger5_link1 * Isometry3::from_parts(
 let link_right_finger5_link3 = link_right_finger5_link2 * Isometry3::from_parts(Translation3::new(0.0_f64, 0.004749999_f64, 0.04361769_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688_f64, 0.0_f64, 0.0_f64, -0.707201765128549_f64))) * { let (s, c) = (joint_cmds[18] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
 let link_right_finger5_link4 = link_right_finger5_link3 * Translation3::new(0.0_f64, -0.0002_f64, 0.0295_f64) * { let (s, c) = (joint_cmds[19] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
 let link_right_finger5_tip_link = link_right_finger5_link4 * Translation3::new(-0.001044639_f64, 0.0002113095_f64, 0.0267_f64);
-[link_right_palm_link, link_right_finger1_link1, link_right_finger1_link2, link_right_finger1_link3, link_right_finger1_link4, link_right_finger1_tip_link, link_right_finger2_link1, link_right_finger2_link2, link_right_finger2_link3, link_right_finger2_link4, link_right_finger2_tip_link, link_right_finger3_link1, link_right_finger3_link2, link_right_finger3_link3, link_right_finger3_link4, link_right_finger3_tip_link, link_right_finger4_link1, link_right_finger4_link2, link_right_finger4_link3, link_right_finger4_link4, link_right_finger4_tip_link, link_right_finger5_link1, link_right_finger5_link2, link_right_finger5_link3, link_right_finger5_link4, link_right_finger5_tip_link]
+poses[0] = link_right_palm_link;
+poses[1] = link_right_finger1_link1;
+poses[2] = link_right_finger1_link2;
+poses[3] = link_right_finger1_link3;
+poses[4] = link_right_finger1_link4;
+poses[5] = link_right_finger1_tip_link;
+poses[6] = link_right_finger2_link1;
+poses[7] = link_right_finger2_link2;
+poses[8] = link_right_finger2_link3;
+poses[9] = link_right_finger2_link4;
+poses[10] = link_right_finger2_tip_link;
+poses[11] = link_right_finger3_link1;
+poses[12] = link_right_finger3_link2;
+poses[13] = link_right_finger3_link3;
+poses[14] = link_right_finger3_link4;
+poses[15] = link_right_finger3_tip_link;
+poses[16] = link_right_finger4_link1;
+poses[17] = link_right_finger4_link2;
+poses[18] = link_right_finger4_link3;
+poses[19] = link_right_finger4_link4;
+poses[20] = link_right_finger4_tip_link;
+poses[21] = link_right_finger5_link1;
+poses[22] = link_right_finger5_link2;
+poses[23] = link_right_finger5_link3;
+poses[24] = link_right_finger5_link4;
+poses[25] = link_right_finger5_tip_link;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_link_jacobians(joint_cmds: &[f64; 20]) -> [SMatrix<f64, 6, 20>; 26] {
-let links = compute_fk(joint_cmds);
+pub fn compute_link_jacobians(joint_cmds: &[f64; 20], jacobians: &mut [SMatrix<f64, 6, 20>; 26]) {
+let mut links = [Isometry3::identity(); 26];
+compute_fk(joint_cmds, &mut links);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_2 = links[3].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
@@ -60,110 +86,134 @@ let axis_world_20 = links[21].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64)
 let axis_world_21 = links[22].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_22 = links[23].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_23 = links[24].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
-let jacobian_right_palm_link = SMatrix::<f64, 6, 20>::zeros();
-let mut jacobian_right_finger1_link1 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_link2 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_0.cross(&(links[2].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_link2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_link3 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_0.cross(&(links[3].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link3.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(links[3].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_link3.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(links[3].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jacobian_right_finger1_link3.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_link4 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_0.cross(&(links[4].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_link4.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(links[4].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_link4.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(links[4].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jacobian_right_finger1_link4.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(links[4].translation.vector - links[4].translation.vector)); let ang = axis_world_3; jacobian_right_finger1_link4.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger1_tip_link = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_0.cross(&(links[5].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_right_finger1_tip_link.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(links[5].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jacobian_right_finger1_tip_link.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_2.cross(&(links[5].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jacobian_right_finger1_tip_link.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_3.cross(&(links[5].translation.vector - links[4].translation.vector)); let ang = axis_world_3; jacobian_right_finger1_tip_link.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link1 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_5.cross(&(links[6].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link1.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link2 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_5.cross(&(links[7].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link2.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(links[7].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_link2.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link3 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_5.cross(&(links[8].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link3.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(links[8].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_link3.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_7.cross(&(links[8].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jacobian_right_finger2_link3.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_link4 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_5.cross(&(links[9].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_link4.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(links[9].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_link4.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_7.cross(&(links[9].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jacobian_right_finger2_link4.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_8.cross(&(links[9].translation.vector - links[9].translation.vector)); let ang = axis_world_8; jacobian_right_finger2_link4.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger2_tip_link = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_5.cross(&(links[10].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jacobian_right_finger2_tip_link.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_6.cross(&(links[10].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jacobian_right_finger2_tip_link.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_7.cross(&(links[10].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jacobian_right_finger2_tip_link.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_8.cross(&(links[10].translation.vector - links[9].translation.vector)); let ang = axis_world_8; jacobian_right_finger2_tip_link.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link1 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_10.cross(&(links[11].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link1.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link2 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_10.cross(&(links[12].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link2.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_11.cross(&(links[12].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_link2.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link3 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_10.cross(&(links[13].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link3.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_11.cross(&(links[13].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_link3.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_12.cross(&(links[13].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jacobian_right_finger3_link3.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_link4 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_10.cross(&(links[14].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_link4.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_11.cross(&(links[14].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_link4.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_12.cross(&(links[14].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jacobian_right_finger3_link4.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_13.cross(&(links[14].translation.vector - links[14].translation.vector)); let ang = axis_world_13; jacobian_right_finger3_link4.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger3_tip_link = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_10.cross(&(links[15].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jacobian_right_finger3_tip_link.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_11.cross(&(links[15].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jacobian_right_finger3_tip_link.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_12.cross(&(links[15].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jacobian_right_finger3_tip_link.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_13.cross(&(links[15].translation.vector - links[14].translation.vector)); let ang = axis_world_13; jacobian_right_finger3_tip_link.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link1 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_15.cross(&(links[16].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link1.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link2 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_15.cross(&(links[17].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link2.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_16.cross(&(links[17].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_link2.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link3 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_15.cross(&(links[18].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link3.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_16.cross(&(links[18].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_link3.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_17.cross(&(links[18].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jacobian_right_finger4_link3.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_link4 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_15.cross(&(links[19].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_link4.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_16.cross(&(links[19].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_link4.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_17.cross(&(links[19].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jacobian_right_finger4_link4.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_18.cross(&(links[19].translation.vector - links[19].translation.vector)); let ang = axis_world_18; jacobian_right_finger4_link4.set_column(15, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger4_tip_link = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_15.cross(&(links[20].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jacobian_right_finger4_tip_link.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_16.cross(&(links[20].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jacobian_right_finger4_tip_link.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_17.cross(&(links[20].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jacobian_right_finger4_tip_link.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_18.cross(&(links[20].translation.vector - links[19].translation.vector)); let ang = axis_world_18; jacobian_right_finger4_tip_link.set_column(15, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link1 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_20.cross(&(links[21].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link1.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link2 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_20.cross(&(links[22].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link2.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_21.cross(&(links[22].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_link2.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link3 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_20.cross(&(links[23].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link3.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_21.cross(&(links[23].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_link3.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_22.cross(&(links[23].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jacobian_right_finger5_link3.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_link4 = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_20.cross(&(links[24].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_link4.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_21.cross(&(links[24].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_link4.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_22.cross(&(links[24].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jacobian_right_finger5_link4.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_23.cross(&(links[24].translation.vector - links[24].translation.vector)); let ang = axis_world_23; jacobian_right_finger5_link4.set_column(19, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_right_finger5_tip_link = SMatrix::<f64, 6, 20>::zeros();
-{ let lin = axis_world_20.cross(&(links[25].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jacobian_right_finger5_tip_link.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_21.cross(&(links[25].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jacobian_right_finger5_tip_link.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_22.cross(&(links[25].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jacobian_right_finger5_tip_link.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_23.cross(&(links[25].translation.vector - links[24].translation.vector)); let ang = axis_world_23; jacobian_right_finger5_tip_link.set_column(19, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-[jacobian_right_palm_link, jacobian_right_finger1_link1, jacobian_right_finger1_link2, jacobian_right_finger1_link3, jacobian_right_finger1_link4, jacobian_right_finger1_tip_link, jacobian_right_finger2_link1, jacobian_right_finger2_link2, jacobian_right_finger2_link3, jacobian_right_finger2_link4, jacobian_right_finger2_tip_link, jacobian_right_finger3_link1, jacobian_right_finger3_link2, jacobian_right_finger3_link3, jacobian_right_finger3_link4, jacobian_right_finger3_tip_link, jacobian_right_finger4_link1, jacobian_right_finger4_link2, jacobian_right_finger4_link3, jacobian_right_finger4_link4, jacobian_right_finger4_tip_link, jacobian_right_finger5_link1, jacobian_right_finger5_link2, jacobian_right_finger5_link3, jacobian_right_finger5_link4, jacobian_right_finger5_tip_link]
+jacobians[0].fill(0.0_f64);
+let mut jac_1 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[1] = jac_1;
+let mut jac_2 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_0.cross(&(links[2].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[2].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jac_2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[2] = jac_2;
+let mut jac_3 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_0.cross(&(links[3].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_3.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[3].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jac_3.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(links[3].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jac_3.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[3] = jac_3;
+let mut jac_4 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_0.cross(&(links[4].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_4.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[4].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jac_4.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(links[4].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jac_4.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(links[4].translation.vector - links[4].translation.vector)); let ang = axis_world_3; jac_4.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[4] = jac_4;
+let mut jac_5 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_0.cross(&(links[5].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_5.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[5].translation.vector - links[2].translation.vector)); let ang = axis_world_1; jac_5.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_2.cross(&(links[5].translation.vector - links[3].translation.vector)); let ang = axis_world_2; jac_5.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_3.cross(&(links[5].translation.vector - links[4].translation.vector)); let ang = axis_world_3; jac_5.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[5] = jac_5;
+let mut jac_6 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_5.cross(&(links[6].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jac_6.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[6] = jac_6;
+let mut jac_7 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_5.cross(&(links[7].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jac_7.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_6.cross(&(links[7].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jac_7.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[7] = jac_7;
+let mut jac_8 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_5.cross(&(links[8].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jac_8.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_6.cross(&(links[8].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jac_8.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_7.cross(&(links[8].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jac_8.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[8] = jac_8;
+let mut jac_9 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_5.cross(&(links[9].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jac_9.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_6.cross(&(links[9].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jac_9.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_7.cross(&(links[9].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jac_9.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_8.cross(&(links[9].translation.vector - links[9].translation.vector)); let ang = axis_world_8; jac_9.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[9] = jac_9;
+let mut jac_10 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_5.cross(&(links[10].translation.vector - links[6].translation.vector)); let ang = axis_world_5; jac_10.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_6.cross(&(links[10].translation.vector - links[7].translation.vector)); let ang = axis_world_6; jac_10.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_7.cross(&(links[10].translation.vector - links[8].translation.vector)); let ang = axis_world_7; jac_10.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_8.cross(&(links[10].translation.vector - links[9].translation.vector)); let ang = axis_world_8; jac_10.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[10] = jac_10;
+let mut jac_11 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_10.cross(&(links[11].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jac_11.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[11] = jac_11;
+let mut jac_12 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_10.cross(&(links[12].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jac_12.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_11.cross(&(links[12].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jac_12.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[12] = jac_12;
+let mut jac_13 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_10.cross(&(links[13].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jac_13.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_11.cross(&(links[13].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jac_13.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_12.cross(&(links[13].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jac_13.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[13] = jac_13;
+let mut jac_14 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_10.cross(&(links[14].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jac_14.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_11.cross(&(links[14].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jac_14.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_12.cross(&(links[14].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jac_14.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_13.cross(&(links[14].translation.vector - links[14].translation.vector)); let ang = axis_world_13; jac_14.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[14] = jac_14;
+let mut jac_15 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_10.cross(&(links[15].translation.vector - links[11].translation.vector)); let ang = axis_world_10; jac_15.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_11.cross(&(links[15].translation.vector - links[12].translation.vector)); let ang = axis_world_11; jac_15.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_12.cross(&(links[15].translation.vector - links[13].translation.vector)); let ang = axis_world_12; jac_15.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_13.cross(&(links[15].translation.vector - links[14].translation.vector)); let ang = axis_world_13; jac_15.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[15] = jac_15;
+let mut jac_16 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_15.cross(&(links[16].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jac_16.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[16] = jac_16;
+let mut jac_17 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_15.cross(&(links[17].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jac_17.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_16.cross(&(links[17].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jac_17.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[17] = jac_17;
+let mut jac_18 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_15.cross(&(links[18].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jac_18.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_16.cross(&(links[18].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jac_18.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_17.cross(&(links[18].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jac_18.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[18] = jac_18;
+let mut jac_19 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_15.cross(&(links[19].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jac_19.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_16.cross(&(links[19].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jac_19.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_17.cross(&(links[19].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jac_19.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_18.cross(&(links[19].translation.vector - links[19].translation.vector)); let ang = axis_world_18; jac_19.set_column(15, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[19] = jac_19;
+let mut jac_20 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_15.cross(&(links[20].translation.vector - links[16].translation.vector)); let ang = axis_world_15; jac_20.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_16.cross(&(links[20].translation.vector - links[17].translation.vector)); let ang = axis_world_16; jac_20.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_17.cross(&(links[20].translation.vector - links[18].translation.vector)); let ang = axis_world_17; jac_20.set_column(14, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_18.cross(&(links[20].translation.vector - links[19].translation.vector)); let ang = axis_world_18; jac_20.set_column(15, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[20] = jac_20;
+let mut jac_21 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_20.cross(&(links[21].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jac_21.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[21] = jac_21;
+let mut jac_22 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_20.cross(&(links[22].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jac_22.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_21.cross(&(links[22].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jac_22.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[22] = jac_22;
+let mut jac_23 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_20.cross(&(links[23].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jac_23.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_21.cross(&(links[23].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jac_23.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_22.cross(&(links[23].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jac_23.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[23] = jac_23;
+let mut jac_24 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_20.cross(&(links[24].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jac_24.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_21.cross(&(links[24].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jac_24.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_22.cross(&(links[24].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jac_24.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_23.cross(&(links[24].translation.vector - links[24].translation.vector)); let ang = axis_world_23; jac_24.set_column(19, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[24] = jac_24;
+let mut jac_25 = SMatrix::<f64, 6, 20>::zeros();
+{ let lin = axis_world_20.cross(&(links[25].translation.vector - links[21].translation.vector)); let ang = axis_world_20; jac_25.set_column(16, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_21.cross(&(links[25].translation.vector - links[22].translation.vector)); let ang = axis_world_21; jac_25.set_column(17, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_22.cross(&(links[25].translation.vector - links[23].translation.vector)); let ang = axis_world_22; jac_25.set_column(18, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_23.cross(&(links[25].translation.vector - links[24].translation.vector)); let ang = axis_world_23; jac_25.set_column(19, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[25] = jac_25;
 }
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
 /// Inverse kinematics for `wujihand-right`. Joints are clamped to their limits after solving.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 20]) -> Result<[f64; 20], KinematicsError<f64>> {
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 20], joint_cmds_out: &mut [f64; 20]) -> Result<(), KinematicsError<f64>> {
 let error_tolerance: f64 = 1e-5_f64;
 let damping_factor: f64 = 0.0001_f64;
 let step_size: f64 = 1.0_f64;
@@ -208,7 +258,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 2 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -247,7 +298,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 3 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -291,7 +343,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 4 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -340,7 +393,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 5 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -390,7 +444,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 6 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -424,7 +479,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 7 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -463,7 +519,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 8 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -507,7 +564,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 9 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -556,7 +614,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 10 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -606,7 +665,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 11 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -640,7 +700,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 12 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -679,7 +740,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 13 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -723,7 +785,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 14 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -772,7 +835,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 15 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -822,7 +886,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 16 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -856,7 +921,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 17 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -895,7 +961,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 18 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -939,7 +1006,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 19 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -988,7 +1056,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 20 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -1038,7 +1107,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 21 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -1072,7 +1142,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 22 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 2>) {
@@ -1111,7 +1182,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 23 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 3>) {
@@ -1155,7 +1227,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 24 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -1204,7 +1277,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 25 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 20]| -> (Isometry3<f64>, SMatrix<f64, 6, 4>) {
@@ -1254,14 +1328,16 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 _ => {
 let error = compute_error(&Isometry3::identity());
 if error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 }
 }

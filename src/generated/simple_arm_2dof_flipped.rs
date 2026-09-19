@@ -6,33 +6,37 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 2]) -> [Isometry3<f64>; 3] {
+pub fn compute_fk(joint_cmds: &[f64; 2], poses: &mut [Isometry3<f64>; 3]) {
 let link_base_link = Isometry3::identity();
 let link_upper_arm = link_base_link * Translation3::new(0.0_f64, 0.0_f64, 0.1_f64) * { let (s, c) = (joint_cmds[0] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
 let link_forearm = link_upper_arm * Translation3::new(0.0_f64, 0.0_f64, 0.9_f64) * { let (s, c) = (joint_cmds[1] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
-[link_forearm, link_upper_arm, link_base_link]
+poses[0] = link_forearm;
+poses[1] = link_upper_arm;
+poses[2] = link_base_link;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_link_jacobians(joint_cmds: &[f64; 2]) -> [SMatrix<f64, 6, 2>; 3] {
-let links = compute_fk(joint_cmds);
+pub fn compute_link_jacobians(joint_cmds: &[f64; 2], jacobians: &mut [SMatrix<f64, 6, 2>; 3]) {
+let mut links = [Isometry3::identity(); 3];
+compute_fk(joint_cmds, &mut links);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_1 = links[0].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
-let mut jacobian_forearm = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_0.cross(&(links[0].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_forearm.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(links[0].translation.vector - links[0].translation.vector)); let ang = axis_world_1; jacobian_forearm.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let mut jacobian_upper_arm = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jacobian_upper_arm.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();
-[jacobian_forearm, jacobian_upper_arm, jacobian_base_link]
+let mut jac_0 = SMatrix::<f64, 6, 2>::zeros();
+{ let lin = axis_world_0.cross(&(links[0].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_0.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(links[0].translation.vector - links[0].translation.vector)); let ang = axis_world_1; jac_0.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[0] = jac_0;
+let mut jac_1 = SMatrix::<f64, 6, 2>::zeros();
+{ let lin = axis_world_0.cross(&(links[1].translation.vector - links[1].translation.vector)); let ang = axis_world_0; jac_1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+jacobians[1] = jac_1;
+jacobians[2].fill(0.0_f64);
 }
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
 /// Inverse kinematics for `simple_arm_2dof_flipped`. Joints are clamped to their limits after solving.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 2]) -> Result<[f64; 2], KinematicsError<f64>> {
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 2], joint_cmds_out: &mut [f64; 2]) -> Result<(), KinematicsError<f64>> {
 let error_tolerance: f64 = 1e-5_f64;
 let damping_factor: f64 = 0.0001_f64;
 let step_size: f64 = 1.0_f64;
@@ -82,7 +86,8 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 1 => {
 let compute_pose_and_jacobian = |joint_cmds: &[f64; 2]| -> (Isometry3<f64>, SMatrix<f64, 6, 1>) {
@@ -116,14 +121,16 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 _ => {
 let error = compute_error(&Isometry3::identity());
 if error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
 }
-Ok(joint_cmds)
+*joint_cmds_out = joint_cmds;
+Ok(())
 }
 }
 }

@@ -110,7 +110,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("#[inline]".to_string());
     out.push("#[rustfmt::skip]".to_string());
     out.push(format!(
-        "pub fn compute_fk(joint_cmds: &[{ty}; {n}]) -> [Isometry3<{ty}>; {m}] {{",
+        "pub fn compute_fk(joint_cmds: &[{ty}; {n}], poses: &mut [Isometry3<{ty}>; {m}]) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
@@ -197,8 +197,9 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
         link_vars_by_idx[joint.child_link_idx] = Some(link_name_var);
     }
 
-    let ordered: Vec<String> = link_vars_by_idx.into_iter().map(|v| v.unwrap()).collect();
-    out.push(format!("[{}]", ordered.join(", ")));
+    for (i, var_name) in link_vars_by_idx.into_iter().enumerate() {
+        out.push(format!("poses[{i}] = {};", var_name.unwrap()));
+    }
     out.push("}".to_string());
 
     Ok(out)
@@ -214,12 +215,16 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("#[allow(non_snake_case)]".to_string());
     out.push("#[rustfmt::skip]".to_string());
     out.push(format!(
-        "pub fn compute_link_jacobians(joint_cmds: &[{ty}; {n}]) -> [SMatrix<{ty}, 6, {n}>; {m}] {{",
+        "pub fn compute_link_jacobians(joint_cmds: &[{ty}; {n}], jacobians: &mut [SMatrix<{ty}, 6, {n}>; {m}]) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
     ));
-    out.push("let links = compute_fk(joint_cmds);".to_string());
+    out.push(format!(
+        "let mut links = [Isometry3::identity(); {m}];",
+        m = galaw_model.links.len()
+    ));
+    out.push("compute_fk(joint_cmds, &mut links);".to_string());
 
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let Some(_) = joint.cmd_idx else { continue };
@@ -246,41 +251,42 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         ancestors_by_link[joint.child_link_idx] = ancestors;
     }
 
-    let mut jacobian_vars: Vec<String> = Vec::with_capacity(galaw_model.links.len());
     for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
-        let jac_var = format!("jacobian_{}", galaw_model.links[link_idx].name);
-        let mut_kw = if ancestors.is_empty() { "" } else { "mut " };
-        out.push(format!(
-            "let {mut_kw}{jac_var} = SMatrix::<{}, 6, {}>::zeros();",
-            type_name, galaw_model.num_actuated_joints
-        ));
-
-        for &joint_idx in ancestors {
-            let joint = &galaw_model.joints[joint_idx];
-            let cmd_idx = joint.cmd_idx.unwrap();
-            let (lin_expr, ang_expr) = if joint.rot_axis.is_some() {
-                (
-                    format!(
-                        "axis_world_{joint_idx}.cross(&(links[{link_idx}].translation.vector - links[{}].translation.vector))",
-                        joint.child_link_idx
-                    ),
-                    format!("axis_world_{joint_idx}"),
-                )
-            } else {
-                (
-                    format!("axis_world_{joint_idx}"),
-                    "Vector3::zeros()".to_string(),
-                )
-            };
+        if ancestors.is_empty() {
+            out.push(format!("jacobians[{link_idx}].fill(0.0_{type_name});"));
+        } else {
+            let jac_var = format!("jac_{link_idx}");
             out.push(format!(
-                "{{ let lin = {lin_expr}; let ang = {ang_expr}; {jac_var}.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
+                "let mut {jac_var} = SMatrix::<{}, 6, {}>::zeros();",
+                type_name, galaw_model.num_actuated_joints
             ));
-        }
 
-        jacobian_vars.push(jac_var);
+            for &joint_idx in ancestors {
+                let joint = &galaw_model.joints[joint_idx];
+                let cmd_idx = joint.cmd_idx.unwrap();
+                let (lin_expr, ang_expr) = if joint.rot_axis.is_some() {
+                    (
+                        format!(
+                            "axis_world_{joint_idx}.cross(&(links[{link_idx}].translation.vector - links[{}].translation.vector))",
+                            joint.child_link_idx
+                        ),
+                        format!("axis_world_{joint_idx}"),
+                    )
+                } else {
+                    (
+                        format!("axis_world_{joint_idx}"),
+                        "Vector3::zeros()".to_string(),
+                    )
+                };
+                out.push(format!(
+                    "{{ let lin = {lin_expr}; let ang = {ang_expr}; {jac_var}.set_column({cmd_idx}, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }}"
+                ));
+            }
+
+            out.push(format!("jacobians[{link_idx}] = {jac_var};"));
+        }
     }
 
-    out.push(format!("[{}]", jacobian_vars.join(", ")));
     out.push("}".to_string());
 
     Ok(out)
@@ -303,7 +309,7 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("#[allow(non_snake_case)]".to_string());
     out.push("#[rustfmt::skip]".to_string());
     out.push(format!(
-        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<{ty}>, initial_joint_cmds: &[{ty}; {n}]) -> Result<[{ty}; {n}], KinematicsError<{ty}>> {{"
+        "pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<{ty}>, initial_joint_cmds: &[{ty}; {n}], joint_cmds_out: &mut [{ty}; {n}]) -> Result<(), KinematicsError<{ty}>> {{"
     ));
     out.push(format!(
         "let error_tolerance: {ty} = {};",
@@ -568,7 +574,8 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
         out.push("if clamped_error.norm() > error_tolerance {".to_string());
         out.push("return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });".to_string());
         out.push("}".to_string());
-        out.push("Ok(joint_cmds)".to_string());
+        out.push("*joint_cmds_out = joint_cmds;".to_string());
+        out.push("Ok(())".to_string());
         out.push("}".to_string());
     }
 
@@ -577,7 +584,8 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("if error.norm() > error_tolerance {".to_string());
     out.push("return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });".to_string());
     out.push("}".to_string());
-    out.push("Ok(joint_cmds)".to_string());
+    out.push("*joint_cmds_out = joint_cmds;".to_string());
+    out.push("Ok(())".to_string());
     out.push("}".to_string());
     out.push("}".to_string()); // match
     out.push("}".to_string()); // fn
