@@ -8,8 +8,10 @@
 //!
 //! ```
 //! # fn main() -> Result<(), galaw::error::GalawError<f64>> {
+//! use nalgebra::Isometry3;
 //! let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
-//! let poses = model.compute_fk(&vec![0.0; model.num_actuated_joints])?;
+//! let mut poses = vec![Isometry3::identity(); model.links.len()];
+//! model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut poses)?;
 //! # Ok(())
 //! # }
 //! ```
