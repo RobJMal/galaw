@@ -6,7 +6,7 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 7]) -> [Isometry3<f64>; 10] {
+pub fn compute_fk(joint_cmds: &[f64; 7], poses: &mut [Isometry3<f64>; 10]) {
 let link_world = Isometry3::identity();
 let link_base_link = link_world;
 let link_link1 = link_base_link * Translation3::new(0.0_f64, 0.0_f64, 0.146_f64) * { let (s, c) = (joint_cmds[0] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
@@ -17,13 +17,23 @@ let link_link5 = link_link4 * Isometry3::from_parts(Translation3::new(0.0_f64, -
 let link_link6 = link_link5 * Isometry3::from_parts(Translation3::new(0.0_f64, -0.0261_f64, 0.124_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476_f64, 0.7071067811865475_f64, 0.0_f64, 0.0_f64))) * { let (s, c) = (joint_cmds[5] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
 let link_link7 = link_link6 * Isometry3::from_parts(Translation3::new(0.0_f64, 0.134_f64, -0.0261_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.7071067811865476_f64, -0.7071067811865475_f64, 0.0_f64, 0.0_f64))) * { let (s, c) = (joint_cmds[6] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
 let link_flange = link_link7 * Translation3::new(0.0_f64, 0.0_f64, 0.048_f64);
-[link_world, link_base_link, link_link1, link_link2, link_link3, link_link4, link_link5, link_link6, link_link7, link_flange]
+poses[0] = link_world;
+poses[1] = link_base_link;
+poses[2] = link_link1;
+poses[3] = link_link2;
+poses[4] = link_link3;
+poses[5] = link_link4;
+poses[6] = link_link5;
+poses[7] = link_link6;
+poses[8] = link_link7;
+poses[9] = link_flange;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_link_jacobians(joint_cmds: &[f64; 7]) -> [SMatrix<f64, 6, 7>; 10] {
-let links = compute_fk(joint_cmds);
+let mut links = [Isometry3::identity(); 10];
+compute_fk(joint_cmds, &mut links);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_2 = links[3].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_3 = links[4].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);

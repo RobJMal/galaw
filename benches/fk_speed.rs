@@ -56,17 +56,16 @@ fn system_specs() -> String {
 }
 
 /// Benchmarks a codegen'd `compute_fk` under the given bench id.
-/// Generic over T (float type) and R (return type) so the same helper
-/// works for both f64 and f32 generated functions.
-fn bench_generated<T: Copy + Clone + std::fmt::Debug + 'static, R: 'static, const N: usize>(
+/// Generic over T (float type), NUM_JOINTS, and NUM_LINKS.
+fn bench_generated<T: nalgebra::RealField + Copy + Clone + std::fmt::Debug + 'static, const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id_label: &str,
     bench_id: usize,
     joint_cmds: &[Vec<T>],
-    generated_compute_fk: impl Fn(&[T; N]) -> R,
+    generated_compute_fk: impl Fn(&[T; NUM_JOINTS], &mut [Isometry3<T>; NUM_LINKS]),
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
-    let joint_cmds_arr: Vec<[T; N]> = joint_cmds
+    let joint_cmds_arr: Vec<[T; NUM_JOINTS]> = joint_cmds
         .iter()
         .map(|c| c.clone().try_into().unwrap())
         .collect();
@@ -75,11 +74,12 @@ fn bench_generated<T: Copy + Clone + std::fmt::Debug + 'static, R: 'static, cons
         BenchmarkId::new(bench_id_label, bench_id),
         &joint_cmds_arr,
         |b, cmds| {
+            let mut poses = [Isometry3::identity(); NUM_LINKS];
             b.iter(|| {
                 for cmd in cmds {
-                    let out = generated_compute_fk(black_box(cmd));
-                    black_box(out);
+                    generated_compute_fk(black_box(cmd), &mut poses);
                 }
+                black_box(&poses);
             });
         },
     );

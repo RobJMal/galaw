@@ -6,17 +6,20 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 2]) -> [Isometry3<f64>; 3] {
+pub fn compute_fk(joint_cmds: &[f64; 2], poses: &mut [Isometry3<f64>; 3]) {
 let link_base_link = Isometry3::identity();
 let link_upper_arm = link_base_link * Translation3::new(0.0_f64, 0.0_f64, 0.1_f64) * { let (s, c) = (joint_cmds[0] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
 let link_forearm = link_upper_arm * Translation3::new(0.0_f64, 0.0_f64, 0.9_f64) * { let (s, c) = (joint_cmds[1] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
-[link_base_link, link_upper_arm, link_forearm]
+poses[0] = link_base_link;
+poses[1] = link_upper_arm;
+poses[2] = link_forearm;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_link_jacobians(joint_cmds: &[f64; 2]) -> [SMatrix<f64, 6, 2>; 3] {
-let links = compute_fk(joint_cmds);
+let mut links = [Isometry3::identity(); 3];
+compute_fk(joint_cmds, &mut links);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let jacobian_base_link = SMatrix::<f64, 6, 2>::zeros();

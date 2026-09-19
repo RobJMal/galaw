@@ -6,7 +6,7 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 14]) -> [Isometry3<f64>; 96] {
+pub fn compute_fk(joint_cmds: &[f64; 14], poses: &mut [Isometry3<f64>; 96]) {
 let link_base = Isometry3::identity();
 let link_base_inertia = link_base;
 let link_body_top = link_base * Translation3::new(0.0_f64, 0.0_f64, 0.144_f64);
@@ -103,13 +103,109 @@ let link_inspection_payload_thermal_camera = link_inspection_payload_head * Isom
 let link_inspection_payload_light = link_inspection_payload_head * Isometry3::from_parts(Translation3::new(0.05495_f64, 0.03_f64, 0.03116_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.4999999983974483_f64, -0.5_f64, 0.5000000016025516_f64, -0.5_f64)));
 let link_inspection_payload_microphone = link_inspection_payload_head * Isometry3::from_parts(Translation3::new(0.0684_f64, 0.023_f64, -0.03_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.4999999983974483_f64, -0.5_f64, 0.5000000016025516_f64, -0.5_f64)));
 let link_inspection_payload_camera_default = link_inspection_payload_mount * Translation3::new(0.0_f64, 0.0_f64, 0.175_f64);
-[link_base, link_base_inertia, link_body_top, link_top_shell, link_bottom_shell, link_face_front, link_depth_camera_front_lower_camera, link_depth_camera_front_lower_camera_parent, link_depth_camera_front_lower_depth_frame, link_depth_camera_front_lower_depth_optical_frame, link_depth_camera_front_upper_camera, link_depth_camera_front_upper_camera_parent, link_depth_camera_front_upper_depth_frame, link_depth_camera_front_upper_depth_optical_frame, link_wide_angle_camera_front_camera, link_wide_angle_camera_front_camera_parent, link_face_rear, link_depth_camera_rear_lower_camera, link_depth_camera_rear_lower_camera_parent, link_depth_camera_rear_lower_depth_frame, link_depth_camera_rear_lower_depth_optical_frame, link_depth_camera_rear_upper_camera, link_depth_camera_rear_upper_camera_parent, link_depth_camera_rear_upper_depth_frame, link_depth_camera_rear_upper_depth_optical_frame, link_wide_angle_camera_rear_camera, link_wide_angle_camera_rear_camera_parent, link_face_shell_front, link_face_shell_rear, link_battery, link_docking_socket, link_hbc_receiver, link_imu_link, link_depth_camera_left_camera, link_depth_camera_left_camera_parent, link_depth_camera_left_depth_frame, link_depth_camera_left_depth_optical_frame, link_depth_camera_right_camera, link_depth_camera_right_camera_parent, link_depth_camera_right_depth_frame, link_depth_camera_right_depth_optical_frame, link_lidar_parent, link_lidar, link_LF_HAA_drive, link_LF_HIP, link_LF_hip_fixed, link_LF_HFE_output, link_LF_HFE_drive, link_LF_THIGH, link_LF_thigh_fixed, link_LF_KFE_drive, link_LF_SHANK, link_LF_shank_fixed, link_LF_FOOT, link_RF_HAA_drive, link_RF_HIP, link_RF_hip_fixed, link_RF_HFE_output, link_RF_HFE_drive, link_RF_THIGH, link_RF_thigh_fixed, link_RF_KFE_drive, link_RF_SHANK, link_RF_shank_fixed, link_RF_FOOT, link_LH_HAA_drive, link_LH_HIP, link_LH_hip_fixed, link_LH_HFE_output, link_LH_HFE_drive, link_LH_THIGH, link_LH_thigh_fixed, link_LH_KFE_drive, link_LH_SHANK, link_LH_shank_fixed, link_LH_FOOT, link_RH_HAA_drive, link_RH_HIP, link_RH_hip_fixed, link_RH_HFE_output, link_RH_HFE_drive, link_RH_THIGH, link_RH_thigh_fixed, link_RH_KFE_drive, link_RH_SHANK, link_RH_shank_fixed, link_RH_FOOT, link_inspection_payload_mount, link_inspection_payload_pan, link_inspection_payload_tilt, link_inspection_payload_head, link_inspection_payload_camera, link_inspection_payload_thermal_camera, link_inspection_payload_light, link_inspection_payload_microphone, link_inspection_payload_camera_default]
+poses[0] = link_base;
+poses[1] = link_base_inertia;
+poses[2] = link_body_top;
+poses[3] = link_top_shell;
+poses[4] = link_bottom_shell;
+poses[5] = link_face_front;
+poses[6] = link_depth_camera_front_lower_camera;
+poses[7] = link_depth_camera_front_lower_camera_parent;
+poses[8] = link_depth_camera_front_lower_depth_frame;
+poses[9] = link_depth_camera_front_lower_depth_optical_frame;
+poses[10] = link_depth_camera_front_upper_camera;
+poses[11] = link_depth_camera_front_upper_camera_parent;
+poses[12] = link_depth_camera_front_upper_depth_frame;
+poses[13] = link_depth_camera_front_upper_depth_optical_frame;
+poses[14] = link_wide_angle_camera_front_camera;
+poses[15] = link_wide_angle_camera_front_camera_parent;
+poses[16] = link_face_rear;
+poses[17] = link_depth_camera_rear_lower_camera;
+poses[18] = link_depth_camera_rear_lower_camera_parent;
+poses[19] = link_depth_camera_rear_lower_depth_frame;
+poses[20] = link_depth_camera_rear_lower_depth_optical_frame;
+poses[21] = link_depth_camera_rear_upper_camera;
+poses[22] = link_depth_camera_rear_upper_camera_parent;
+poses[23] = link_depth_camera_rear_upper_depth_frame;
+poses[24] = link_depth_camera_rear_upper_depth_optical_frame;
+poses[25] = link_wide_angle_camera_rear_camera;
+poses[26] = link_wide_angle_camera_rear_camera_parent;
+poses[27] = link_face_shell_front;
+poses[28] = link_face_shell_rear;
+poses[29] = link_battery;
+poses[30] = link_docking_socket;
+poses[31] = link_hbc_receiver;
+poses[32] = link_imu_link;
+poses[33] = link_depth_camera_left_camera;
+poses[34] = link_depth_camera_left_camera_parent;
+poses[35] = link_depth_camera_left_depth_frame;
+poses[36] = link_depth_camera_left_depth_optical_frame;
+poses[37] = link_depth_camera_right_camera;
+poses[38] = link_depth_camera_right_camera_parent;
+poses[39] = link_depth_camera_right_depth_frame;
+poses[40] = link_depth_camera_right_depth_optical_frame;
+poses[41] = link_lidar_parent;
+poses[42] = link_lidar;
+poses[43] = link_LF_HAA_drive;
+poses[44] = link_LF_HIP;
+poses[45] = link_LF_hip_fixed;
+poses[46] = link_LF_HFE_output;
+poses[47] = link_LF_HFE_drive;
+poses[48] = link_LF_THIGH;
+poses[49] = link_LF_thigh_fixed;
+poses[50] = link_LF_KFE_drive;
+poses[51] = link_LF_SHANK;
+poses[52] = link_LF_shank_fixed;
+poses[53] = link_LF_FOOT;
+poses[54] = link_RF_HAA_drive;
+poses[55] = link_RF_HIP;
+poses[56] = link_RF_hip_fixed;
+poses[57] = link_RF_HFE_output;
+poses[58] = link_RF_HFE_drive;
+poses[59] = link_RF_THIGH;
+poses[60] = link_RF_thigh_fixed;
+poses[61] = link_RF_KFE_drive;
+poses[62] = link_RF_SHANK;
+poses[63] = link_RF_shank_fixed;
+poses[64] = link_RF_FOOT;
+poses[65] = link_LH_HAA_drive;
+poses[66] = link_LH_HIP;
+poses[67] = link_LH_hip_fixed;
+poses[68] = link_LH_HFE_output;
+poses[69] = link_LH_HFE_drive;
+poses[70] = link_LH_THIGH;
+poses[71] = link_LH_thigh_fixed;
+poses[72] = link_LH_KFE_drive;
+poses[73] = link_LH_SHANK;
+poses[74] = link_LH_shank_fixed;
+poses[75] = link_LH_FOOT;
+poses[76] = link_RH_HAA_drive;
+poses[77] = link_RH_HIP;
+poses[78] = link_RH_hip_fixed;
+poses[79] = link_RH_HFE_output;
+poses[80] = link_RH_HFE_drive;
+poses[81] = link_RH_THIGH;
+poses[82] = link_RH_thigh_fixed;
+poses[83] = link_RH_KFE_drive;
+poses[84] = link_RH_SHANK;
+poses[85] = link_RH_shank_fixed;
+poses[86] = link_RH_FOOT;
+poses[87] = link_inspection_payload_mount;
+poses[88] = link_inspection_payload_pan;
+poses[89] = link_inspection_payload_tilt;
+poses[90] = link_inspection_payload_head;
+poses[91] = link_inspection_payload_camera;
+poses[92] = link_inspection_payload_thermal_camera;
+poses[93] = link_inspection_payload_light;
+poses[94] = link_inspection_payload_microphone;
+poses[95] = link_inspection_payload_camera_default;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_link_jacobians(joint_cmds: &[f64; 14]) -> [SMatrix<f64, 6, 14>; 96] {
-let links = compute_fk(joint_cmds);
+let mut links = [Isometry3::identity(); 96];
+compute_fk(joint_cmds, &mut links);
 let axis_world_43 = links[44].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
 let axis_world_46 = links[48].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
 let axis_world_50 = links[51].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);

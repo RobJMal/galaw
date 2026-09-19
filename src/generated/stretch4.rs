@@ -6,7 +6,7 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 13]) -> [Isometry3<f64>; 54] {
+pub fn compute_fk(joint_cmds: &[f64; 13], poses: &mut [Isometry3<f64>; 54]) {
 let link_base_footprint = Isometry3::identity();
 let link_base_link = link_base_footprint * Translation3::new(0.0_f64, 0.0_f64, 0.027999995691835_f64);
 let link_line_sensor_5_link = link_base_link * Isometry3::from_parts(Translation3::new(0.0613832011662534_f64, 0.178318823151171_f64, 0.0527013981430276_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.8438292287911043_f64, -0.11247552717193304_f64, 0.19481332766988357_f64, 0.48718503239261407_f64)));
@@ -61,13 +61,67 @@ let link_wheel_1_link = link_base_link * Isometry3::from_parts(Translation3::new
 let link_wheel_0_link = link_base_link * Isometry3::from_parts(Translation3::new(0.150688420258492_f64, 0.0869999999999999_f64, 0.072000004308165_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.35355339059327484_f64, -0.3535533905932761_f64, -0.6123724356957947_f64, 0.6123724356957925_f64))) * { let (s, c) = (joint_cmds[12] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
 let link_docking_contact_link = link_base_link * Translation3::new(0.0_f64, 0.1768_f64, 0.107500004308165_f64);
 let link_laser = link_base_link;
-[link_base_footprint, link_base_link, link_line_sensor_5_link, link_line_sensor_5_optical_link, link_line_sensor_4_link, link_line_sensor_4_optical_link, link_line_sensor_3_link, link_line_sensor_3_optical_link, link_line_sensor_2_link, link_line_sensor_2_optical_link, link_line_sensor_1_link, link_line_sensor_1_optical_link, link_line_sensor_0_link, link_line_sensor_0_optical_link, link_head_link, link_lidar_right_link, link_lidar_left_link, link_camera_right_link, link_camera_right_optical_link, link_camera_left_link, link_camera_left_optical_link, link_camera_center_link, link_camera_center_optical_link, link_mast_link, link_lift_link, link_arm_l0_link, link_arm_l1_link, link_arm_l2_link, link_arm_l3_link, link_arm_l4_link, link_wrist_link, link_wrist_yaw_link, link_wrist_pitch_link, link_wrist_roll_link, link_gripper_camera_link, link_gripper_stereo_camera_color_optical_frame, link_gripper_right_camera_color_optical_frame, link_gripper_left_camera_color_optical_frame, link_tool_attachment_site_link, link_wrist_aruco_link, link_wrist_reflector_link, link_wheel_2_link, link_wheel_1_link, link_wheel_0_link, link_docking_contact_link, link_quick_connect_interface_link, link_gripper_finger_right_link, link_gripper_fingertip_right_link, link_aruco_fingertip_right_link, link_gripper_finger_left_link, link_gripper_fingertip_left_link, link_aruco_fingertip_left_link, link_grasp_center_link, link_laser]
+poses[0] = link_base_footprint;
+poses[1] = link_base_link;
+poses[2] = link_line_sensor_5_link;
+poses[3] = link_line_sensor_5_optical_link;
+poses[4] = link_line_sensor_4_link;
+poses[5] = link_line_sensor_4_optical_link;
+poses[6] = link_line_sensor_3_link;
+poses[7] = link_line_sensor_3_optical_link;
+poses[8] = link_line_sensor_2_link;
+poses[9] = link_line_sensor_2_optical_link;
+poses[10] = link_line_sensor_1_link;
+poses[11] = link_line_sensor_1_optical_link;
+poses[12] = link_line_sensor_0_link;
+poses[13] = link_line_sensor_0_optical_link;
+poses[14] = link_head_link;
+poses[15] = link_lidar_right_link;
+poses[16] = link_lidar_left_link;
+poses[17] = link_camera_right_link;
+poses[18] = link_camera_right_optical_link;
+poses[19] = link_camera_left_link;
+poses[20] = link_camera_left_optical_link;
+poses[21] = link_camera_center_link;
+poses[22] = link_camera_center_optical_link;
+poses[23] = link_mast_link;
+poses[24] = link_lift_link;
+poses[25] = link_arm_l0_link;
+poses[26] = link_arm_l1_link;
+poses[27] = link_arm_l2_link;
+poses[28] = link_arm_l3_link;
+poses[29] = link_arm_l4_link;
+poses[30] = link_wrist_link;
+poses[31] = link_wrist_yaw_link;
+poses[32] = link_wrist_pitch_link;
+poses[33] = link_wrist_roll_link;
+poses[34] = link_gripper_camera_link;
+poses[35] = link_gripper_stereo_camera_color_optical_frame;
+poses[36] = link_gripper_right_camera_color_optical_frame;
+poses[37] = link_gripper_left_camera_color_optical_frame;
+poses[38] = link_tool_attachment_site_link;
+poses[39] = link_wrist_aruco_link;
+poses[40] = link_wrist_reflector_link;
+poses[41] = link_wheel_2_link;
+poses[42] = link_wheel_1_link;
+poses[43] = link_wheel_0_link;
+poses[44] = link_docking_contact_link;
+poses[45] = link_quick_connect_interface_link;
+poses[46] = link_gripper_finger_right_link;
+poses[47] = link_gripper_fingertip_right_link;
+poses[48] = link_aruco_fingertip_right_link;
+poses[49] = link_gripper_finger_left_link;
+poses[50] = link_gripper_fingertip_left_link;
+poses[51] = link_aruco_fingertip_left_link;
+poses[52] = link_grasp_center_link;
+poses[53] = link_laser;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_link_jacobians(joint_cmds: &[f64; 13]) -> [SMatrix<f64, 6, 13>; 54] {
-let links = compute_fk(joint_cmds);
+let mut links = [Isometry3::identity(); 54];
+compute_fk(joint_cmds, &mut links);
 let axis_world_23 = links[24].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_25 = links[26].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
 let axis_world_26 = links[27].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);

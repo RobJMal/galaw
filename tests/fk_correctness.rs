@@ -73,12 +73,13 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
 /// itself producing a shared trait. The dynamic path is the ground truth here
 /// (already checked against `k` above), so this only needs to confirm the
 /// generated code agrees with it.
-fn check_generated_matches_dynamic<const N: usize, const M: usize>(
+fn check_generated_matches_dynamic<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     urdf_path: &str,
-    generated_compute_fk: impl Fn(&[f64; N]) -> [Isometry3<f64>; M],
+    generated_compute_fk: impl Fn(&[f64; NUM_JOINTS], &mut [Isometry3<f64>; NUM_LINKS]),
 ) -> TestResult {
     let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
     let mut dynamic_links = vec![Isometry3::identity(); galaw_model.links.len()];
+    let mut generated_poses = [Isometry3::identity(); NUM_LINKS];
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
@@ -94,11 +95,11 @@ fn check_generated_matches_dynamic<const N: usize, const M: usize>(
 
         galaw_model.compute_fk(&joint_cmds, &mut dynamic_links)?;
 
-        let joint_cmds_arr: [f64; N] = joint_cmds.clone().try_into().unwrap();
-        let generated_links = generated_compute_fk(&joint_cmds_arr);
+        let joint_cmds_arr: [f64; NUM_JOINTS] = joint_cmds.clone().try_into().unwrap();
+        generated_compute_fk(&joint_cmds_arr, &mut generated_poses);
 
         for i in 0..galaw_model.links.len() {
-            assert_galaw_transform_close(&dynamic_links[i], &generated_links[i], &TEST_TOLERANCE);
+            assert_galaw_transform_close(&dynamic_links[i], &generated_poses[i], &TEST_TOLERANCE);
         }
     }
 

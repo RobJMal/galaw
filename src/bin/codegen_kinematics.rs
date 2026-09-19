@@ -110,7 +110,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("#[inline]".to_string());
     out.push("#[rustfmt::skip]".to_string());
     out.push(format!(
-        "pub fn compute_fk(joint_cmds: &[{ty}; {n}]) -> [Isometry3<{ty}>; {m}] {{",
+        "pub fn compute_fk(joint_cmds: &[{ty}; {n}], poses: &mut [Isometry3<{ty}>; {m}]) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
@@ -197,8 +197,9 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
         link_vars_by_idx[joint.child_link_idx] = Some(link_name_var);
     }
 
-    let ordered: Vec<String> = link_vars_by_idx.into_iter().map(|v| v.unwrap()).collect();
-    out.push(format!("[{}]", ordered.join(", ")));
+    for (i, var_name) in link_vars_by_idx.into_iter().enumerate() {
+        out.push(format!("poses[{i}] = {};", var_name.unwrap()));
+    }
     out.push("}".to_string());
 
     Ok(out)
@@ -219,7 +220,8 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
     ));
-    out.push("let links = compute_fk(joint_cmds);".to_string());
+    out.push(format!("let mut links = [Isometry3::identity(); {m}];", m = galaw_model.links.len()));
+    out.push("compute_fk(joint_cmds, &mut links);".to_string());
 
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let Some(_) = joint.cmd_idx else { continue };

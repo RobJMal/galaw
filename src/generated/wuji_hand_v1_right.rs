@@ -6,7 +6,7 @@ use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 20]) -> [Isometry3<f64>; 26] {
+pub fn compute_fk(joint_cmds: &[f64; 20], poses: &mut [Isometry3<f64>; 26]) {
 let link_right_palm_link = Isometry3::identity();
 let link_right_finger1_link1 = link_right_palm_link * Isometry3::from_parts(Translation3::new(0.0084399_f64, 0.020587_f64, 0.028893_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.6822193668878683_f64, -0.6176690399171142_f64, 0.08050471975634982_f64, -0.3828585674474818_f64))) * { let (s, c) = (joint_cmds[0] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
 let link_right_finger1_link2 = link_right_finger1_link1 * Isometry3::from_parts(Translation3::new(-0.0047549_f64, -0.0058191_f64, 0.014132_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.7262524781813893_f64, 0.29085087339109844_f64, -0.08559118145800193_f64, -0.6169580674889091_f64))) * { let (s, c) = (joint_cmds[1] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
@@ -33,13 +33,39 @@ let link_right_finger5_link2 = link_right_finger5_link1 * Isometry3::from_parts(
 let link_right_finger5_link3 = link_right_finger5_link2 * Isometry3::from_parts(Translation3::new(0.0_f64, 0.004749999_f64, 0.04361769_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.7070117844838688_f64, 0.0_f64, 0.0_f64, -0.707201765128549_f64))) * { let (s, c) = (joint_cmds[18] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
 let link_right_finger5_link4 = link_right_finger5_link3 * Translation3::new(0.0_f64, -0.0002_f64, 0.0295_f64) * { let (s, c) = (joint_cmds[19] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
 let link_right_finger5_tip_link = link_right_finger5_link4 * Translation3::new(-0.001044639_f64, 0.0002113095_f64, 0.0267_f64);
-[link_right_palm_link, link_right_finger1_link1, link_right_finger1_link2, link_right_finger1_link3, link_right_finger1_link4, link_right_finger1_tip_link, link_right_finger2_link1, link_right_finger2_link2, link_right_finger2_link3, link_right_finger2_link4, link_right_finger2_tip_link, link_right_finger3_link1, link_right_finger3_link2, link_right_finger3_link3, link_right_finger3_link4, link_right_finger3_tip_link, link_right_finger4_link1, link_right_finger4_link2, link_right_finger4_link3, link_right_finger4_link4, link_right_finger4_tip_link, link_right_finger5_link1, link_right_finger5_link2, link_right_finger5_link3, link_right_finger5_link4, link_right_finger5_tip_link]
+poses[0] = link_right_palm_link;
+poses[1] = link_right_finger1_link1;
+poses[2] = link_right_finger1_link2;
+poses[3] = link_right_finger1_link3;
+poses[4] = link_right_finger1_link4;
+poses[5] = link_right_finger1_tip_link;
+poses[6] = link_right_finger2_link1;
+poses[7] = link_right_finger2_link2;
+poses[8] = link_right_finger2_link3;
+poses[9] = link_right_finger2_link4;
+poses[10] = link_right_finger2_tip_link;
+poses[11] = link_right_finger3_link1;
+poses[12] = link_right_finger3_link2;
+poses[13] = link_right_finger3_link3;
+poses[14] = link_right_finger3_link4;
+poses[15] = link_right_finger3_tip_link;
+poses[16] = link_right_finger4_link1;
+poses[17] = link_right_finger4_link2;
+poses[18] = link_right_finger4_link3;
+poses[19] = link_right_finger4_link4;
+poses[20] = link_right_finger4_tip_link;
+poses[21] = link_right_finger5_link1;
+poses[22] = link_right_finger5_link2;
+poses[23] = link_right_finger5_link3;
+poses[24] = link_right_finger5_link4;
+poses[25] = link_right_finger5_tip_link;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_link_jacobians(joint_cmds: &[f64; 20]) -> [SMatrix<f64, 6, 20>; 26] {
-let links = compute_fk(joint_cmds);
+let mut links = [Isometry3::identity(); 26];
+compute_fk(joint_cmds, &mut links);
 let axis_world_0 = links[1].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_1 = links[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_2 = links[3].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
