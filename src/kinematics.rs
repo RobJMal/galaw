@@ -163,7 +163,6 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         let mut links = vec![Isometry3::identity(); self.links.len()];
         self.compute_fk(joint_cmds, &mut links)?;
-
         self.fill_jacobian_columns(
             &links,
             &self.ancestors_by_link[target_link_idx],

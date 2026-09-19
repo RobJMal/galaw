@@ -79,7 +79,10 @@ fn check_generated_matches_dynamic<const NUM_JOINTS: usize, const NUM_LINKS: usi
 ) -> TestResult {
     let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
     let mut dynamic_links = vec![Isometry3::identity(); galaw_model.links.len()];
+<<<<<<< HEAD
     let mut generated_poses = [Isometry3::identity(); NUM_LINKS];
+=======
+>>>>>>> 991b1da (rebase: getting precompute features from main)
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
