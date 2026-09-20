@@ -5,7 +5,7 @@ use nalgebra::{
 
 use crate::{
     error::{GalawError, KinematicsError},
-    types::GalawModel,
+    types::{GalawData, GalawModel},
 };
 
 impl<T: RealField + Copy> GalawModel<T> {
@@ -58,18 +58,17 @@ impl<T: RealField + Copy> GalawModel<T> {
     ///
     /// ```
     /// # fn main() -> Result<(), galaw::error::GalawError<f64>> {
-    /// use nalgebra::Isometry3;
     /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
-    /// let mut poses = vec![Isometry3::identity(); model.links.len()];
-    /// model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut poses)?;
-    /// assert_eq!(poses.len(), model.links.len());
+    /// let mut data = model.create_galaw_data();
+    /// model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut data)?;
+    /// assert_eq!(data.link_poses.len(), model.links.len());
     /// # Ok(())
     /// # }
     /// ```
     pub fn compute_fk(
         &self,
         joint_cmds: &[T],
-        poses: &mut [Isometry3<T>],
+        data: &mut GalawData<T>,
     ) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
@@ -82,7 +81,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         // Root link is identity since it serves as global base frame and is not
         // set by the joint loop. Therefore, it needs to be set.
         let root_idx = self.joints.first().map_or(0, |j| j.parent_link_idx);
-        poses[root_idx] = Isometry3::identity();
+        data.link_poses[root_idx] = Isometry3::identity();
 
         for joint in &self.joints {
             let cmd = joint
@@ -101,7 +100,8 @@ impl<T: RealField + Copy> GalawModel<T> {
             };
 
             let joint_local = joint.transform * Isometry3::from_parts(translation, rotation);
-            poses[joint.child_link_idx] = poses[joint.parent_link_idx] * joint_local;
+            data.link_poses[joint.child_link_idx] =
+                data.link_poses[joint.parent_link_idx] * joint_local;
         }
 
         Ok(())
@@ -117,7 +117,7 @@ impl<T: RealField + Copy> GalawModel<T> {
     pub fn compute_link_jacobians(
         &self,
         joint_cmds: &[T],
-        jacobians: &mut [Matrix6xX<T>],
+        data: &mut GalawData<T>,
     ) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
@@ -126,23 +126,15 @@ impl<T: RealField + Copy> GalawModel<T> {
             }
             .into());
         }
-        if jacobians.len() != self.links.len() {
-            return Err(KinematicsError::OutLengthMismatch {
-                expected: self.links.len(),
-                actual: jacobians.len(),
-            }
-            .into());
-        }
 
-        let mut links = vec![Isometry3::identity(); self.links.len()];
-        self.compute_fk(joint_cmds, &mut links)?;
+        self.compute_fk(joint_cmds, data)?;
 
         for (link_idx, ancestors) in self.ancestors_by_link.iter().enumerate() {
             self.fill_jacobian_columns(
-                &links,
+                &data.link_poses,
                 ancestors,
-                &links[link_idx].translation,
-                &mut jacobians[link_idx],
+                &data.link_poses[link_idx].translation,
+                &mut data.link_jacobians[link_idx],
             );
         }
 
@@ -158,7 +150,7 @@ impl<T: RealField + Copy> GalawModel<T> {
         &self,
         joint_cmds: &[T],
         target_link_idx: usize,
-        jacobian: &mut Matrix6xX<T>,
+        data: &mut GalawData<T>,
     ) -> Result<(), GalawError<T>> {
         if joint_cmds.len() != self.num_actuated_joints {
             return Err(KinematicsError::JointCmdLengthMismatch {
@@ -175,13 +167,12 @@ impl<T: RealField + Copy> GalawModel<T> {
             .into());
         }
 
-        let mut links = vec![Isometry3::identity(); self.links.len()];
-        self.compute_fk(joint_cmds, &mut links)?;
+        self.compute_fk(joint_cmds, data)?;
         self.fill_jacobian_columns(
-            &links,
+            &data.link_poses,
             &self.ancestors_by_link[target_link_idx],
-            &links[target_link_idx].translation,
-            jacobian,
+            &data.link_poses[target_link_idx].translation,
+            &mut data.link_jacobians[target_link_idx],
         );
 
         Ok(())
@@ -269,12 +260,12 @@ impl<T: RealField + Copy> GalawModel<T> {
         target_link_idx: usize,
         target_pose: &Isometry3<T>,
         initial_joint_cmds: &[T],
-        joint_cmds_out: &mut [T],
+        data: &mut GalawData<T>,
     ) -> Result<(), GalawError<T>> {
-        if joint_cmds_out.len() != self.num_actuated_joints {
-            return Err(KinematicsError::OutLengthMismatch {
-                expected: self.num_actuated_joints,
-                actual: joint_cmds_out.len(),
+        if initial_joint_cmds.len() != self.num_actuated_joints {
+            return Err(KinematicsError::JointCmdLengthMismatch {
+                num_actuated: self.num_actuated_joints,
+                num_input: initial_joint_cmds.len(),
             }
             .into());
         }
@@ -302,7 +293,8 @@ impl<T: RealField + Copy> GalawModel<T> {
             ))
         };
 
-        let mut joint_cmds_candidate = initial_joint_cmds.to_vec();
+        // Use data.solved_joint_cmds as the candidate buffer directly.
+        data.solved_joint_cmds.copy_from_slice(initial_joint_cmds);
         let mut chain_poses: Vec<Isometry3<T>> = Vec::with_capacity(chain.len());
         let damping_matrix = Matrix6::<T>::identity() * damping_factor;
         let mut jac: Matrix6xX<T> = Matrix6xX::zeros(self.num_actuated_joints);
@@ -310,7 +302,7 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         let mut current_pose = self.compute_restricted_pose_and_fill_jacobian(
             chain,
-            &joint_cmds_candidate,
+            &data.solved_joint_cmds,
             &mut chain_poses,
             &mut jac,
         );
@@ -333,13 +325,13 @@ impl<T: RealField + Copy> GalawModel<T> {
                 .expect("J*J^T + damping*I is always positive definite for damping > 0")
                 .solve(&error);
             jac.tr_mul_to(&x, &mut dq);
-            for (q, dq_i) in joint_cmds_candidate.iter_mut().zip(dq.iter()) {
+            for (q, dq_i) in data.solved_joint_cmds.iter_mut().zip(dq.iter()) {
                 *q += step_size * *dq_i;
             }
 
             current_pose = self.compute_restricted_pose_and_fill_jacobian(
                 chain,
-                &joint_cmds_candidate,
+                &data.solved_joint_cmds,
                 &mut chain_poses,
                 &mut jac,
             );
@@ -349,13 +341,13 @@ impl<T: RealField + Copy> GalawModel<T> {
 
         // Clamped converged solution to joint limits
         // No null-space steering
-        for (i, cmd) in joint_cmds_candidate.iter_mut().enumerate() {
+        for (i, cmd) in data.solved_joint_cmds.iter_mut().enumerate() {
             *cmd = cmd.clamp(self.joint_limit_lower[i], self.joint_limit_upper[i]);
         }
 
         let clamped_pose = self.compute_restricted_pose_and_fill_jacobian(
             chain,
-            &joint_cmds_candidate,
+            &data.solved_joint_cmds,
             &mut chain_poses,
             &mut jac,
         );
@@ -368,7 +360,6 @@ impl<T: RealField + Copy> GalawModel<T> {
             .into());
         }
 
-        joint_cmds_out.copy_from_slice(&joint_cmds_candidate);
         Ok(())
     }
 }

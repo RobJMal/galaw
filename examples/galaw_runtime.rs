@@ -19,12 +19,12 @@ fn main() -> Result<(), GalawError<f64>> {
     joint_cmds[elbow_idx] = -0.3;
 
     // --- Forward kinematics ---
-    model.compute_fk(&joint_cmds, &mut data.link_poses)?;
+    model.compute_fk(&joint_cmds, &mut data)?;
     println!("=== FK ===");
     println!("forearm pose: {:?}", data.link_poses[forearm_idx]);
 
     // --- Jacobian ---
-    model.compute_link_jacobians(&joint_cmds, &mut data.link_jacobians)?;
+    model.compute_link_jacobians(&joint_cmds, &mut data)?;
     println!("\n=== Jacobian ===");
     println!("forearm jacobian:\n{}", data.link_jacobians[forearm_idx]);
 
@@ -32,13 +32,9 @@ fn main() -> Result<(), GalawError<f64>> {
     // Use the FK result above as the target, then solve from a zero initial guess.
     let target_pose = data.link_poses[forearm_idx];
     let init_joint_cmds = vec![0.0; model.num_actuated_joints];
-    model.compute_ik(
-        forearm_idx,
-        &target_pose,
-        &init_joint_cmds,
-        &mut data.solved_joint_cmds,
-    )?;
-    model.compute_fk(&data.solved_joint_cmds, &mut data.link_poses)?;
+    model.compute_ik(forearm_idx, &target_pose, &init_joint_cmds, &mut data)?;
+    let solved_joint_cmds = data.solved_joint_cmds.clone();
+    model.compute_fk(&solved_joint_cmds, &mut data)?;
     println!("\n=== IK ===");
     println!("target pose:  {:?}", target_pose);
     println!("solved cmds:  {:?}", data.solved_joint_cmds);

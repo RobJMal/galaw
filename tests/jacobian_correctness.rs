@@ -1,4 +1,4 @@
-use nalgebra::{Isometry3, Matrix6xX, SMatrix};
+use nalgebra::SMatrix;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
@@ -34,9 +34,11 @@ fn assert_galaw_jacobian_matches_finite_difference(
     galaw_model: &GalawModel<f64>,
     joint_cmds: &[f64],
 ) -> TestResult {
-    let mut jacobians =
-        vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
-    galaw_model.compute_link_jacobians(joint_cmds, &mut jacobians)?;
+    let mut data = galaw_model.create_galaw_data();
+    galaw_model.compute_link_jacobians(joint_cmds, &mut data)?;
+
+    let mut data_plus = galaw_model.create_galaw_data();
+    let mut data_minus = galaw_model.create_galaw_data();
 
     for joint in &galaw_model.joints {
         let Some(cmd_idx) = joint.cmd_idx else {
@@ -48,21 +50,19 @@ fn assert_galaw_jacobian_matches_finite_difference(
         let mut minus = joint_cmds.to_vec();
         minus[cmd_idx] -= FD_EPS;
 
-        let mut links_plus = vec![Isometry3::identity(); galaw_model.links.len()];
-        galaw_model.compute_fk(&plus, &mut links_plus)?;
-        let mut links_minus = vec![Isometry3::identity(); galaw_model.links.len()];
-        galaw_model.compute_fk(&minus, &mut links_minus)?;
+        galaw_model.compute_fk(&plus, &mut data_plus)?;
+        galaw_model.compute_fk(&minus, &mut data_minus)?;
 
         for link_idx in 0..galaw_model.links.len() {
-            let linear = (links_plus[link_idx].translation.vector
-                - links_minus[link_idx].translation.vector)
+            let linear = (data_plus.link_poses[link_idx].translation.vector
+                - data_minus.link_poses[link_idx].translation.vector)
                 / (2.0 * FD_EPS);
 
-            let relative_rotation =
-                links_plus[link_idx].rotation * links_minus[link_idx].rotation.inverse();
+            let relative_rotation = data_plus.link_poses[link_idx].rotation
+                * data_minus.link_poses[link_idx].rotation.inverse();
             let angular = relative_rotation.scaled_axis() / (2.0 * FD_EPS);
 
-            let jac = &jacobians[link_idx];
+            let jac = &data.link_jacobians[link_idx];
             assert_close_fd(jac[(0, cmd_idx)], linear.x);
             assert_close_fd(jac[(1, cmd_idx)], linear.y);
             assert_close_fd(jac[(2, cmd_idx)], linear.z);
@@ -84,12 +84,11 @@ fn asssert_galaw_jacobian_matches_k(
     k_chain.set_joint_positions(joint_cmds)?;
     k_chain.update_transforms();
 
-    let mut galaw_jacobian =
-        vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
-    galaw_model.compute_link_jacobians(joint_cmds, &mut galaw_jacobian)?;
+    let mut data = galaw_model.create_galaw_data();
+    galaw_model.compute_link_jacobians(joint_cmds, &mut data)?;
 
     for (target_link_idx, link) in galaw_model.links.iter().enumerate() {
-        let galaw_link_jacobian = &galaw_jacobian[target_link_idx];
+        let galaw_link_jacobian = &data.link_jacobians[target_link_idx];
 
         let k_node = k_chain
             .find_link(&link.name)
@@ -136,15 +135,14 @@ fn check_generated_jacobian_matches_runtime<const N: usize, const M: usize>(
 ) -> TestResult {
     let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
 
-    let mut dynamic_jacobians =
-        vec![Matrix6xX::zeros(galaw_model.num_actuated_joints); galaw_model.links.len()];
+    let mut data = galaw_model.create_galaw_data();
     let mut generated_jacobians: [SMatrix<f64, 6, N>; M] =
         std::array::from_fn(|_| SMatrix::zeros());
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
         let joint_cmds = random_joint_cmds(&galaw_model, &mut rng);
-        galaw_model.compute_link_jacobians(&joint_cmds, &mut dynamic_jacobians)?;
+        galaw_model.compute_link_jacobians(&joint_cmds, &mut data)?;
 
         let joint_cmds_arr: [f64; N] = joint_cmds.clone().try_into().unwrap();
         generated_compute_link_jacobians(&joint_cmds_arr, &mut generated_jacobians);
@@ -153,7 +151,7 @@ fn check_generated_jacobian_matches_runtime<const N: usize, const M: usize>(
             for row in 0..6 {
                 for col in 0..N {
                     assert_close(
-                        dynamic_jacobians[link_idx][(row, col)],
+                        data.link_jacobians[link_idx][(row, col)],
                         generated_jacobians[link_idx][(row, col)],
                         &TEST_TOLERANCE,
                     );

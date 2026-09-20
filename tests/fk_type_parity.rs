@@ -6,7 +6,6 @@
 /// surface at specific precisions, and documents the expected precision trade-off
 /// when switching types for performance.
 // Third-party
-use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
@@ -25,8 +24,8 @@ fn check_fk_f32_f64_parity(urdf_path: &str) -> TestResult {
     let model_f32 = load_urdf::<f32>(urdf_path)?;
     let model_f64 = load_urdf::<f64>(urdf_path)?;
 
-    let mut links_f64: Vec<Isometry3<f64>> = vec![Isometry3::identity(); model_f64.links.len()];
-    let mut links_f32: Vec<Isometry3<f32>> = vec![Isometry3::identity(); model_f32.links.len()];
+    let mut data_f64 = model_f64.create_galaw_data();
+    let mut data_f32 = model_f32.create_galaw_data();
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
@@ -42,12 +41,12 @@ fn check_fk_f32_f64_parity(urdf_path: &str) -> TestResult {
             .collect();
         let cmds_f32: Vec<f32> = cmds_f64.iter().map(|&v| v as f32).collect();
 
-        model_f64.compute_fk(&cmds_f64, &mut links_f64)?;
-        model_f32.compute_fk(&cmds_f32, &mut links_f32)?;
+        model_f64.compute_fk(&cmds_f64, &mut data_f64)?;
+        model_f32.compute_fk(&cmds_f32, &mut data_f32)?;
 
         for i in 0..model_f64.links.len() {
-            let t32 = &links_f32[i].translation;
-            let t64 = &links_f64[i].translation;
+            let t32 = &data_f32.link_poses[i].translation;
+            let t64 = &data_f64.link_poses[i].translation;
             assert!(
                 (t32.x as f64 - t64.x).abs() < PARITY_TOLERANCE,
                 "link {i} translation.x: f32={:.6e} f64={:.6e}",
@@ -69,8 +68,8 @@ fn check_fk_f32_f64_parity(urdf_path: &str) -> TestResult {
 
             // Quaternions double-cover SO(3): q and -q represent the same rotation,
             // so compare via |q32 · q64| ≈ 1.
-            let r32 = &links_f32[i].rotation;
-            let r64 = &links_f64[i].rotation;
+            let r32 = &data_f32.link_poses[i].rotation;
+            let r64 = &data_f64.link_poses[i].rotation;
             let dot = ((r32.w as f64) * r64.w
                 + (r32.i as f64) * r64.i
                 + (r32.j as f64) * r64.j

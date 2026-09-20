@@ -9,7 +9,6 @@ use rand_chacha::ChaCha8Rng;
 
 // Custom
 use galaw::load_urdf;
-use nalgebra::Matrix6xX;
 
 mod common;
 use common::{RNG_SEED, TestResult};
@@ -20,6 +19,8 @@ const PARITY_TOLERANCE: f64 = 1e-4;
 fn check_jacobian_f32_f64_parity(urdf_path: &str) -> TestResult {
     let model_f32 = load_urdf::<f32>(urdf_path)?;
     let model_f64 = load_urdf::<f64>(urdf_path)?;
+    let mut data_f64 = model_f64.create_galaw_data();
+    let mut data_f32 = model_f32.create_galaw_data();
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
@@ -34,18 +35,14 @@ fn check_jacobian_f32_f64_parity(urdf_path: &str) -> TestResult {
             .collect();
         let cmds_f32: Vec<f32> = cmds_f64.iter().map(|&v| v as f32).collect();
 
-        let mut jacs_f64 =
-            vec![Matrix6xX::zeros(model_f64.num_actuated_joints); model_f64.links.len()];
-        model_f64.compute_link_jacobians(&cmds_f64, &mut jacs_f64)?;
-        let mut jacs_f32 =
-            vec![Matrix6xX::zeros(model_f32.num_actuated_joints); model_f32.links.len()];
-        model_f32.compute_link_jacobians(&cmds_f32, &mut jacs_f32)?;
+        model_f64.compute_link_jacobians(&cmds_f64, &mut data_f64)?;
+        model_f32.compute_link_jacobians(&cmds_f32, &mut data_f32)?;
 
         for link_idx in 0..model_f64.links.len() {
             for row in 0..6 {
                 for col in 0..model_f64.num_actuated_joints {
-                    let v32 = jacs_f32[link_idx][(row, col)] as f64;
-                    let v64 = jacs_f64[link_idx][(row, col)];
+                    let v32 = data_f32.link_jacobians[link_idx][(row, col)] as f64;
+                    let v64 = data_f64.link_jacobians[link_idx][(row, col)];
                     assert!(
                         (v32 - v64).abs() < PARITY_TOLERANCE,
                         "link {link_idx} [{row},{col}]: f32={v32:.6e} f64={v64:.6e}"

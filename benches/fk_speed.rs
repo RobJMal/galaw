@@ -128,17 +128,16 @@ fn bench_fk(c: &mut Criterion) {
         group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
 
         // ----- galaw-runtime -----
-        let n_links = galaw_model.links.len();
         group.bench_with_input(
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
-                let mut out = vec![Isometry3::identity(); n_links];
+                let mut data = galaw_model.create_galaw_data();
                 b.iter(|| {
                     for cmd in cmds {
-                        galaw_model.compute_fk(black_box(cmd), &mut out).unwrap();
+                        galaw_model.compute_fk(black_box(cmd), &mut data).unwrap();
                     }
-                    black_box(&out);
+                    black_box(&data.link_poses);
                 });
             },
         );

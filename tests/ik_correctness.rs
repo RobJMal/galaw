@@ -79,17 +79,11 @@ fn assert_galaw_ik_correctness(
         target_joint_cmd
     );
 
-    let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
-    galaw_model.compute_fk(target_joint_cmd, &mut fk_poses)?;
-    let target_link_pose = fk_poses[target_link_idx];
+    let mut data = galaw_model.create_galaw_data();
+    galaw_model.compute_fk(target_joint_cmd, &mut data)?;
+    let target_link_pose = data.link_poses[target_link_idx];
 
-    let mut solved_joint_cmds = vec![0.0f64; galaw_model.num_actuated_joints];
-    match galaw_model.compute_ik(
-        target_link_idx,
-        &target_link_pose,
-        init_joint_cmd,
-        &mut solved_joint_cmds,
-    ) {
+    match galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd, &mut data) {
         Ok(()) => {}
         Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge { .. })) => {
             eprintln!("[skip] IK did not converge after clamping");
@@ -103,7 +97,7 @@ fn assert_galaw_ik_correctness(
         .joints
         .iter()
         .filter(|j| j.cmd_idx.is_some())
-        .zip(solved_joint_cmds.iter())
+        .zip(data.solved_joint_cmds.iter())
     {
         if let (Some(lo), Some(hi)) = (joint.limit_lower, joint.limit_upper) {
             assert!(
@@ -114,8 +108,9 @@ fn assert_galaw_ik_correctness(
         }
     }
 
-    galaw_model.compute_fk(&solved_joint_cmds, &mut fk_poses)?;
-    let solved_link_poses = fk_poses[target_link_idx];
+    let solved = data.solved_joint_cmds.clone();
+    galaw_model.compute_fk(&solved, &mut data)?;
+    let solved_link_poses = data.link_poses[target_link_idx];
     assert_galaw_transform_close(&target_link_pose, &solved_link_poses, &TEST_TOLERANCE);
 
     Ok(())
@@ -177,6 +172,7 @@ fn check_generated_matches_runtime<const N: usize>(
         "no valid IK target links found for {urdf_path}"
     );
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
+    let mut data = galaw_model.create_galaw_data();
 
     for _ in 0..NUM_POSES {
         let target_link_idx = candidates[rng.random_range(0..candidates.len())];
@@ -189,9 +185,8 @@ fn check_generated_matches_runtime<const N: usize>(
             target_joint_cmd
         );
 
-        let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
-        galaw_model.compute_fk(&target_joint_cmd, &mut fk_poses)?;
-        let target_pose = fk_poses[target_link_idx];
+        galaw_model.compute_fk(&target_joint_cmd, &mut data)?;
+        let target_pose = data.link_poses[target_link_idx];
 
         let init_joint_cmd_arr: [f64; N] = init_joint_cmd.try_into().unwrap();
         let mut solved_joint_cmds = [0.0f64; N];
@@ -208,8 +203,9 @@ fn check_generated_matches_runtime<const N: usize>(
             }
             Err(e) => return Err(e.into()),
         };
-        galaw_model.compute_fk(&solved_joint_cmds, &mut fk_poses)?;
-        let solved_pose = fk_poses[target_link_idx];
+        // solved_joint_cmds is a separate fixed-size array — no borrow conflict
+        galaw_model.compute_fk(&solved_joint_cmds, &mut data)?;
+        let solved_pose = data.link_poses[target_link_idx];
 
         assert_galaw_transform_close(&target_pose, &solved_pose, &TEST_TOLERANCE);
     }

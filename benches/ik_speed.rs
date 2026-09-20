@@ -84,12 +84,12 @@ fn bench_generated_ik<
         BenchmarkId::new(bench_id_label, bench_id),
         &trials_arr,
         |b, trials| {
-            let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
+            let mut data = galaw_model.create_galaw_data();
             let mut solved: [FloatType; NUM_JOINTS] = std::array::from_fn(|_| FloatType::default());
             b.iter(|| {
                 for (target, init) in trials {
-                    galaw_model.compute_fk(target, &mut fk_poses).unwrap();
-                    let pose = fk_poses[link_idx];
+                    galaw_model.compute_fk(target, &mut data).unwrap();
+                    let pose = data.link_poses[link_idx];
                     let _ = black_box(generated_compute_ik(
                         link_idx,
                         &pose,
@@ -125,17 +125,16 @@ fn bench_ik(c: &mut Criterion) {
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &trials,
             |b, trials| {
-                let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
-                let mut solved = vec![0.0f64; galaw_model.num_actuated_joints];
+                let mut data = galaw_model.create_galaw_data();
                 b.iter(|| {
                     for (target, init) in trials {
-                        galaw_model.compute_fk(target, &mut fk_poses).unwrap();
-                        let pose = fk_poses[link_idx];
+                        galaw_model.compute_fk(target, &mut data).unwrap();
+                        let pose = data.link_poses[link_idx];
                         let _ = black_box(galaw_model.compute_ik(
                             link_idx,
                             &pose,
                             black_box(init),
-                            &mut solved,
+                            &mut data,
                         ));
                     }
                 });

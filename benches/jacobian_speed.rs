@@ -9,7 +9,7 @@ use rand_chacha::ChaCha8Rng;
 
 // Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
-use nalgebra::{Matrix6xX, SMatrix};
+use nalgebra::SMatrix;
 
 // ---- CONSTANTS ----
 const RNG_SEED: u64 = 42;
@@ -78,20 +78,18 @@ fn bench_jacobian(c: &mut Criterion) {
         ));
 
         // ---- galaw-runtime ----
-        let num_links = galaw_model.links.len();
-        let num_actuated = galaw_model.num_actuated_joints;
         group.bench_with_input(
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
-                let mut jacobians = vec![Matrix6xX::zeros(num_actuated); num_links];
+                let mut data = galaw_model.create_galaw_data();
                 b.iter(|| {
                     for cmd in cmds {
                         galaw_model
-                            .compute_link_jacobians(black_box(cmd), &mut jacobians)
+                            .compute_link_jacobians(black_box(cmd), &mut data)
                             .unwrap();
                     }
-                    black_box(&jacobians);
+                    black_box(&data.link_jacobians);
                 });
             },
         );
