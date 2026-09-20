@@ -1142,6 +1142,7 @@ dependencies = [
  "nalgebra",
  "rand 0.10.2",
  "rand_chacha 0.10.0",
+ "rayon",
  "roxmltree",
  "serde_json",
  "sysinfo",
