@@ -8,6 +8,8 @@ use std::time::Instant;
 
 use rayon::prelude::*;
 
+use nalgebra::Isometry3;
+
 use galaw::{load_urdf, types::GalawData};
 
 const URDF: &str = "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf";
@@ -57,6 +59,29 @@ fn main() {
     });
     let par_tl_time = par_tl_start.elapsed();
 
+    // ---- Parallel: thread-local + saved results ----
+    // Same thread-local scratch buffer as above, but copies link_poses out to a
+    // separate Vec after each FK call. Stores only poses (not jacobian/IK buffers),
+    // so memory is much smaller than per-pose GalawData.
+    // Memory: (num_threads × sizeof(GalawData)) + (NUM_POSES × n_links × sizeof(Isometry3))
+    let mut saved_poses: Vec<Vec<Isometry3<f64>>> =
+        vec![vec![Isometry3::identity(); n_links]; NUM_POSES];
+
+    let par_tl_save_start = Instant::now();
+    batch_cmds
+        .par_iter()
+        .zip(saved_poses.par_iter_mut())
+        .for_each(|(cmds, out)| {
+            TL_DATA.with(|cell| {
+                let mut borrow = cell.borrow_mut();
+                let data = borrow.get_or_insert_with(|| model.create_galaw_data());
+                model.compute_fk(cmds, data).unwrap();
+                out.copy_from_slice(&data.link_poses);
+            });
+        });
+    let par_tl_save_time = par_tl_save_start.elapsed();
+    black_box(&saved_poses);
+
     // ---- Parallel: per-pose buffers ----
     // One GalawData pre-allocated per pose. Results remain accessible after
     // the loop, but memory cost is NUM_POSES × sizeof(GalawData).
@@ -74,38 +99,43 @@ fn main() {
     let par_pp_time = par_pp_start.elapsed();
 
     // ---- Results ----
-    let data_size_kb = {
-        let poses = n_links * std::mem::size_of::<nalgebra::Isometry3<f64>>();
+    let galaw_data_size_kb = {
+        let poses = n_links * std::mem::size_of::<Isometry3<f64>>();
         let jacs = n_links * 6 * n_joints * std::mem::size_of::<f64>();
         let cmds = n_joints * std::mem::size_of::<f64>();
         (poses + jacs + cmds) / 1024
     };
+    let poses_only_kb = n_links * std::mem::size_of::<Isometry3<f64>>() / 1024;
 
     println!(
-        "Sequential:            {:>8.2} ms  ({:.2} µs/pose)",
+        "Sequential:                  {:>8.2} ms  ({:.2} µs/pose)  results: discarded",
         seq_time.as_secs_f64() * 1e3,
         seq_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
     );
     println!(
-        "Parallel thread-local: {:>8.2} ms  ({:.2} µs/pose)  [{}t × {} KB = {} KB total]",
+        "Parallel thread-local:       {:>8.2} ms  ({:.2} µs/pose)  results: discarded     [{}t × {} KB = {} KB]",
         par_tl_time.as_secs_f64() * 1e3,
         par_tl_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
-        n_threads,
-        data_size_kb,
-        n_threads * data_size_kb,
+        n_threads, galaw_data_size_kb, n_threads * galaw_data_size_kb,
     );
     println!(
-        "Parallel per-pose:     {:>8.2} ms  ({:.2} µs/pose)  [{} poses × {} KB = {} MB total]",
+        "Parallel thread-local+saved: {:>8.2} ms  ({:.2} µs/pose)  results: poses only   [{}t × {} KB scratch + {} poses × {} KB = {} MB]",
+        par_tl_save_time.as_secs_f64() * 1e3,
+        par_tl_save_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
+        n_threads, galaw_data_size_kb,
+        NUM_POSES, poses_only_kb, (n_threads * galaw_data_size_kb + NUM_POSES * poses_only_kb) / 1024,
+    );
+    println!(
+        "Parallel per-pose:           {:>8.2} ms  ({:.2} µs/pose)  results: full GalawData [{} poses × {} KB = {} MB]",
         par_pp_time.as_secs_f64() * 1e3,
         par_pp_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
-        NUM_POSES,
-        data_size_kb,
-        NUM_POSES * data_size_kb / 1024,
+        NUM_POSES, galaw_data_size_kb, NUM_POSES * galaw_data_size_kb / 1024,
     );
     println!();
     println!(
-        "Speedup (thread-local): {:.2}x  |  Speedup (per-pose): {:.2}x  (theoretical max: {}x)",
+        "Speedup vs sequential — thread-local: {:.2}x  thread-local+saved: {:.2}x  per-pose: {:.2}x  (theoretical max: {}x)",
         seq_time.as_secs_f64() / par_tl_time.as_secs_f64(),
+        seq_time.as_secs_f64() / par_tl_save_time.as_secs_f64(),
         seq_time.as_secs_f64() / par_pp_time.as_secs_f64(),
         n_threads,
     );
