@@ -8,7 +8,12 @@ use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-use galaw::{error::KinematicsError, fixtures::BENCH_URDFS, load_urdf, types::{GalawModel, GeneratedGalawData}};
+use galaw::{
+    error::KinematicsError,
+    fixtures::BENCH_URDFS,
+    load_urdf,
+    types::{GalawModel, GeneratedGalawData},
+};
 
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;

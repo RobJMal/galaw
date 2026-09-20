@@ -108,7 +108,12 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
             })
             .collect();
 
-        match model_f32.compute_ik(target_link_idx, &target_pose_f32, &init_cmds_f32, &mut data_f32) {
+        match model_f32.compute_ik(
+            target_link_idx,
+            &target_pose_f32,
+            &init_cmds_f32,
+            &mut data_f32,
+        ) {
             Ok(()) => {}
             Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge {
                 ..

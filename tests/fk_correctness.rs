@@ -5,7 +5,10 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{load_urdf, types::{GalawModel, GeneratedGalawData}};
+use galaw::{
+    load_urdf,
+    types::{GalawModel, GeneratedGalawData},
+};
 
 mod common;
 use common::{
@@ -74,7 +77,10 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
 /// generated code agrees with it.
 fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     urdf_path: &str,
-    generated_compute_fk: impl Fn(&[f64; NUM_JOINTS], &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>),
+    generated_compute_fk: impl Fn(
+        &[f64; NUM_JOINTS],
+        &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
+    ),
 ) -> TestResult {
     let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
     let mut data = galaw_model.create_galaw_data();
@@ -98,7 +104,11 @@ fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usi
         generated_compute_fk(&joint_cmds_arr, &mut gen_data);
 
         for i in 0..galaw_model.links.len() {
-            assert_galaw_transform_close(&data.link_poses[i], &gen_data.link_poses[i], &TEST_TOLERANCE);
+            assert_galaw_transform_close(
+                &data.link_poses[i],
+                &gen_data.link_poses[i],
+                &TEST_TOLERANCE,
+            );
         }
     }
 

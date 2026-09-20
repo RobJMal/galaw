@@ -123,10 +123,10 @@ impl<T: RealField + Copy> GalawModel<T> {
 
     /// Creates GalawData to store output of kinematics computation.
     pub fn create_galaw_data(&self) -> GalawData<T> {
-        GalawData { 
-            link_poses: vec![Isometry3::identity(); self.links.len()], 
-            link_jacobians: vec![Matrix6xX::zeros(self.num_actuated_joints); self.links.len()], 
-            solved_joint_cmds: vec![T::zero(); self.num_actuated_joints], 
+        GalawData {
+            link_poses: vec![Isometry3::identity(); self.links.len()],
+            link_jacobians: vec![Matrix6xX::zeros(self.num_actuated_joints); self.links.len()],
+            solved_joint_cmds: vec![T::zero(); self.num_actuated_joints],
         }
     }
 }
@@ -144,6 +144,7 @@ pub struct GeneratedGalawData<T, const NUM_JOINTS: usize, const NUM_LINKS: usize
     pub solved_joint_cmds: [T; NUM_JOINTS],
 }
 
+#[allow(clippy::new_without_default)] // Must pass in NUM_JOINTS and NUM_LINKS
 impl<T: RealField + Copy, const NUM_JOINTS: usize, const NUM_LINKS: usize>
     GeneratedGalawData<T, NUM_JOINTS, NUM_LINKS>
 {

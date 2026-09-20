@@ -130,7 +130,10 @@ fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
 /// Runs correctness check generated `compute_link_jacobians` against the runtime version.
 fn check_generated_jacobian_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     urdf_path: &str,
-    generated_compute_link_jacobians: impl Fn(&[f64; NUM_JOINTS], &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>),
+    generated_compute_link_jacobians: impl Fn(
+        &[f64; NUM_JOINTS],
+        &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
+    ),
 ) -> TestResult {
     let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
 

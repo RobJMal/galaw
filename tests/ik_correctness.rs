@@ -6,7 +6,10 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{error::KinematicsError, types::{GalawModel, GeneratedGalawData}};
+use galaw::{
+    error::KinematicsError,
+    types::{GalawModel, GeneratedGalawData},
+};
 
 mod common;
 use common::{RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models, zero_joint_cmds};
@@ -83,7 +86,12 @@ fn assert_galaw_ik_correctness(
     galaw_model.compute_fk(target_joint_cmd, &mut data)?;
     let target_link_pose = data.link_poses[target_link_idx];
 
-    match galaw_model.compute_ik(target_link_idx, &target_link_pose, init_joint_cmd, &mut data) {
+    match galaw_model.compute_ik(
+        target_link_idx,
+        &target_link_pose,
+        init_joint_cmd,
+        &mut data,
+    ) {
         Ok(()) => {}
         Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge { .. })) => {
             eprintln!("[skip] IK did not converge after clamping");

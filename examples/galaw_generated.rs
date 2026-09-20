@@ -1,4 +1,9 @@
-use galaw::{error::GalawError, generated::simple_arm_2dof, load_urdf, types::{GalawModel, GeneratedGalawData}};
+use galaw::{
+    error::GalawError,
+    generated::simple_arm_2dof,
+    load_urdf,
+    types::{GalawModel, GeneratedGalawData},
+};
 
 fn main() -> Result<(), GalawError<f64>> {
     // Load the model only to resolve joint/link names to indices.
