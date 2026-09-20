@@ -64,6 +64,8 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
     // Everything else — target pose, IK, FK — runs in f32.
     let model_f32 = load_urdf::<f32>(urdf_path)?;
     let model_f64 = load_urdf::<f64>(urdf_path)?;
+    let mut data_f64 = model_f64.create_galaw_data();
+    let mut data_f32 = model_f32.create_galaw_data();
 
     let candidates = candidate_target_links(&model_f32);
     assert!(!candidates.is_empty(), "no valid IK targets in {urdf_path}");
@@ -87,9 +89,8 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
 
         // Compute target pose in f64 then cast to f32 so the IK operates entirely
         // in f32, matching real usage (no f64 ground-truth leaking in).
-        let mut fk_poses_f64 = vec![Isometry3::identity(); model_f64.links.len()];
-        model_f64.compute_fk(&target_cmds_f64, &mut fk_poses_f64)?;
-        let target_pose_f64 = fk_poses_f64[target_link_idx];
+        model_f64.compute_fk(&target_cmds_f64, &mut data_f64)?;
+        let target_pose_f64 = data_f64.link_poses[target_link_idx];
         let target_pose_f32 = iso_f64_to_f32(&target_pose_f64);
 
         // Perturb target joint cmds to form initial conditions.
@@ -107,12 +108,11 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
             })
             .collect();
 
-        let mut solved = vec![0.0f32; model_f32.num_actuated_joints];
         match model_f32.compute_ik(
             target_link_idx,
             &target_pose_f32,
             &init_cmds_f32,
-            &mut solved,
+            &mut data_f32,
         ) {
             Ok(()) => {}
             Err(galaw::error::GalawError::Kinematics(KinematicsError::IkDidNotConverge {
@@ -124,9 +124,9 @@ fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
             Err(e) => return Err(e.into()),
         };
 
-        let mut fk_poses_f32 = vec![Isometry3::identity(); model_f32.links.len()];
-        model_f32.compute_fk(&solved, &mut fk_poses_f32)?;
-        let achieved = fk_poses_f32[target_link_idx];
+        let solved = data_f32.solved_joint_cmds.clone();
+        model_f32.compute_fk(&solved, &mut data_f32)?;
+        let achieved = data_f32.link_poses[target_link_idx];
 
         // Translation
         let t = &achieved.translation;

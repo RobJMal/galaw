@@ -4,13 +4,12 @@ use std::hint::black_box; // Prevents compiler from optimizing away code since w
 // Third-Party
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
-use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use sysinfo::System;
 
 // Custom
-use galaw::{fixtures::BENCH_URDFS, load_urdf};
+use galaw::{fixtures::BENCH_URDFS, load_urdf, types::GeneratedGalawData};
 
 // ----- CONSTANTS -----
 const RNG_SEED: u64 = 42;
@@ -66,7 +65,7 @@ fn bench_generated<
     bench_id_label: &str,
     bench_id: usize,
     joint_cmds: &[Vec<T>],
-    generated_compute_fk: impl Fn(&[T; NUM_JOINTS], &mut [Isometry3<T>; NUM_LINKS]),
+    generated_compute_fk: impl Fn(&[T; NUM_JOINTS], &mut GeneratedGalawData<T, NUM_JOINTS, NUM_LINKS>),
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
     let joint_cmds_arr: Vec<[T; NUM_JOINTS]> = joint_cmds
@@ -78,12 +77,12 @@ fn bench_generated<
         BenchmarkId::new(bench_id_label, bench_id),
         &joint_cmds_arr,
         |b, cmds| {
-            let mut poses = [Isometry3::identity(); NUM_LINKS];
+            let mut data = GeneratedGalawData::new();
             b.iter(|| {
                 for cmd in cmds {
-                    generated_compute_fk(black_box(cmd), &mut poses);
+                    generated_compute_fk(black_box(cmd), &mut data);
                 }
-                black_box(&poses);
+                black_box(&data.link_poses);
             });
         },
     );
@@ -128,17 +127,16 @@ fn bench_fk(c: &mut Criterion) {
         group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
 
         // ----- galaw-runtime -----
-        let n_links = galaw_model.links.len();
         group.bench_with_input(
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
-                let mut out = vec![Isometry3::identity(); n_links];
+                let mut data = galaw_model.create_galaw_data();
                 b.iter(|| {
                     for cmd in cmds {
-                        galaw_model.compute_fk(black_box(cmd), &mut out).unwrap();
+                        galaw_model.compute_fk(black_box(cmd), &mut data).unwrap();
                     }
-                    black_box(&out);
+                    black_box(&data.link_poses);
                 });
             },
         );

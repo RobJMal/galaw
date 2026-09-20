@@ -2,16 +2,19 @@
 
 //! `galaw` is a robot kinematics library.
 //!
-//! Two APIs: [`load_urdf`] + [`types::GalawModel::compute_fk`] work for any
-//! URDF at runtime; the `codegen_kinematics` binary generates a fixed, faster
-//! `compute_fk` per robot ahead of time (see [`generated`]).
+//! Two APIs for FK, Jacobians, and IK: [`load_urdf`] + [`types::GalawModel`] work
+//! for any URDF at runtime; the `codegen_kinematics` binary generates fixed,
+//! faster implementations per robot ahead of time (see [`generated`]).
+//!
+//! Both APIs write results into caller-owned output buffers ([`types::GalawData`]
+//! or [`types::GeneratedGalawData`]) to eliminate per-call heap allocation.
 //!
 //! ```
 //! # fn main() -> Result<(), galaw::error::GalawError<f64>> {
-//! use nalgebra::Isometry3;
 //! let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
-//! let mut poses = vec![Isometry3::identity(); model.links.len()];
-//! model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut poses)?;
+//! let mut data = model.create_galaw_data();
+//! model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut data)?;
+//! model.compute_link_jacobians(&vec![0.0; model.num_actuated_joints], &mut data)?;
 //! # Ok(())
 //! # }
 //! ```

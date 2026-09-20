@@ -8,7 +8,12 @@ use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-use galaw::{error::KinematicsError, fixtures::BENCH_URDFS, load_urdf, types::GalawModel};
+use galaw::{
+    error::KinematicsError,
+    fixtures::BENCH_URDFS,
+    load_urdf,
+    types::{GalawModel, GeneratedGalawData},
+};
 
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
@@ -56,10 +61,11 @@ fn target_link(model: &GalawModel<f64>) -> usize {
 }
 
 /// Benchmarks a codegen'd `compute_ik` under the given id.
-/// Generic over FloatType and NUM_JOINTS (DOF count).
+/// Generic over FloatType, NUM_JOINTS (DOF count), and NUM_LINKS (link count).
 fn bench_generated_ik<
     FloatType: nalgebra::RealField + Copy + Clone + Default + 'static,
     const NUM_JOINTS: usize,
+    const NUM_LINKS: usize,
 >(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id_label: &str,
@@ -71,7 +77,7 @@ fn bench_generated_ik<
         usize,
         &Isometry3<FloatType>,
         &[FloatType; NUM_JOINTS],
-        &mut [FloatType; NUM_JOINTS],
+        &mut GeneratedGalawData<FloatType, NUM_JOINTS, NUM_LINKS>,
     ) -> Result<(), KinematicsError<FloatType>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
@@ -84,17 +90,17 @@ fn bench_generated_ik<
         BenchmarkId::new(bench_id_label, bench_id),
         &trials_arr,
         |b, trials| {
-            let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
-            let mut solved: [FloatType; NUM_JOINTS] = std::array::from_fn(|_| FloatType::default());
+            let mut data = galaw_model.create_galaw_data();
+            let mut gen_data = GeneratedGalawData::new();
             b.iter(|| {
                 for (target, init) in trials {
-                    galaw_model.compute_fk(target, &mut fk_poses).unwrap();
-                    let pose = fk_poses[link_idx];
+                    galaw_model.compute_fk(target, &mut data).unwrap();
+                    let pose = data.link_poses[link_idx];
                     let _ = black_box(generated_compute_ik(
                         link_idx,
                         &pose,
                         black_box(init),
-                        &mut solved,
+                        &mut gen_data,
                     ));
                 }
             });
@@ -125,17 +131,16 @@ fn bench_ik(c: &mut Criterion) {
             BenchmarkId::new("galaw-runtime", galaw_model.joints.len()),
             &trials,
             |b, trials| {
-                let mut fk_poses = vec![Isometry3::identity(); galaw_model.links.len()];
-                let mut solved = vec![0.0f64; galaw_model.num_actuated_joints];
+                let mut data = galaw_model.create_galaw_data();
                 b.iter(|| {
                     for (target, init) in trials {
-                        galaw_model.compute_fk(target, &mut fk_poses).unwrap();
-                        let pose = fk_poses[link_idx];
+                        galaw_model.compute_fk(target, &mut data).unwrap();
+                        let pose = data.link_poses[link_idx];
                         let _ = black_box(galaw_model.compute_ik(
                             link_idx,
                             &pose,
                             black_box(init),
-                            &mut solved,
+                            &mut data,
                         ));
                     }
                 });

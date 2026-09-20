@@ -3,7 +3,7 @@
 
 ## Features
 
-- **Stateless** — `compute_fk`, `compute_link_jacobian`, and `compute_ik` take joint commands and return fresh results. No mutable state, no setup step, safe to call concurrently.
+- **Pre-allocated output buffers** — results are written into caller-owned `GalawData` (runtime) or `GeneratedGalawData` (generated) structs, eliminating per-call heap allocation. Allocate once, reuse across calls.
 - **Code-generated (optional)** — ahead-of-time implementations per robot, with no parsing or `Result` on the hot path and fixed-size array types verified at compile time.
 - **Correctness-tested** — FK checked against [`k`](https://crates.io/crates/k); Jacobian checked against finite differences; IK checked by round-tripping through FK.
 - **Named lookups** — command joints/links by name, never by assumed index.
@@ -32,20 +32,23 @@ fn main() -> Result<(), GalawError<f64>> {
     joint_cmds[shoulder_idx] = 0.5;
     joint_cmds[elbow_idx] = -0.3;
 
+    // Allocate output buffers once — reuse across calls with no per-call heap allocation.
+    let mut data = model.create_galaw_data();
+
     // Forward kinematics
-    let poses = model.compute_fk(&joint_cmds)?;
+    model.compute_fk(&joint_cmds, &mut data)?;
 
     // Jacobian — one 6×N matrix per link
-    let jacobians = model.compute_link_jacobians(&joint_cmds)?;
+    model.compute_link_jacobians(&joint_cmds, &mut data)?;
 
     // Inverse kinematics (damped Levenberg-Marquardt, clamps to joint limits)
-    let target_pose = poses[forearm_idx];
+    let target_pose = data.link_poses[forearm_idx];
     let init_cmds = vec![0.0_f64; model.num_actuated_joints];
-    let solved_cmds = model.compute_ik(forearm_idx, &target_pose, &init_cmds)?;
+    model.compute_ik(forearm_idx, &target_pose, &init_cmds, &mut data)?;
 
-    println!("poses:    {:?}", poses[forearm_idx]);
-    println!("jacobian:\n{}", jacobians[forearm_idx]);
-    println!("solved:   {:?}", solved_cmds);
+    println!("poses:    {:?}", data.link_poses[forearm_idx]);
+    println!("jacobian:\n{}", data.link_jacobians[forearm_idx]);
+    println!("solved:   {:?}", data.solved_joint_cmds);
     Ok(())
 }
 ```
@@ -64,7 +67,7 @@ cargo run --bin codegen_kinematics -- assets/urdf/custom/simple_arm_2dof.urdf sr
 Then call the generated functions directly — no `GalawModel`, no `Result`, no parsing at call time:
 
 ```rust
-use galaw::{error::GalawError, generated::simple_arm_2dof, load_urdf, types::GalawModel};
+use galaw::{error::GalawError, generated::simple_arm_2dof, load_urdf, types::{GalawModel, GeneratedGalawData}};
 
 fn main() -> Result<(), GalawError<f64>> {
     // Load model only to resolve joint/link names to indices.
@@ -78,20 +81,23 @@ fn main() -> Result<(), GalawError<f64>> {
     joint_cmds[shoulder_idx] = 0.5;
     joint_cmds[elbow_idx] = -0.3;
 
+    // Allocate output buffers once — stack-allocated, zero heap overhead.
+    let mut data: GeneratedGalawData<f64, 2, 3> = GeneratedGalawData::new();
+
     // Forward kinematics
-    let poses = simple_arm_2dof::compute_fk(&joint_cmds);
+    simple_arm_2dof::compute_fk(&joint_cmds, &mut data);
 
     // Jacobian — fixed-size array of SMatrix<f64, 6, 2>, one per link
-    let jacobians = simple_arm_2dof::compute_link_jacobians(&joint_cmds);
+    simple_arm_2dof::compute_link_jacobians(&joint_cmds, &mut data);
 
     // Inverse kinematics
-    let target_pose = poses[forearm_idx];
+    let target_pose = data.link_poses[forearm_idx];
     let init_cmds: [f64; 2] = [0.0; 2];
-    let solved_cmds = simple_arm_2dof::compute_ik(forearm_idx, &target_pose, &init_cmds)?;
+    simple_arm_2dof::compute_ik(forearm_idx, &target_pose, &init_cmds, &mut data)?;
 
-    println!("poses:    {:?}", poses[forearm_idx]);
-    println!("jacobian:\n{}", jacobians[forearm_idx]);
-    println!("solved:   {:?}", solved_cmds);
+    println!("poses:    {:?}", data.link_poses[forearm_idx]);
+    println!("jacobian:\n{}", data.link_jacobians[forearm_idx]);
+    println!("solved:   {:?}", data.solved_joint_cmds);
     Ok(())
 }
 ```
