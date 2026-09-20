@@ -8,8 +8,7 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{fixtures::BENCH_URDFS, load_urdf};
-use nalgebra::SMatrix;
+use galaw::{fixtures::BENCH_URDFS, load_urdf, types::GeneratedGalawData};
 
 // ---- CONSTANTS ----
 const RNG_SEED: u64 = 42;
@@ -28,7 +27,7 @@ fn bench_generated_jacobian<
     joint_cmds: &[Vec<FloatType>],
     generated_compute_link_jacobians: impl Fn(
         &[FloatType; NUM_JOINTS],
-        &mut [SMatrix<FloatType, 6, NUM_JOINTS>; NUM_LINKS],
+        &mut GeneratedGalawData<FloatType, NUM_JOINTS, NUM_LINKS>,
     ),
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
@@ -41,13 +40,12 @@ fn bench_generated_jacobian<
         BenchmarkId::new(bench_id_label, bench_id),
         &joint_cmds_arr,
         |b, cmds| {
-            let mut jacobians: [SMatrix<FloatType, 6, NUM_JOINTS>; NUM_LINKS] =
-                std::array::from_fn(|_| SMatrix::zeros());
+            let mut data = GeneratedGalawData::new();
             b.iter(|| {
                 for cmd in cmds {
-                    generated_compute_link_jacobians(black_box(cmd), &mut jacobians);
+                    generated_compute_link_jacobians(black_box(cmd), &mut data);
                 }
-                black_box(&jacobians);
+                black_box(&data.link_jacobians);
             });
         },
     );

@@ -2,11 +2,12 @@
 #[allow(unused_imports)]
 #[rustfmt::skip]
 use nalgebra::{Isometry3, Translation3, UnitQuaternion, Quaternion, Unit, Vector3};
+use crate::types::GeneratedGalawData;
 /// Forward kinematics for `assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf`: 14 joints → 96 link poses.
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 14], poses: &mut [Isometry3<f64>; 96]) {
+pub fn compute_fk(joint_cmds: &[f64; 14], data: &mut GeneratedGalawData<f64, 14, 96>) {
 let link_base = Isometry3::identity();
 let link_base_inertia = link_base;
 let link_body_top = link_base * Translation3::new(0.0_f64, 0.0_f64, 0.144_f64);
@@ -103,366 +104,365 @@ let link_inspection_payload_thermal_camera = link_inspection_payload_head * Isom
 let link_inspection_payload_light = link_inspection_payload_head * Isometry3::from_parts(Translation3::new(0.05495_f64, 0.03_f64, 0.03116_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.4999999983974483_f64, -0.5_f64, 0.5000000016025516_f64, -0.5_f64)));
 let link_inspection_payload_microphone = link_inspection_payload_head * Isometry3::from_parts(Translation3::new(0.0684_f64, 0.023_f64, -0.03_f64), UnitQuaternion::from_quaternion(Quaternion::new(0.4999999983974483_f64, -0.5_f64, 0.5000000016025516_f64, -0.5_f64)));
 let link_inspection_payload_camera_default = link_inspection_payload_mount * Translation3::new(0.0_f64, 0.0_f64, 0.175_f64);
-poses[0] = link_base;
-poses[1] = link_base_inertia;
-poses[2] = link_body_top;
-poses[3] = link_top_shell;
-poses[4] = link_bottom_shell;
-poses[5] = link_face_front;
-poses[6] = link_depth_camera_front_lower_camera;
-poses[7] = link_depth_camera_front_lower_camera_parent;
-poses[8] = link_depth_camera_front_lower_depth_frame;
-poses[9] = link_depth_camera_front_lower_depth_optical_frame;
-poses[10] = link_depth_camera_front_upper_camera;
-poses[11] = link_depth_camera_front_upper_camera_parent;
-poses[12] = link_depth_camera_front_upper_depth_frame;
-poses[13] = link_depth_camera_front_upper_depth_optical_frame;
-poses[14] = link_wide_angle_camera_front_camera;
-poses[15] = link_wide_angle_camera_front_camera_parent;
-poses[16] = link_face_rear;
-poses[17] = link_depth_camera_rear_lower_camera;
-poses[18] = link_depth_camera_rear_lower_camera_parent;
-poses[19] = link_depth_camera_rear_lower_depth_frame;
-poses[20] = link_depth_camera_rear_lower_depth_optical_frame;
-poses[21] = link_depth_camera_rear_upper_camera;
-poses[22] = link_depth_camera_rear_upper_camera_parent;
-poses[23] = link_depth_camera_rear_upper_depth_frame;
-poses[24] = link_depth_camera_rear_upper_depth_optical_frame;
-poses[25] = link_wide_angle_camera_rear_camera;
-poses[26] = link_wide_angle_camera_rear_camera_parent;
-poses[27] = link_face_shell_front;
-poses[28] = link_face_shell_rear;
-poses[29] = link_battery;
-poses[30] = link_docking_socket;
-poses[31] = link_hbc_receiver;
-poses[32] = link_imu_link;
-poses[33] = link_depth_camera_left_camera;
-poses[34] = link_depth_camera_left_camera_parent;
-poses[35] = link_depth_camera_left_depth_frame;
-poses[36] = link_depth_camera_left_depth_optical_frame;
-poses[37] = link_depth_camera_right_camera;
-poses[38] = link_depth_camera_right_camera_parent;
-poses[39] = link_depth_camera_right_depth_frame;
-poses[40] = link_depth_camera_right_depth_optical_frame;
-poses[41] = link_lidar_parent;
-poses[42] = link_lidar;
-poses[43] = link_LF_HAA_drive;
-poses[44] = link_LF_HIP;
-poses[45] = link_LF_hip_fixed;
-poses[46] = link_LF_HFE_output;
-poses[47] = link_LF_HFE_drive;
-poses[48] = link_LF_THIGH;
-poses[49] = link_LF_thigh_fixed;
-poses[50] = link_LF_KFE_drive;
-poses[51] = link_LF_SHANK;
-poses[52] = link_LF_shank_fixed;
-poses[53] = link_LF_FOOT;
-poses[54] = link_RF_HAA_drive;
-poses[55] = link_RF_HIP;
-poses[56] = link_RF_hip_fixed;
-poses[57] = link_RF_HFE_output;
-poses[58] = link_RF_HFE_drive;
-poses[59] = link_RF_THIGH;
-poses[60] = link_RF_thigh_fixed;
-poses[61] = link_RF_KFE_drive;
-poses[62] = link_RF_SHANK;
-poses[63] = link_RF_shank_fixed;
-poses[64] = link_RF_FOOT;
-poses[65] = link_LH_HAA_drive;
-poses[66] = link_LH_HIP;
-poses[67] = link_LH_hip_fixed;
-poses[68] = link_LH_HFE_output;
-poses[69] = link_LH_HFE_drive;
-poses[70] = link_LH_THIGH;
-poses[71] = link_LH_thigh_fixed;
-poses[72] = link_LH_KFE_drive;
-poses[73] = link_LH_SHANK;
-poses[74] = link_LH_shank_fixed;
-poses[75] = link_LH_FOOT;
-poses[76] = link_RH_HAA_drive;
-poses[77] = link_RH_HIP;
-poses[78] = link_RH_hip_fixed;
-poses[79] = link_RH_HFE_output;
-poses[80] = link_RH_HFE_drive;
-poses[81] = link_RH_THIGH;
-poses[82] = link_RH_thigh_fixed;
-poses[83] = link_RH_KFE_drive;
-poses[84] = link_RH_SHANK;
-poses[85] = link_RH_shank_fixed;
-poses[86] = link_RH_FOOT;
-poses[87] = link_inspection_payload_mount;
-poses[88] = link_inspection_payload_pan;
-poses[89] = link_inspection_payload_tilt;
-poses[90] = link_inspection_payload_head;
-poses[91] = link_inspection_payload_camera;
-poses[92] = link_inspection_payload_thermal_camera;
-poses[93] = link_inspection_payload_light;
-poses[94] = link_inspection_payload_microphone;
-poses[95] = link_inspection_payload_camera_default;
+data.link_poses[0] = link_base;
+data.link_poses[1] = link_base_inertia;
+data.link_poses[2] = link_body_top;
+data.link_poses[3] = link_top_shell;
+data.link_poses[4] = link_bottom_shell;
+data.link_poses[5] = link_face_front;
+data.link_poses[6] = link_depth_camera_front_lower_camera;
+data.link_poses[7] = link_depth_camera_front_lower_camera_parent;
+data.link_poses[8] = link_depth_camera_front_lower_depth_frame;
+data.link_poses[9] = link_depth_camera_front_lower_depth_optical_frame;
+data.link_poses[10] = link_depth_camera_front_upper_camera;
+data.link_poses[11] = link_depth_camera_front_upper_camera_parent;
+data.link_poses[12] = link_depth_camera_front_upper_depth_frame;
+data.link_poses[13] = link_depth_camera_front_upper_depth_optical_frame;
+data.link_poses[14] = link_wide_angle_camera_front_camera;
+data.link_poses[15] = link_wide_angle_camera_front_camera_parent;
+data.link_poses[16] = link_face_rear;
+data.link_poses[17] = link_depth_camera_rear_lower_camera;
+data.link_poses[18] = link_depth_camera_rear_lower_camera_parent;
+data.link_poses[19] = link_depth_camera_rear_lower_depth_frame;
+data.link_poses[20] = link_depth_camera_rear_lower_depth_optical_frame;
+data.link_poses[21] = link_depth_camera_rear_upper_camera;
+data.link_poses[22] = link_depth_camera_rear_upper_camera_parent;
+data.link_poses[23] = link_depth_camera_rear_upper_depth_frame;
+data.link_poses[24] = link_depth_camera_rear_upper_depth_optical_frame;
+data.link_poses[25] = link_wide_angle_camera_rear_camera;
+data.link_poses[26] = link_wide_angle_camera_rear_camera_parent;
+data.link_poses[27] = link_face_shell_front;
+data.link_poses[28] = link_face_shell_rear;
+data.link_poses[29] = link_battery;
+data.link_poses[30] = link_docking_socket;
+data.link_poses[31] = link_hbc_receiver;
+data.link_poses[32] = link_imu_link;
+data.link_poses[33] = link_depth_camera_left_camera;
+data.link_poses[34] = link_depth_camera_left_camera_parent;
+data.link_poses[35] = link_depth_camera_left_depth_frame;
+data.link_poses[36] = link_depth_camera_left_depth_optical_frame;
+data.link_poses[37] = link_depth_camera_right_camera;
+data.link_poses[38] = link_depth_camera_right_camera_parent;
+data.link_poses[39] = link_depth_camera_right_depth_frame;
+data.link_poses[40] = link_depth_camera_right_depth_optical_frame;
+data.link_poses[41] = link_lidar_parent;
+data.link_poses[42] = link_lidar;
+data.link_poses[43] = link_LF_HAA_drive;
+data.link_poses[44] = link_LF_HIP;
+data.link_poses[45] = link_LF_hip_fixed;
+data.link_poses[46] = link_LF_HFE_output;
+data.link_poses[47] = link_LF_HFE_drive;
+data.link_poses[48] = link_LF_THIGH;
+data.link_poses[49] = link_LF_thigh_fixed;
+data.link_poses[50] = link_LF_KFE_drive;
+data.link_poses[51] = link_LF_SHANK;
+data.link_poses[52] = link_LF_shank_fixed;
+data.link_poses[53] = link_LF_FOOT;
+data.link_poses[54] = link_RF_HAA_drive;
+data.link_poses[55] = link_RF_HIP;
+data.link_poses[56] = link_RF_hip_fixed;
+data.link_poses[57] = link_RF_HFE_output;
+data.link_poses[58] = link_RF_HFE_drive;
+data.link_poses[59] = link_RF_THIGH;
+data.link_poses[60] = link_RF_thigh_fixed;
+data.link_poses[61] = link_RF_KFE_drive;
+data.link_poses[62] = link_RF_SHANK;
+data.link_poses[63] = link_RF_shank_fixed;
+data.link_poses[64] = link_RF_FOOT;
+data.link_poses[65] = link_LH_HAA_drive;
+data.link_poses[66] = link_LH_HIP;
+data.link_poses[67] = link_LH_hip_fixed;
+data.link_poses[68] = link_LH_HFE_output;
+data.link_poses[69] = link_LH_HFE_drive;
+data.link_poses[70] = link_LH_THIGH;
+data.link_poses[71] = link_LH_thigh_fixed;
+data.link_poses[72] = link_LH_KFE_drive;
+data.link_poses[73] = link_LH_SHANK;
+data.link_poses[74] = link_LH_shank_fixed;
+data.link_poses[75] = link_LH_FOOT;
+data.link_poses[76] = link_RH_HAA_drive;
+data.link_poses[77] = link_RH_HIP;
+data.link_poses[78] = link_RH_hip_fixed;
+data.link_poses[79] = link_RH_HFE_output;
+data.link_poses[80] = link_RH_HFE_drive;
+data.link_poses[81] = link_RH_THIGH;
+data.link_poses[82] = link_RH_thigh_fixed;
+data.link_poses[83] = link_RH_KFE_drive;
+data.link_poses[84] = link_RH_SHANK;
+data.link_poses[85] = link_RH_shank_fixed;
+data.link_poses[86] = link_RH_FOOT;
+data.link_poses[87] = link_inspection_payload_mount;
+data.link_poses[88] = link_inspection_payload_pan;
+data.link_poses[89] = link_inspection_payload_tilt;
+data.link_poses[90] = link_inspection_payload_head;
+data.link_poses[91] = link_inspection_payload_camera;
+data.link_poses[92] = link_inspection_payload_thermal_camera;
+data.link_poses[93] = link_inspection_payload_light;
+data.link_poses[94] = link_inspection_payload_microphone;
+data.link_poses[95] = link_inspection_payload_camera_default;
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_link_jacobians(joint_cmds: &[f64; 14], jacobians: &mut [SMatrix<f64, 6, 14>; 96]) {
-let mut links = [Isometry3::identity(); 96];
-compute_fk(joint_cmds, &mut links);
-let axis_world_43 = links[44].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_46 = links[48].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_50 = links[51].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_54 = links[55].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_57 = links[59].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_61 = links[62].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_65 = links[66].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_68 = links[70].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_72 = links[73].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_76 = links[77].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_79 = links[81].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_83 = links[84].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
-let axis_world_87 = links[88].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
-let axis_world_88 = links[89].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
-jacobians[0].fill(0.0_f64);
-jacobians[1].fill(0.0_f64);
-jacobians[2].fill(0.0_f64);
-jacobians[3].fill(0.0_f64);
-jacobians[4].fill(0.0_f64);
-jacobians[5].fill(0.0_f64);
-jacobians[6].fill(0.0_f64);
-jacobians[7].fill(0.0_f64);
-jacobians[8].fill(0.0_f64);
-jacobians[9].fill(0.0_f64);
-jacobians[10].fill(0.0_f64);
-jacobians[11].fill(0.0_f64);
-jacobians[12].fill(0.0_f64);
-jacobians[13].fill(0.0_f64);
-jacobians[14].fill(0.0_f64);
-jacobians[15].fill(0.0_f64);
-jacobians[16].fill(0.0_f64);
-jacobians[17].fill(0.0_f64);
-jacobians[18].fill(0.0_f64);
-jacobians[19].fill(0.0_f64);
-jacobians[20].fill(0.0_f64);
-jacobians[21].fill(0.0_f64);
-jacobians[22].fill(0.0_f64);
-jacobians[23].fill(0.0_f64);
-jacobians[24].fill(0.0_f64);
-jacobians[25].fill(0.0_f64);
-jacobians[26].fill(0.0_f64);
-jacobians[27].fill(0.0_f64);
-jacobians[28].fill(0.0_f64);
-jacobians[29].fill(0.0_f64);
-jacobians[30].fill(0.0_f64);
-jacobians[31].fill(0.0_f64);
-jacobians[32].fill(0.0_f64);
-jacobians[33].fill(0.0_f64);
-jacobians[34].fill(0.0_f64);
-jacobians[35].fill(0.0_f64);
-jacobians[36].fill(0.0_f64);
-jacobians[37].fill(0.0_f64);
-jacobians[38].fill(0.0_f64);
-jacobians[39].fill(0.0_f64);
-jacobians[40].fill(0.0_f64);
-jacobians[41].fill(0.0_f64);
-jacobians[42].fill(0.0_f64);
-jacobians[43].fill(0.0_f64);
+pub fn compute_link_jacobians(joint_cmds: &[f64; 14], data: &mut GeneratedGalawData<f64, 14, 96>) {
+compute_fk(joint_cmds, data);
+let axis_world_43 = data.link_poses[44].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_46 = data.link_poses[48].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_50 = data.link_poses[51].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_54 = data.link_poses[55].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_57 = data.link_poses[59].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_61 = data.link_poses[62].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_65 = data.link_poses[66].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_68 = data.link_poses[70].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_72 = data.link_poses[73].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_76 = data.link_poses[77].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_79 = data.link_poses[81].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_83 = data.link_poses[84].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
+let axis_world_87 = data.link_poses[88].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
+let axis_world_88 = data.link_poses[89].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
+data.link_jacobians[0].fill(0.0_f64);
+data.link_jacobians[1].fill(0.0_f64);
+data.link_jacobians[2].fill(0.0_f64);
+data.link_jacobians[3].fill(0.0_f64);
+data.link_jacobians[4].fill(0.0_f64);
+data.link_jacobians[5].fill(0.0_f64);
+data.link_jacobians[6].fill(0.0_f64);
+data.link_jacobians[7].fill(0.0_f64);
+data.link_jacobians[8].fill(0.0_f64);
+data.link_jacobians[9].fill(0.0_f64);
+data.link_jacobians[10].fill(0.0_f64);
+data.link_jacobians[11].fill(0.0_f64);
+data.link_jacobians[12].fill(0.0_f64);
+data.link_jacobians[13].fill(0.0_f64);
+data.link_jacobians[14].fill(0.0_f64);
+data.link_jacobians[15].fill(0.0_f64);
+data.link_jacobians[16].fill(0.0_f64);
+data.link_jacobians[17].fill(0.0_f64);
+data.link_jacobians[18].fill(0.0_f64);
+data.link_jacobians[19].fill(0.0_f64);
+data.link_jacobians[20].fill(0.0_f64);
+data.link_jacobians[21].fill(0.0_f64);
+data.link_jacobians[22].fill(0.0_f64);
+data.link_jacobians[23].fill(0.0_f64);
+data.link_jacobians[24].fill(0.0_f64);
+data.link_jacobians[25].fill(0.0_f64);
+data.link_jacobians[26].fill(0.0_f64);
+data.link_jacobians[27].fill(0.0_f64);
+data.link_jacobians[28].fill(0.0_f64);
+data.link_jacobians[29].fill(0.0_f64);
+data.link_jacobians[30].fill(0.0_f64);
+data.link_jacobians[31].fill(0.0_f64);
+data.link_jacobians[32].fill(0.0_f64);
+data.link_jacobians[33].fill(0.0_f64);
+data.link_jacobians[34].fill(0.0_f64);
+data.link_jacobians[35].fill(0.0_f64);
+data.link_jacobians[36].fill(0.0_f64);
+data.link_jacobians[37].fill(0.0_f64);
+data.link_jacobians[38].fill(0.0_f64);
+data.link_jacobians[39].fill(0.0_f64);
+data.link_jacobians[40].fill(0.0_f64);
+data.link_jacobians[41].fill(0.0_f64);
+data.link_jacobians[42].fill(0.0_f64);
+data.link_jacobians[43].fill(0.0_f64);
 let mut jac_44 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[44].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_44.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[44] = jac_44;
+{ let lin = axis_world_43.cross(&(data.link_poses[44].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_44.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[44] = jac_44;
 let mut jac_45 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[45].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_45.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[45] = jac_45;
+{ let lin = axis_world_43.cross(&(data.link_poses[45].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_45.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[45] = jac_45;
 let mut jac_46 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[46].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_46.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[46] = jac_46;
+{ let lin = axis_world_43.cross(&(data.link_poses[46].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_46.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[46] = jac_46;
 let mut jac_47 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[47].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_47.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[47].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_47.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[47] = jac_47;
+{ let lin = axis_world_43.cross(&(data.link_poses[47].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_47.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[47].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_47.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[47] = jac_47;
 let mut jac_48 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[48].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_48.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[48].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_48.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[48] = jac_48;
+{ let lin = axis_world_43.cross(&(data.link_poses[48].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_48.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[48].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_48.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[48] = jac_48;
 let mut jac_49 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[49].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_49.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[49].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_49.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[49] = jac_49;
+{ let lin = axis_world_43.cross(&(data.link_poses[49].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_49.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[49].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_49.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[49] = jac_49;
 let mut jac_50 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[50].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_50.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[50].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_50.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[50] = jac_50;
+{ let lin = axis_world_43.cross(&(data.link_poses[50].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_50.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[50].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_50.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[50] = jac_50;
 let mut jac_51 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[51].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_51.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[51].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_51.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_50.cross(&(links[51].translation.vector - links[51].translation.vector)); let ang = axis_world_50; jac_51.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[51] = jac_51;
+{ let lin = axis_world_43.cross(&(data.link_poses[51].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_51.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[51].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_51.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_50.cross(&(data.link_poses[51].translation.vector - data.link_poses[51].translation.vector)); let ang = axis_world_50; jac_51.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[51] = jac_51;
 let mut jac_52 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[52].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_52.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[52].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_52.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_50.cross(&(links[52].translation.vector - links[51].translation.vector)); let ang = axis_world_50; jac_52.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[52] = jac_52;
+{ let lin = axis_world_43.cross(&(data.link_poses[52].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_52.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[52].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_52.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_50.cross(&(data.link_poses[52].translation.vector - data.link_poses[51].translation.vector)); let ang = axis_world_50; jac_52.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[52] = jac_52;
 let mut jac_53 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_43.cross(&(links[53].translation.vector - links[44].translation.vector)); let ang = axis_world_43; jac_53.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_46.cross(&(links[53].translation.vector - links[48].translation.vector)); let ang = axis_world_46; jac_53.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_50.cross(&(links[53].translation.vector - links[51].translation.vector)); let ang = axis_world_50; jac_53.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[53] = jac_53;
-jacobians[54].fill(0.0_f64);
+{ let lin = axis_world_43.cross(&(data.link_poses[53].translation.vector - data.link_poses[44].translation.vector)); let ang = axis_world_43; jac_53.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_46.cross(&(data.link_poses[53].translation.vector - data.link_poses[48].translation.vector)); let ang = axis_world_46; jac_53.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_50.cross(&(data.link_poses[53].translation.vector - data.link_poses[51].translation.vector)); let ang = axis_world_50; jac_53.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[53] = jac_53;
+data.link_jacobians[54].fill(0.0_f64);
 let mut jac_55 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[55].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_55.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[55] = jac_55;
+{ let lin = axis_world_54.cross(&(data.link_poses[55].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_55.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[55] = jac_55;
 let mut jac_56 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[56].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_56.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[56] = jac_56;
+{ let lin = axis_world_54.cross(&(data.link_poses[56].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_56.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[56] = jac_56;
 let mut jac_57 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[57].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_57.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[57] = jac_57;
+{ let lin = axis_world_54.cross(&(data.link_poses[57].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_57.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[57] = jac_57;
 let mut jac_58 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[58].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_58.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[58].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_58.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[58] = jac_58;
+{ let lin = axis_world_54.cross(&(data.link_poses[58].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_58.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[58].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_58.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[58] = jac_58;
 let mut jac_59 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[59].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_59.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[59].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_59.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[59] = jac_59;
+{ let lin = axis_world_54.cross(&(data.link_poses[59].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_59.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[59].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_59.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[59] = jac_59;
 let mut jac_60 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[60].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_60.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[60].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_60.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[60] = jac_60;
+{ let lin = axis_world_54.cross(&(data.link_poses[60].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_60.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[60].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_60.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[60] = jac_60;
 let mut jac_61 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[61].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_61.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[61].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_61.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[61] = jac_61;
+{ let lin = axis_world_54.cross(&(data.link_poses[61].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_61.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[61].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_61.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[61] = jac_61;
 let mut jac_62 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[62].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_62.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[62].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_62.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_61.cross(&(links[62].translation.vector - links[62].translation.vector)); let ang = axis_world_61; jac_62.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[62] = jac_62;
+{ let lin = axis_world_54.cross(&(data.link_poses[62].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_62.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[62].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_62.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_61.cross(&(data.link_poses[62].translation.vector - data.link_poses[62].translation.vector)); let ang = axis_world_61; jac_62.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[62] = jac_62;
 let mut jac_63 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[63].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_63.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[63].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_63.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_61.cross(&(links[63].translation.vector - links[62].translation.vector)); let ang = axis_world_61; jac_63.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[63] = jac_63;
+{ let lin = axis_world_54.cross(&(data.link_poses[63].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_63.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[63].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_63.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_61.cross(&(data.link_poses[63].translation.vector - data.link_poses[62].translation.vector)); let ang = axis_world_61; jac_63.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[63] = jac_63;
 let mut jac_64 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_54.cross(&(links[64].translation.vector - links[55].translation.vector)); let ang = axis_world_54; jac_64.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_57.cross(&(links[64].translation.vector - links[59].translation.vector)); let ang = axis_world_57; jac_64.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_61.cross(&(links[64].translation.vector - links[62].translation.vector)); let ang = axis_world_61; jac_64.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[64] = jac_64;
-jacobians[65].fill(0.0_f64);
+{ let lin = axis_world_54.cross(&(data.link_poses[64].translation.vector - data.link_poses[55].translation.vector)); let ang = axis_world_54; jac_64.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_57.cross(&(data.link_poses[64].translation.vector - data.link_poses[59].translation.vector)); let ang = axis_world_57; jac_64.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_61.cross(&(data.link_poses[64].translation.vector - data.link_poses[62].translation.vector)); let ang = axis_world_61; jac_64.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[64] = jac_64;
+data.link_jacobians[65].fill(0.0_f64);
 let mut jac_66 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[66].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_66.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[66] = jac_66;
+{ let lin = axis_world_65.cross(&(data.link_poses[66].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_66.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[66] = jac_66;
 let mut jac_67 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[67].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_67.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[67] = jac_67;
+{ let lin = axis_world_65.cross(&(data.link_poses[67].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_67.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[67] = jac_67;
 let mut jac_68 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[68].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_68.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[68] = jac_68;
+{ let lin = axis_world_65.cross(&(data.link_poses[68].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_68.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[68] = jac_68;
 let mut jac_69 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[69].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_69.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[69].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_69.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[69] = jac_69;
+{ let lin = axis_world_65.cross(&(data.link_poses[69].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_69.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[69].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_69.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[69] = jac_69;
 let mut jac_70 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[70].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_70.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[70].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_70.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[70] = jac_70;
+{ let lin = axis_world_65.cross(&(data.link_poses[70].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_70.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[70].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_70.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[70] = jac_70;
 let mut jac_71 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[71].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_71.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[71].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_71.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[71] = jac_71;
+{ let lin = axis_world_65.cross(&(data.link_poses[71].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_71.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[71].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_71.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[71] = jac_71;
 let mut jac_72 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[72].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_72.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[72].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_72.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[72] = jac_72;
+{ let lin = axis_world_65.cross(&(data.link_poses[72].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_72.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[72].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_72.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[72] = jac_72;
 let mut jac_73 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[73].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_73.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[73].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_73.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_72.cross(&(links[73].translation.vector - links[73].translation.vector)); let ang = axis_world_72; jac_73.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[73] = jac_73;
+{ let lin = axis_world_65.cross(&(data.link_poses[73].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_73.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[73].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_73.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_72.cross(&(data.link_poses[73].translation.vector - data.link_poses[73].translation.vector)); let ang = axis_world_72; jac_73.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[73] = jac_73;
 let mut jac_74 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[74].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_74.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[74].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_74.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_72.cross(&(links[74].translation.vector - links[73].translation.vector)); let ang = axis_world_72; jac_74.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[74] = jac_74;
+{ let lin = axis_world_65.cross(&(data.link_poses[74].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_74.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[74].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_74.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_72.cross(&(data.link_poses[74].translation.vector - data.link_poses[73].translation.vector)); let ang = axis_world_72; jac_74.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[74] = jac_74;
 let mut jac_75 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_65.cross(&(links[75].translation.vector - links[66].translation.vector)); let ang = axis_world_65; jac_75.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_68.cross(&(links[75].translation.vector - links[70].translation.vector)); let ang = axis_world_68; jac_75.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_72.cross(&(links[75].translation.vector - links[73].translation.vector)); let ang = axis_world_72; jac_75.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[75] = jac_75;
-jacobians[76].fill(0.0_f64);
+{ let lin = axis_world_65.cross(&(data.link_poses[75].translation.vector - data.link_poses[66].translation.vector)); let ang = axis_world_65; jac_75.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_68.cross(&(data.link_poses[75].translation.vector - data.link_poses[70].translation.vector)); let ang = axis_world_68; jac_75.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_72.cross(&(data.link_poses[75].translation.vector - data.link_poses[73].translation.vector)); let ang = axis_world_72; jac_75.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[75] = jac_75;
+data.link_jacobians[76].fill(0.0_f64);
 let mut jac_77 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[77].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_77.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[77] = jac_77;
+{ let lin = axis_world_76.cross(&(data.link_poses[77].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_77.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[77] = jac_77;
 let mut jac_78 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[78].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_78.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[78] = jac_78;
+{ let lin = axis_world_76.cross(&(data.link_poses[78].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_78.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[78] = jac_78;
 let mut jac_79 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[79].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_79.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[79] = jac_79;
+{ let lin = axis_world_76.cross(&(data.link_poses[79].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_79.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[79] = jac_79;
 let mut jac_80 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[80].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_80.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[80].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_80.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[80] = jac_80;
+{ let lin = axis_world_76.cross(&(data.link_poses[80].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_80.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[80].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_80.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[80] = jac_80;
 let mut jac_81 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[81].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_81.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[81].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_81.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[81] = jac_81;
+{ let lin = axis_world_76.cross(&(data.link_poses[81].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_81.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[81].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_81.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[81] = jac_81;
 let mut jac_82 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[82].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_82.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[82].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_82.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[82] = jac_82;
+{ let lin = axis_world_76.cross(&(data.link_poses[82].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_82.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[82].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_82.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[82] = jac_82;
 let mut jac_83 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[83].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_83.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[83].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_83.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[83] = jac_83;
+{ let lin = axis_world_76.cross(&(data.link_poses[83].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_83.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[83].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_83.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[83] = jac_83;
 let mut jac_84 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[84].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_84.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[84].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_84.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_83.cross(&(links[84].translation.vector - links[84].translation.vector)); let ang = axis_world_83; jac_84.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[84] = jac_84;
+{ let lin = axis_world_76.cross(&(data.link_poses[84].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_84.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[84].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_84.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_83.cross(&(data.link_poses[84].translation.vector - data.link_poses[84].translation.vector)); let ang = axis_world_83; jac_84.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[84] = jac_84;
 let mut jac_85 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[85].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_85.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[85].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_85.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_83.cross(&(links[85].translation.vector - links[84].translation.vector)); let ang = axis_world_83; jac_85.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[85] = jac_85;
+{ let lin = axis_world_76.cross(&(data.link_poses[85].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_85.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[85].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_85.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_83.cross(&(data.link_poses[85].translation.vector - data.link_poses[84].translation.vector)); let ang = axis_world_83; jac_85.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[85] = jac_85;
 let mut jac_86 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_76.cross(&(links[86].translation.vector - links[77].translation.vector)); let ang = axis_world_76; jac_86.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_79.cross(&(links[86].translation.vector - links[81].translation.vector)); let ang = axis_world_79; jac_86.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_83.cross(&(links[86].translation.vector - links[84].translation.vector)); let ang = axis_world_83; jac_86.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[86] = jac_86;
-jacobians[87].fill(0.0_f64);
+{ let lin = axis_world_76.cross(&(data.link_poses[86].translation.vector - data.link_poses[77].translation.vector)); let ang = axis_world_76; jac_86.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_79.cross(&(data.link_poses[86].translation.vector - data.link_poses[81].translation.vector)); let ang = axis_world_79; jac_86.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_83.cross(&(data.link_poses[86].translation.vector - data.link_poses[84].translation.vector)); let ang = axis_world_83; jac_86.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[86] = jac_86;
+data.link_jacobians[87].fill(0.0_f64);
 let mut jac_88 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[88].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_88.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[88] = jac_88;
+{ let lin = axis_world_87.cross(&(data.link_poses[88].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_88.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[88] = jac_88;
 let mut jac_89 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[89].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_89.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_88.cross(&(links[89].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jac_89.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[89] = jac_89;
+{ let lin = axis_world_87.cross(&(data.link_poses[89].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_89.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(data.link_poses[89].translation.vector - data.link_poses[89].translation.vector)); let ang = axis_world_88; jac_89.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[89] = jac_89;
 let mut jac_90 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[90].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_90.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_88.cross(&(links[90].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jac_90.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[90] = jac_90;
+{ let lin = axis_world_87.cross(&(data.link_poses[90].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_90.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(data.link_poses[90].translation.vector - data.link_poses[89].translation.vector)); let ang = axis_world_88; jac_90.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[90] = jac_90;
 let mut jac_91 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[91].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_91.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_88.cross(&(links[91].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jac_91.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[91] = jac_91;
+{ let lin = axis_world_87.cross(&(data.link_poses[91].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_91.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(data.link_poses[91].translation.vector - data.link_poses[89].translation.vector)); let ang = axis_world_88; jac_91.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[91] = jac_91;
 let mut jac_92 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[92].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_92.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_88.cross(&(links[92].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jac_92.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[92] = jac_92;
+{ let lin = axis_world_87.cross(&(data.link_poses[92].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_92.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(data.link_poses[92].translation.vector - data.link_poses[89].translation.vector)); let ang = axis_world_88; jac_92.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[92] = jac_92;
 let mut jac_93 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[93].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_93.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_88.cross(&(links[93].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jac_93.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[93] = jac_93;
+{ let lin = axis_world_87.cross(&(data.link_poses[93].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_93.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(data.link_poses[93].translation.vector - data.link_poses[89].translation.vector)); let ang = axis_world_88; jac_93.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[93] = jac_93;
 let mut jac_94 = SMatrix::<f64, 6, 14>::zeros();
-{ let lin = axis_world_87.cross(&(links[94].translation.vector - links[88].translation.vector)); let ang = axis_world_87; jac_94.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_88.cross(&(links[94].translation.vector - links[89].translation.vector)); let ang = axis_world_88; jac_94.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-jacobians[94] = jac_94;
-jacobians[95].fill(0.0_f64);
+{ let lin = axis_world_87.cross(&(data.link_poses[94].translation.vector - data.link_poses[88].translation.vector)); let ang = axis_world_87; jac_94.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_88.cross(&(data.link_poses[94].translation.vector - data.link_poses[89].translation.vector)); let ang = axis_world_88; jac_94.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+data.link_jacobians[94] = jac_94;
+data.link_jacobians[95].fill(0.0_f64);
 }
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;
 /// Inverse kinematics for `anymal-D`. Joints are clamped to their limits after solving.
 #[allow(non_snake_case)]
 #[rustfmt::skip]
-pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 14], joint_cmds_out: &mut [f64; 14]) -> Result<(), KinematicsError<f64>> {
+pub fn compute_ik(target_link_idx: usize, target_pose: &Isometry3<f64>, initial_joint_cmds: &[f64; 14], data: &mut GeneratedGalawData<f64, 14, 96>) -> Result<(), KinematicsError<f64>> {
 let error_tolerance: f64 = 1e-5_f64;
 let damping_factor: f64 = 0.0001_f64;
 let step_size: f64 = 1.0_f64;
@@ -498,7 +498,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 2 => {
@@ -525,7 +525,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 3 => {
@@ -551,7 +551,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 4 => {
@@ -577,7 +577,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 5 => {
@@ -604,7 +604,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 6 => {
@@ -631,7 +631,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 7 => {
@@ -658,7 +658,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 8 => {
@@ -685,7 +685,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 9 => {
@@ -712,7 +712,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 10 => {
@@ -739,7 +739,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 11 => {
@@ -766,7 +766,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 12 => {
@@ -793,7 +793,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 13 => {
@@ -820,7 +820,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 14 => {
@@ -847,7 +847,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 15 => {
@@ -874,7 +874,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 16 => {
@@ -901,7 +901,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 17 => {
@@ -928,7 +928,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 18 => {
@@ -955,7 +955,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 19 => {
@@ -982,7 +982,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 20 => {
@@ -1009,7 +1009,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 21 => {
@@ -1036,7 +1036,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 22 => {
@@ -1063,7 +1063,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 23 => {
@@ -1090,7 +1090,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 24 => {
@@ -1117,7 +1117,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 25 => {
@@ -1144,7 +1144,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 26 => {
@@ -1171,7 +1171,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 27 => {
@@ -1198,7 +1198,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 28 => {
@@ -1225,7 +1225,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 29 => {
@@ -1251,7 +1251,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 30 => {
@@ -1278,7 +1278,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 31 => {
@@ -1305,7 +1305,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 32 => {
@@ -1332,7 +1332,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 33 => {
@@ -1359,7 +1359,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 34 => {
@@ -1386,7 +1386,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 35 => {
@@ -1413,7 +1413,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 36 => {
@@ -1440,7 +1440,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 37 => {
@@ -1467,7 +1467,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 38 => {
@@ -1494,7 +1494,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 39 => {
@@ -1521,7 +1521,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 40 => {
@@ -1548,7 +1548,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 41 => {
@@ -1575,7 +1575,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 42 => {
@@ -1602,7 +1602,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 43 => {
@@ -1629,7 +1629,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 44 => {
@@ -1665,7 +1665,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 45 => {
@@ -1701,7 +1701,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 46 => {
@@ -1738,7 +1738,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 47 => {
@@ -1780,7 +1780,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 48 => {
@@ -1822,7 +1822,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 49 => {
@@ -1865,7 +1865,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 50 => {
@@ -1908,7 +1908,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 51 => {
@@ -1956,7 +1956,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 52 => {
@@ -2005,7 +2005,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 53 => {
@@ -2054,7 +2054,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 54 => {
@@ -2081,7 +2081,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 55 => {
@@ -2117,7 +2117,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 56 => {
@@ -2153,7 +2153,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 57 => {
@@ -2190,7 +2190,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 58 => {
@@ -2232,7 +2232,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 59 => {
@@ -2274,7 +2274,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 60 => {
@@ -2317,7 +2317,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 61 => {
@@ -2360,7 +2360,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 62 => {
@@ -2408,7 +2408,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 63 => {
@@ -2457,7 +2457,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 64 => {
@@ -2506,7 +2506,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 65 => {
@@ -2533,7 +2533,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 66 => {
@@ -2569,7 +2569,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 67 => {
@@ -2606,7 +2606,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 68 => {
@@ -2643,7 +2643,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 69 => {
@@ -2685,7 +2685,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 70 => {
@@ -2727,7 +2727,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 71 => {
@@ -2770,7 +2770,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 72 => {
@@ -2813,7 +2813,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 73 => {
@@ -2861,7 +2861,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 74 => {
@@ -2910,7 +2910,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 75 => {
@@ -2959,7 +2959,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 76 => {
@@ -2986,7 +2986,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 77 => {
@@ -3022,7 +3022,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 78 => {
@@ -3059,7 +3059,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 79 => {
@@ -3096,7 +3096,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 80 => {
@@ -3138,7 +3138,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 81 => {
@@ -3180,7 +3180,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 82 => {
@@ -3223,7 +3223,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 83 => {
@@ -3266,7 +3266,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 84 => {
@@ -3314,7 +3314,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 85 => {
@@ -3363,7 +3363,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 86 => {
@@ -3412,7 +3412,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 87 => {
@@ -3439,7 +3439,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 88 => {
@@ -3475,7 +3475,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 89 => {
@@ -3516,7 +3516,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 90 => {
@@ -3557,7 +3557,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 91 => {
@@ -3599,7 +3599,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 92 => {
@@ -3641,7 +3641,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 93 => {
@@ -3683,7 +3683,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 94 => {
@@ -3725,7 +3725,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 95 => {
@@ -3752,7 +3752,7 @@ let clamped_error = compute_error(&clamped_pose);
 if clamped_error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations, final_error: clamped_error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 _ => {
@@ -3760,7 +3760,7 @@ let error = compute_error(&Isometry3::identity());
 if error.norm() > error_tolerance {
 return Err(KinematicsError::IkDidNotConverge { iterations: 0, final_error: error.norm() });
 }
-*joint_cmds_out = joint_cmds;
+data.solved_joint_cmds = joint_cmds;
 Ok(())
 }
 }

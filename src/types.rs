@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use nalgebra::{Isometry3, Matrix6xX, RealField, Unit, Vector3};
+use nalgebra::{Isometry3, Matrix6xX, RealField, SMatrix, Unit, Vector3};
 
 /// A rigid body in the robot's kinematic tree.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -127,6 +127,33 @@ impl<T: RealField + Copy> GalawModel<T> {
             link_poses: vec![Isometry3::identity(); self.links.len()], 
             link_jacobians: vec![Matrix6xX::zeros(self.num_actuated_joints); self.links.len()], 
             solved_joint_cmds: vec![T::zero(); self.num_actuated_joints], 
+        }
+    }
+}
+
+/// Fixed-size output buffers for generated kinematics computation.
+///
+/// `NUM_JOINTS` and `NUM_LINKS` are baked in at compile time, enabling LLVM to
+/// unroll loops and avoid heap allocation entirely (contrast with [`GalawData`]).
+pub struct GeneratedGalawData<T, const NUM_JOINTS: usize, const NUM_LINKS: usize> {
+    /// Poses of all the links of the robot. Output of generated FK computation.
+    pub link_poses: [Isometry3<T>; NUM_LINKS],
+    /// Jacobians of all the links of the robot. Output of generated Jacobian computation.
+    pub link_jacobians: [SMatrix<T, 6, NUM_JOINTS>; NUM_LINKS],
+    /// Output of generated IK computation.
+    pub solved_joint_cmds: [T; NUM_JOINTS],
+}
+
+impl<T: RealField + Copy, const NUM_JOINTS: usize, const NUM_LINKS: usize>
+    GeneratedGalawData<T, NUM_JOINTS, NUM_LINKS>
+{
+    /// Creates a new `GeneratedGalawData` with identity link poses, zero Jacobians, and zero
+    /// solved joint commands.
+    pub fn new() -> Self {
+        Self {
+            link_poses: [Isometry3::identity(); NUM_LINKS],
+            link_jacobians: [SMatrix::zeros(); NUM_LINKS],
+            solved_joint_cmds: [T::zero(); NUM_JOINTS],
         }
     }
 }

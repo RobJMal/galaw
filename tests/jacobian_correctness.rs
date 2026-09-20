@@ -1,4 +1,3 @@
-use nalgebra::SMatrix;
 /// Tests the correctness of the implemented Jacobian computation
 /// with Rust's k library
 // Third-party
@@ -6,7 +5,7 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::types::GalawModel;
+use galaw::types::{GalawModel, GeneratedGalawData};
 
 mod common;
 use common::{
@@ -129,30 +128,29 @@ fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
 }
 
 /// Runs correctness check generated `compute_link_jacobians` against the runtime version.
-fn check_generated_jacobian_matches_runtime<const N: usize, const M: usize>(
+fn check_generated_jacobian_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     urdf_path: &str,
-    generated_compute_link_jacobians: impl Fn(&[f64; N], &mut [SMatrix<f64, 6, N>; M]),
+    generated_compute_link_jacobians: impl Fn(&[f64; NUM_JOINTS], &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>),
 ) -> TestResult {
     let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
 
     let mut data = galaw_model.create_galaw_data();
-    let mut generated_jacobians: [SMatrix<f64, 6, N>; M] =
-        std::array::from_fn(|_| SMatrix::zeros());
+    let mut gen_data = GeneratedGalawData::new();
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
         let joint_cmds = random_joint_cmds(&galaw_model, &mut rng);
         galaw_model.compute_link_jacobians(&joint_cmds, &mut data)?;
 
-        let joint_cmds_arr: [f64; N] = joint_cmds.clone().try_into().unwrap();
-        generated_compute_link_jacobians(&joint_cmds_arr, &mut generated_jacobians);
+        let joint_cmds_arr: [f64; NUM_JOINTS] = joint_cmds.clone().try_into().unwrap();
+        generated_compute_link_jacobians(&joint_cmds_arr, &mut gen_data);
 
         for link_idx in 0..galaw_model.links.len() {
             for row in 0..6 {
-                for col in 0..N {
+                for col in 0..NUM_JOINTS {
                     assert_close(
                         data.link_jacobians[link_idx][(row, col)],
-                        generated_jacobians[link_idx][(row, col)],
+                        gen_data.link_jacobians[link_idx][(row, col)],
                         &TEST_TOLERANCE,
                     );
                 }

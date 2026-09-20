@@ -1,12 +1,11 @@
 /// Tests the correctness of the implemented forward kinematics function
 /// with Rust's k library
 // Third-party
-use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{load_urdf, types::GalawModel};
+use galaw::{load_urdf, types::{GalawModel, GeneratedGalawData}};
 
 mod common;
 use common::{
@@ -75,11 +74,11 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
 /// generated code agrees with it.
 fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
     urdf_path: &str,
-    generated_compute_fk: impl Fn(&[f64; NUM_JOINTS], &mut [Isometry3<f64>; NUM_LINKS]),
+    generated_compute_fk: impl Fn(&[f64; NUM_JOINTS], &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>),
 ) -> TestResult {
     let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
     let mut data = galaw_model.create_galaw_data();
-    let mut generated_poses = [Isometry3::identity(); NUM_LINKS];
+    let mut gen_data = GeneratedGalawData::new();
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     for _ in 0..NUM_POSES {
@@ -96,10 +95,10 @@ fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usi
         galaw_model.compute_fk(&joint_cmds, &mut data)?;
 
         let joint_cmds_arr: [f64; NUM_JOINTS] = joint_cmds.clone().try_into().unwrap();
-        generated_compute_fk(&joint_cmds_arr, &mut generated_poses);
+        generated_compute_fk(&joint_cmds_arr, &mut gen_data);
 
         for i in 0..galaw_model.links.len() {
-            assert_galaw_transform_close(&data.link_poses[i], &generated_poses[i], &TEST_TOLERANCE);
+            assert_galaw_transform_close(&data.link_poses[i], &gen_data.link_poses[i], &TEST_TOLERANCE);
         }
     }
 

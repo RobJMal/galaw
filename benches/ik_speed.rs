@@ -8,7 +8,7 @@ use nalgebra::Isometry3;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-use galaw::{error::KinematicsError, fixtures::BENCH_URDFS, load_urdf, types::GalawModel};
+use galaw::{error::KinematicsError, fixtures::BENCH_URDFS, load_urdf, types::{GalawModel, GeneratedGalawData}};
 
 const RNG_SEED: u64 = 42;
 const N_POSES: usize = 100;
@@ -56,10 +56,11 @@ fn target_link(model: &GalawModel<f64>) -> usize {
 }
 
 /// Benchmarks a codegen'd `compute_ik` under the given id.
-/// Generic over FloatType and NUM_JOINTS (DOF count).
+/// Generic over FloatType, NUM_JOINTS (DOF count), and NUM_LINKS (link count).
 fn bench_generated_ik<
     FloatType: nalgebra::RealField + Copy + Clone + Default + 'static,
     const NUM_JOINTS: usize,
+    const NUM_LINKS: usize,
 >(
     group: &mut BenchmarkGroup<'_, WallTime>,
     bench_id_label: &str,
@@ -71,7 +72,7 @@ fn bench_generated_ik<
         usize,
         &Isometry3<FloatType>,
         &[FloatType; NUM_JOINTS],
-        &mut [FloatType; NUM_JOINTS],
+        &mut GeneratedGalawData<FloatType, NUM_JOINTS, NUM_LINKS>,
     ) -> Result<(), KinematicsError<FloatType>>,
 ) {
     // Conversion to fixed-size arrays happens once, up front - not timed.
@@ -85,7 +86,7 @@ fn bench_generated_ik<
         &trials_arr,
         |b, trials| {
             let mut data = galaw_model.create_galaw_data();
-            let mut solved: [FloatType; NUM_JOINTS] = std::array::from_fn(|_| FloatType::default());
+            let mut gen_data = GeneratedGalawData::new();
             b.iter(|| {
                 for (target, init) in trials {
                     galaw_model.compute_fk(target, &mut data).unwrap();
@@ -94,7 +95,7 @@ fn bench_generated_ik<
                         link_idx,
                         &pose,
                         black_box(init),
-                        &mut solved,
+                        &mut gen_data,
                     ));
                 }
             });
