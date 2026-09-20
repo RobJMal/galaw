@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use nalgebra::{Isometry3, RealField, Unit, Vector3};
+use nalgebra::{Isometry3, Matrix6xX, RealField, Unit, Vector3};
 
 /// A rigid body in the robot's kinematic tree.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -120,4 +120,23 @@ impl<T: RealField + Copy> GalawModel<T> {
     pub fn get_joint_idx(&self, name: &str) -> Option<usize> {
         self.joint_name_to_idx.get(name).copied()
     }
+
+    /// Creates GalawData to store output of kinematics computation.
+    pub fn create_galaw_data(&self) -> GalawData<T> {
+        GalawData { 
+            link_poses: vec![Isometry3::identity(); self.links.len()], 
+            link_jacobians: vec![Matrix6xX::zeros(self.num_actuated_joints); self.links.len()], 
+            solved_joint_cmds: vec![T::zero(); self.num_actuated_joints], 
+        }
+    }
+}
+
+/// Data structure that stores and contains the outputs of the model.
+pub struct GalawData<T> {
+    /// Poses of all the links of the robot. Output of FK computation.
+    pub link_poses: Vec<Isometry3<T>>,
+    /// Jacobians of all the links of the robot. Output of Jacobian computation.
+    pub link_jacobians: Vec<Matrix6xX<T>>,
+    /// Output of IK computation.
+    pub solved_joint_cmds: Vec<T>,
 }
