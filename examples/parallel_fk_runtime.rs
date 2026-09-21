@@ -23,14 +23,21 @@ fn main() {
     let n_links = model.links.len();
     let n_threads = rayon::current_num_threads();
 
-    println!("Robot:   {} ({} DOF, {} links)", model.name, n_joints, n_links);
+    println!(
+        "Robot:   {} ({} DOF, {} links)",
+        model.name, n_joints, n_links
+    );
     println!("Batch:   {} poses", NUM_POSES);
     println!("Threads: {}", n_threads);
     println!();
 
     // Batch commands
     let batch_cmds: Vec<Vec<f64>> = (0..NUM_POSES)
-        .map(|i| (0..n_joints).map(|j| ((i + j) as f64 * 0.1).sin()).collect())
+        .map(|i| {
+            (0..n_joints)
+                .map(|j| ((i + j) as f64 * 0.1).sin())
+                .collect()
+        })
         .collect();
 
     // ---- Sequential ----
@@ -78,6 +85,8 @@ fn main() {
         "Parallel thread-local:       {:>8.2} ms  ({:.2} µs/pose) [{} threads × {} KB = {} KB]",
         par_tl_time.as_secs_f64() * 1e3,
         par_tl_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
-        n_threads, galaw_data_size_kb, n_threads * galaw_data_size_kb,
+        n_threads,
+        galaw_data_size_kb,
+        n_threads * galaw_data_size_kb,
     );
 }

@@ -72,6 +72,8 @@ fn main() {
         "Parallel thread-local:       {:>8.2} ms  ({:.2} µs/pose) [{} threads × {} KB = {} KB]",
         par_tl_time.as_secs_f64() * 1e3,
         par_tl_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
-        n_threads, galaw_data_size_kb, n_threads * galaw_data_size_kb,
+        n_threads,
+        galaw_data_size_kb,
+        n_threads * galaw_data_size_kb,
     );
 }
