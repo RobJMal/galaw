@@ -118,7 +118,6 @@ fn bench_fk(c: &mut Criterion) {
                         (Some(lower), Some(upper)) => rng.random_range(lower..upper),
                         _ => rng.random_range(0.0..0.0),
                     })
-                    // .map(|j| rng.random_range(j.limit_lower..j.limit_upper))
                     .collect()
             })
             .collect();
