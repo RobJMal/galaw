@@ -5,7 +5,7 @@
 
 - **Pre-allocated output buffers** — results are written into caller-owned `GalawData` (runtime) or `GeneratedGalawData` (generated) structs, eliminating per-call heap allocation. Allocate once, reuse across calls.
 - **Code-generated (optional)** — ahead-of-time implementations per robot, with no parsing or `Result` on the hot path and fixed-size array types verified at compile time.
-- **Correctness-tested** — FK checked against [`k`](https://crates.io/crates/k); Jacobian checked against finite differences; IK checked by round-tripping through FK.
+- **Correctness-tested** — FK checked against [`k`](https://crates.io/crates/k). Jacobian checked against finite differences. IK checked by round-tripping through FK.
 - **Named lookups** — command joints/links by name, never by assumed index.
 - **Descriptive errors** — malformed URDFs fail with a specific cause, not a panic.
 
@@ -57,14 +57,14 @@ Full runnable version: [`examples/galaw_runtime.rs`](examples/galaw_runtime.rs) 
 
 ### Generated
 
-Ahead of time, generate fixed code for a specific robot (code for the robots shipped with this repo already exists under `src/generated/` — see `galaw::generated`):
+Ahead of time, generate fixed code for a specific robot (code for the robots shipped with this repo already exists under `src/generated/`, see `galaw::generated`):
 
 ```
 # 1st arg: urdf_path, 2nd arg: out_path
 cargo run --bin codegen_kinematics -- assets/urdf/custom/simple_arm_2dof.urdf src/generated/simple_arm_2dof.rs
 ```
 
-Then call the generated functions directly — no `GalawModel`, no `Result`, no parsing at call time:
+Then call the generated functions directly:
 
 ```rust
 use galaw::{error::GalawError, generated::simple_arm_2dof, load_urdf, types::{GalawModel, GeneratedGalawData}};
@@ -106,7 +106,7 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 
 ### Which one should I use?
 
-**Runtime** if you need to support arbitrary URDFs at runtime — e.g. a robot chosen by a user, or loaded from a file you don't control at compile time. **Generated** if you know the robot ahead of time and want the fastest possible computation, at the cost of a codegen step and one generated file per robot.
+**Runtime** if you need to support arbitrary URDFs at runtime (e.g. a robot chosen by a user, or loaded from a file you don't control at compile time). **Generated** if you know the robot ahead of time and want the fastest possible computation, at the cost of a codegen step and one generated file per robot.
 
 ## Performance
 
@@ -121,10 +121,10 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 Reproduce with `cargo bench`, then plot with:
 
 ```bash
-cargo run --release --example plot_bench           # all three
-cargo run --release --example plot_bench -- fk     # FK only
-cargo run --release --example plot_bench -- ik     # IK only
-cargo run --release --example plot_bench -- jacobian
+cargo run --release --example plot_bench              # all three
+cargo run --release --example plot_bench -- fk        # FK only
+cargo run --release --example plot_bench -- ik        # IK only
+cargo run --release --example plot_bench -- jacobian  # Jacobian only
 ```
 
 ### Forward Kinematics
