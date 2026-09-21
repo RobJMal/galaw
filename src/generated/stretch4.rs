@@ -140,30 +140,6 @@ let axis_world_42 = poses[49].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64)
 let axis_world_48 = poses[41].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_49 = poses[42].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_50 = poses[43].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
-data.link_jacobians[0].fill(0.0_f64);
-data.link_jacobians[1].fill(0.0_f64);
-data.link_jacobians[2].fill(0.0_f64);
-data.link_jacobians[3].fill(0.0_f64);
-data.link_jacobians[4].fill(0.0_f64);
-data.link_jacobians[5].fill(0.0_f64);
-data.link_jacobians[6].fill(0.0_f64);
-data.link_jacobians[7].fill(0.0_f64);
-data.link_jacobians[8].fill(0.0_f64);
-data.link_jacobians[9].fill(0.0_f64);
-data.link_jacobians[10].fill(0.0_f64);
-data.link_jacobians[11].fill(0.0_f64);
-data.link_jacobians[12].fill(0.0_f64);
-data.link_jacobians[13].fill(0.0_f64);
-data.link_jacobians[14].fill(0.0_f64);
-data.link_jacobians[15].fill(0.0_f64);
-data.link_jacobians[16].fill(0.0_f64);
-data.link_jacobians[17].fill(0.0_f64);
-data.link_jacobians[18].fill(0.0_f64);
-data.link_jacobians[19].fill(0.0_f64);
-data.link_jacobians[20].fill(0.0_f64);
-data.link_jacobians[21].fill(0.0_f64);
-data.link_jacobians[22].fill(0.0_f64);
-data.link_jacobians[23].fill(0.0_f64);
 let mut jac_24 = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_23; let ang = Vector3::zeros(); jac_24.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[24] = jac_24;
@@ -299,7 +275,6 @@ data.link_jacobians[42] = jac_42;
 let mut jac_43 = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_50.cross(&(poses[43].translation.vector - poses[43].translation.vector)); let ang = axis_world_50; jac_43.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[43] = jac_43;
-data.link_jacobians[44].fill(0.0_f64);
 let mut jac_45 = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_23; let ang = Vector3::zeros(); jac_45.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_25; let ang = Vector3::zeros(); jac_45.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
@@ -386,7 +361,6 @@ let mut jac_52 = SMatrix::<f64, 6, 13>::zeros();
 { let lin = axis_world_31.cross(&(poses[52].translation.vector - poses[32].translation.vector)); let ang = axis_world_31; jac_52.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_32.cross(&(poses[52].translation.vector - poses[33].translation.vector)); let ang = axis_world_32; jac_52.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[52] = jac_52;
-data.link_jacobians[53].fill(0.0_f64);
 data.link_poses = poses;
 }
 use nalgebra::{SVector, Matrix6};

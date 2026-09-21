@@ -30,7 +30,6 @@ compute_fk_impl(joint_cmds, &mut poses);
 let axis_world_0 = poses[1].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_1 = poses[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let axis_world_2 = poses[3].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64);
-data.link_jacobians[0].fill(0.0_f64);
 let mut jac_1 = SMatrix::<f64, 6, 3>::zeros();
 { let lin = axis_world_0.cross(&(poses[1].translation.vector - poses[1].translation.vector)); let ang = axis_world_0; jac_1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[1] = jac_1;

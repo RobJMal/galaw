@@ -46,8 +46,6 @@ let axis_world_4 = poses[5].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_5 = poses[6].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_6 = poses[7].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_7 = poses[8].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
-data.link_jacobians[0].fill(0.0_f64);
-data.link_jacobians[1].fill(0.0_f64);
 let mut jac_2 = SMatrix::<f64, 6, 7>::zeros();
 { let lin = axis_world_1.cross(&(poses[2].translation.vector - poses[2].translation.vector)); let ang = axis_world_1; jac_2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[2] = jac_2;

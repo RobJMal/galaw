@@ -225,50 +225,6 @@ let axis_world_79 = poses[81].rotation * Vector3::new(1.0_f64, 0.0_f64, 0.0_f64)
 let axis_world_83 = poses[84].rotation * Vector3::new(-1.0_f64, 0.0_f64, 0.0_f64);
 let axis_world_87 = poses[88].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
 let axis_world_88 = poses[89].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
-data.link_jacobians[0].fill(0.0_f64);
-data.link_jacobians[1].fill(0.0_f64);
-data.link_jacobians[2].fill(0.0_f64);
-data.link_jacobians[3].fill(0.0_f64);
-data.link_jacobians[4].fill(0.0_f64);
-data.link_jacobians[5].fill(0.0_f64);
-data.link_jacobians[6].fill(0.0_f64);
-data.link_jacobians[7].fill(0.0_f64);
-data.link_jacobians[8].fill(0.0_f64);
-data.link_jacobians[9].fill(0.0_f64);
-data.link_jacobians[10].fill(0.0_f64);
-data.link_jacobians[11].fill(0.0_f64);
-data.link_jacobians[12].fill(0.0_f64);
-data.link_jacobians[13].fill(0.0_f64);
-data.link_jacobians[14].fill(0.0_f64);
-data.link_jacobians[15].fill(0.0_f64);
-data.link_jacobians[16].fill(0.0_f64);
-data.link_jacobians[17].fill(0.0_f64);
-data.link_jacobians[18].fill(0.0_f64);
-data.link_jacobians[19].fill(0.0_f64);
-data.link_jacobians[20].fill(0.0_f64);
-data.link_jacobians[21].fill(0.0_f64);
-data.link_jacobians[22].fill(0.0_f64);
-data.link_jacobians[23].fill(0.0_f64);
-data.link_jacobians[24].fill(0.0_f64);
-data.link_jacobians[25].fill(0.0_f64);
-data.link_jacobians[26].fill(0.0_f64);
-data.link_jacobians[27].fill(0.0_f64);
-data.link_jacobians[28].fill(0.0_f64);
-data.link_jacobians[29].fill(0.0_f64);
-data.link_jacobians[30].fill(0.0_f64);
-data.link_jacobians[31].fill(0.0_f64);
-data.link_jacobians[32].fill(0.0_f64);
-data.link_jacobians[33].fill(0.0_f64);
-data.link_jacobians[34].fill(0.0_f64);
-data.link_jacobians[35].fill(0.0_f64);
-data.link_jacobians[36].fill(0.0_f64);
-data.link_jacobians[37].fill(0.0_f64);
-data.link_jacobians[38].fill(0.0_f64);
-data.link_jacobians[39].fill(0.0_f64);
-data.link_jacobians[40].fill(0.0_f64);
-data.link_jacobians[41].fill(0.0_f64);
-data.link_jacobians[42].fill(0.0_f64);
-data.link_jacobians[43].fill(0.0_f64);
 let mut jac_44 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_43.cross(&(poses[44].translation.vector - poses[44].translation.vector)); let ang = axis_world_43; jac_44.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[44] = jac_44;
@@ -309,7 +265,6 @@ let mut jac_53 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_46.cross(&(poses[53].translation.vector - poses[48].translation.vector)); let ang = axis_world_46; jac_53.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_50.cross(&(poses[53].translation.vector - poses[51].translation.vector)); let ang = axis_world_50; jac_53.set_column(2, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[53] = jac_53;
-data.link_jacobians[54].fill(0.0_f64);
 let mut jac_55 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_54.cross(&(poses[55].translation.vector - poses[55].translation.vector)); let ang = axis_world_54; jac_55.set_column(3, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[55] = jac_55;
@@ -350,7 +305,6 @@ let mut jac_64 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_57.cross(&(poses[64].translation.vector - poses[59].translation.vector)); let ang = axis_world_57; jac_64.set_column(4, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_61.cross(&(poses[64].translation.vector - poses[62].translation.vector)); let ang = axis_world_61; jac_64.set_column(5, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[64] = jac_64;
-data.link_jacobians[65].fill(0.0_f64);
 let mut jac_66 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_65.cross(&(poses[66].translation.vector - poses[66].translation.vector)); let ang = axis_world_65; jac_66.set_column(6, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[66] = jac_66;
@@ -391,7 +345,6 @@ let mut jac_75 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_68.cross(&(poses[75].translation.vector - poses[70].translation.vector)); let ang = axis_world_68; jac_75.set_column(7, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_72.cross(&(poses[75].translation.vector - poses[73].translation.vector)); let ang = axis_world_72; jac_75.set_column(8, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[75] = jac_75;
-data.link_jacobians[76].fill(0.0_f64);
 let mut jac_77 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_76.cross(&(poses[77].translation.vector - poses[77].translation.vector)); let ang = axis_world_76; jac_77.set_column(9, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[77] = jac_77;
@@ -432,7 +385,6 @@ let mut jac_86 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_79.cross(&(poses[86].translation.vector - poses[81].translation.vector)); let ang = axis_world_79; jac_86.set_column(10, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_83.cross(&(poses[86].translation.vector - poses[84].translation.vector)); let ang = axis_world_83; jac_86.set_column(11, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[86] = jac_86;
-data.link_jacobians[87].fill(0.0_f64);
 let mut jac_88 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_87.cross(&(poses[88].translation.vector - poses[88].translation.vector)); let ang = axis_world_87; jac_88.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[88] = jac_88;
@@ -460,7 +412,6 @@ let mut jac_94 = SMatrix::<f64, 6, 14>::zeros();
 { let lin = axis_world_87.cross(&(poses[94].translation.vector - poses[88].translation.vector)); let ang = axis_world_87; jac_94.set_column(12, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 { let lin = axis_world_88.cross(&(poses[94].translation.vector - poses[89].translation.vector)); let ang = axis_world_88; jac_94.set_column(13, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[94] = jac_94;
-data.link_jacobians[95].fill(0.0_f64);
 data.link_poses = poses;
 }
 use nalgebra::{SVector, Matrix6};

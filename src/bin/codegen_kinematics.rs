@@ -263,9 +263,7 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
 
     for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
         if ancestors.is_empty() {
-            out.push(format!(
-                "data.link_jacobians[{link_idx}].fill(0.0_{type_name});"
-            ));
+            continue;
         } else {
             let jac_var = format!("jac_{link_idx}");
             out.push(format!(
