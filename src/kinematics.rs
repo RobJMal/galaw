@@ -50,9 +50,9 @@ impl<T: RealField + Copy> GalawModel<T> {
 
     /// Computes forward kinematics of a model.
     ///
-    /// Computes forward kinematics of a model, writing each link's world-space
-    /// pose into `poses`. `poses` must have length [`GalawModel::links`]`.len()`.
-    /// `joint_cmds` must have length [`GalawModel::num_actuated_joints`].
+    /// Writes each link's world-space pose into `data.link_poses`. `data` must
+    /// be created by [`GalawModel::create_galaw_data`]. `joint_cmds` must have
+    /// length [`GalawModel::num_actuated_joints`].
     ///
     /// # Examples
     ///
@@ -61,7 +61,7 @@ impl<T: RealField + Copy> GalawModel<T> {
     /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
     /// let mut data = model.create_galaw_data();
     /// model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut data)?;
-    /// assert_eq!(data.link_poses.len(), model.links.len());
+    /// assert_eq!(data.link_poses.len(), model.num_links);
     /// # Ok(())
     /// # }
     /// ```
@@ -109,11 +109,10 @@ impl<T: RealField + Copy> GalawModel<T> {
 
     /// Computes the Jacobian of every link in a model.
     ///
-    /// `jacobians` must have length [`GalawModel::links`]`.len()`, with each matrix
-    /// pre-allocated to `6 × num_actuated_joints` and pre-zeroed. Only ancestor
-    /// columns are written per link, so a buffer initialized with
-    /// `Matrix6xX::zeros(num_actuated_joints)` can be reused across calls without
-    /// re-zeroing, provided the model topology is unchanged.
+    /// Results are written into `data.link_jacobians`. Only ancestor columns are
+    /// written per link, so `data` from [`GalawModel::create_galaw_data`] can be
+    /// reused across calls without re-zeroing, provided the model topology is
+    /// unchanged. `joint_cmds` must have length [`GalawModel::num_actuated_joints`].
     pub fn compute_link_jacobians(
         &self,
         joint_cmds: &[T],
@@ -144,8 +143,10 @@ impl<T: RealField + Copy> GalawModel<T> {
     /// Computes the Jacobian for a single link of a model.
     ///
     /// Primarily, this is used for computations where we only need specific links.
-    /// `jacobian` must be pre-allocated to `6 × num_actuated_joints` and pre-zeroed.
-    /// Only ancestor columns are written, so the buffer can be reused across calls.
+    /// The result is written into `data.link_jacobians[target_link_idx]`. Only
+    /// ancestor columns are written, so `data` from [`GalawModel::create_galaw_data`]
+    /// can be reused across calls without re-zeroing, provided the model topology is
+    /// unchanged. `joint_cmds` must have length [`GalawModel::num_actuated_joints`].
     pub fn compute_link_jacobian(
         &self,
         joint_cmds: &[T],
@@ -159,9 +160,9 @@ impl<T: RealField + Copy> GalawModel<T> {
             }
             .into());
         }
-        if target_link_idx >= self.links.len() {
+        if target_link_idx >= self.num_links {
             return Err(KinematicsError::LinkIdxOutOfBounds {
-                num_links: self.links.len(),
+                num_links: self.num_links,
                 requested: target_link_idx,
             }
             .into());
@@ -253,7 +254,8 @@ impl<T: RealField + Copy> GalawModel<T> {
 
     /// Computes inverse kinematics of a model.
     ///
-    /// Writes the solved joint commands into `joint_cmds_out`. `joint_cmds_out` must have
+    /// The solved joint commands are written into `data.solved_joint_cmds`. `data` must
+    /// be created by [`GalawModel::create_galaw_data`]. `initial_joint_cmds` must have
     /// length [`GalawModel::num_actuated_joints`].
     pub fn compute_ik(
         &self,

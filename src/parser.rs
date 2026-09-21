@@ -424,6 +424,7 @@ where
 
     Ok(GalawModel {
         name: robot_name,
+        num_links: links.len(),
         links,
         link_name_to_idx,
         joints: ordered_joints,

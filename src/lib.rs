@@ -22,6 +22,7 @@
 /// Error types returned by this crate's public functions.
 pub mod error;
 /// URDF fixtures shared by the benchmark suite and its chart generator.
+#[doc(hidden)]
 pub mod fixtures;
 /// Ahead-of-time generated `compute_fk` implementations, one per robot.
 ///
@@ -33,12 +34,10 @@ pub mod fixtures;
 pub mod generated;
 /// Forward-kinematics computation.
 pub mod kinematics;
-/// URDF parsing.
-pub mod parser;
+pub(crate) mod parser;
 /// Core data types: links, joints, and the parsed robot model.
 pub mod types;
-/// Small parsing helpers shared across the crate.
-pub mod utils;
+pub(crate) mod utils;
 
-/// Parses a URDF file into a [`types::GalawModel`]. See [`parser::load_urdf`].
+/// Parses a URDF file at `path` into a [`types::GalawModel`].
 pub use parser::load_urdf;

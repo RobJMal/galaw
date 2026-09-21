@@ -1,4 +1,4 @@
-/// Bechmarks the Jacobian computations.
+/// Benchmarks the Jacobian computations.
 use std::hint::black_box;
 
 // Third-party

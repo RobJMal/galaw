@@ -45,7 +45,7 @@ fn candidate_target_links<T>(model: &GalawModel<T>) -> Vec<usize> {
     let parent_indices: std::collections::HashSet<usize> =
         model.joints.iter().map(|j| j.parent_link_idx).collect();
 
-    let mut ancestors_by_link = vec![vec![]; model.links.len()];
+    let mut ancestors_by_link = vec![vec![]; model.num_links];
     for (joint_idx, joint) in model.joints.iter().enumerate() {
         let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
         if joint.cmd_idx.is_some() {
@@ -54,7 +54,7 @@ fn candidate_target_links<T>(model: &GalawModel<T>) -> Vec<usize> {
         ancestors_by_link[joint.child_link_idx] = ancestors;
     }
 
-    (0..model.links.len())
+    (0..model.num_links)
         .filter(|&i| !parent_indices.contains(&i) && !ancestors_by_link[i].is_empty())
         .collect()
 }
