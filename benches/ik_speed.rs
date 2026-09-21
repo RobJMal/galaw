@@ -50,12 +50,12 @@ fn perturbed_joint_cmds(model: &GalawModel<f64>, base: &[f64], rng: &mut ChaCha8
 // First leaf link with an actuated ancestor.
 fn target_link(model: &GalawModel<f64>) -> usize {
     let parents: HashSet<usize> = model.joints.iter().map(|j| j.parent_link_idx).collect();
-    let mut has_actuated_ancestor = vec![false; model.links.len()];
+    let mut has_actuated_ancestor = vec![false; model.num_links];
     for joint in &model.joints {
         has_actuated_ancestor[joint.child_link_idx] =
             has_actuated_ancestor[joint.parent_link_idx] || joint.cmd_idx.is_some();
     }
-    (0..model.links.len())
+    (0..model.num_links)
         .find(|&i| !parents.contains(&i) && has_actuated_ancestor[i])
         .unwrap()
 }

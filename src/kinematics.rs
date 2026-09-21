@@ -61,7 +61,7 @@ impl<T: RealField + Copy> GalawModel<T> {
     /// let model = galaw::load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf")?;
     /// let mut data = model.create_galaw_data();
     /// model.compute_fk(&vec![0.0; model.num_actuated_joints], &mut data)?;
-    /// assert_eq!(data.link_poses.len(), model.links.len());
+    /// assert_eq!(data.link_poses.len(), model.num_links);
     /// # Ok(())
     /// # }
     /// ```
@@ -159,9 +159,9 @@ impl<T: RealField + Copy> GalawModel<T> {
             }
             .into());
         }
-        if target_link_idx >= self.links.len() {
+        if target_link_idx >= self.num_links {
             return Err(KinematicsError::LinkIdxOutOfBounds {
-                num_links: self.links.len(),
+                num_links: self.num_links,
                 requested: target_link_idx,
             }
             .into());

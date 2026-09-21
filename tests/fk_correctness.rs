@@ -103,7 +103,7 @@ fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usi
         let joint_cmds_arr: [f64; NUM_JOINTS] = joint_cmds.clone().try_into().unwrap();
         generated_compute_fk(&joint_cmds_arr, &mut gen_data);
 
-        for i in 0..galaw_model.links.len() {
+        for i in 0..galaw_model.num_links {
             assert_galaw_transform_close(
                 &data.link_poses[i],
                 &gen_data.link_poses[i],

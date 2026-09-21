@@ -105,7 +105,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push(format!(
         "/// Forward kinematics for `{urdf_path}`: {} joints → {} link poses.",
         galaw_model.num_actuated_joints,
-        galaw_model.links.len(),
+        galaw_model.num_links,
     ));
     out.push("#[allow(non_snake_case)]".to_string());
     out.push("#[inline]".to_string());
@@ -114,7 +114,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
         "fn compute_fk_impl(joint_cmds: &[{ty}; {n}], poses: &mut [Isometry3<{ty}>; {m}]) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
-        m = galaw_model.links.len(),
+        m = galaw_model.num_links,
     ));
 
     let child_indices: std::collections::HashSet<usize> = galaw_model
@@ -122,13 +122,13 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
         .iter()
         .map(|j| j.child_link_idx)
         .collect();
-    let root_link_idx = (0..galaw_model.links.len())
+    let root_link_idx = (0..galaw_model.num_links)
         .find(|idx| !child_indices.contains(idx))
         .ok_or("could not find root link")?;
     let root_link_var = format!("link_{}", galaw_model.links[root_link_idx].name);
     out.push(format!("let {root_link_var} = Isometry3::identity();"));
 
-    let mut link_vars_by_idx: Vec<Option<String>> = vec![None; galaw_model.links.len()];
+    let mut link_vars_by_idx: Vec<Option<String>> = vec![None; galaw_model.num_links];
     link_vars_by_idx[root_link_idx] = Some(root_link_var);
 
     for joint in galaw_model.joints.iter() {
@@ -207,7 +207,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
         "pub fn compute_fk(joint_cmds: &[{ty}; {n}], data: &mut GeneratedGalawData<{ty}, {n}, {m}>) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
-        m = galaw_model.links.len(),
+        m = galaw_model.num_links,
     ));
     out.push("compute_fk_impl(joint_cmds, &mut data.link_poses);".to_string());
     out.push("}".to_string());
@@ -228,11 +228,11 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         "pub fn compute_link_jacobians(joint_cmds: &[{ty}; {n}], data: &mut GeneratedGalawData<{ty}, {n}, {m}>) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
-        m = galaw_model.links.len(),
+        m = galaw_model.num_links,
     ));
     out.push(format!(
         "let mut poses = [Isometry3::identity(); {}];",
-        galaw_model.links.len(),
+        galaw_model.num_links,
     ));
     out.push("compute_fk_impl(joint_cmds, &mut poses);".to_string());
 
@@ -252,7 +252,7 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         ));
     }
 
-    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); galaw_model.links.len()];
+    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); galaw_model.num_links];
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
         if joint.cmd_idx.is_some() {
@@ -310,7 +310,7 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     let mut out: Vec<String> = Vec::new();
     let ty = type_name;
     let num_joints = galaw_model.num_actuated_joints;
-    let num_links = galaw_model.links.len();
+    let num_links = galaw_model.num_links;
 
     out.push("use nalgebra::{SVector, Matrix6};".to_string());
     out.push("use crate::error::KinematicsError;".to_string());
@@ -352,7 +352,7 @@ fn generate_ik_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("let mut joint_cmds = *initial_joint_cmds;".to_string());
     out.push("match target_link_idx {".to_string());
 
-    for link_idx in 0..galaw_model.links.len() {
+    for link_idx in 0..galaw_model.num_links {
         let chain = &galaw_model.chain_by_link[link_idx];
         if chain.is_empty() {
             continue;

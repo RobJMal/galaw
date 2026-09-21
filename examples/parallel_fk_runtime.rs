@@ -20,7 +20,7 @@ const NUM_POSES: usize = 10_000;
 fn main() {
     let model = load_urdf::<f64>(URDF).unwrap();
     let n_joints = model.num_actuated_joints;
-    let n_links = model.links.len();
+    let n_links = model.num_links;
     let n_threads = rayon::current_num_threads();
 
     println!(

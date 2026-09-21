@@ -78,8 +78,10 @@ pub struct GalawModel<T> {
     pub link_name_to_idx: HashMap<String, usize>,
     /// Maps an actuated joint's name to its `cmd_idx` (its position in a `joint_cmds` slice).
     pub joint_name_to_idx: HashMap<String, usize>,
-    /// Number of actuated (non-`Fixed`) joints — the expected length of a `joint_cmds` slice.
+    /// Number of actuated (non-`Fixed`) joints. Expected length of a `joint_cmds` slice.
     pub num_actuated_joints: usize,
+    /// Total number of links. Length of [`GalawData::link_poses`] and [`GalawData::link_jacobians`].
+    pub num_links: usize,
     /// For each link index, ordered actuated ancestor joint indices (into [`GalawModel::joints`]).
     pub ancestors_by_link: Vec<Vec<usize>>,
     /// For each link index, ordered joint indices (into [`GalawModel::joints`]) on the root-to-link path.
@@ -124,8 +126,8 @@ impl<T: RealField + Copy> GalawModel<T> {
     /// Creates GalawData to store output of kinematics computation.
     pub fn create_galaw_data(&self) -> GalawData<T> {
         GalawData {
-            link_poses: vec![Isometry3::identity(); self.links.len()],
-            link_jacobians: vec![Matrix6xX::zeros(self.num_actuated_joints); self.links.len()],
+            link_poses: vec![Isometry3::identity(); self.num_links],
+            link_jacobians: vec![Matrix6xX::zeros(self.num_actuated_joints); self.num_links],
             solved_joint_cmds: vec![T::zero(); self.num_actuated_joints],
         }
     }

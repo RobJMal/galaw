@@ -52,7 +52,7 @@ fn assert_galaw_jacobian_matches_finite_difference(
         galaw_model.compute_fk(&plus, &mut data_plus)?;
         galaw_model.compute_fk(&minus, &mut data_minus)?;
 
-        for link_idx in 0..galaw_model.links.len() {
+        for link_idx in 0..galaw_model.num_links {
             let linear = (data_plus.link_poses[link_idx].translation.vector
                 - data_minus.link_poses[link_idx].translation.vector)
                 / (2.0 * FD_EPS);
@@ -148,7 +148,7 @@ fn check_generated_jacobian_matches_runtime<const NUM_JOINTS: usize, const NUM_L
         let joint_cmds_arr: [f64; NUM_JOINTS] = joint_cmds.clone().try_into().unwrap();
         generated_compute_link_jacobians(&joint_cmds_arr, &mut gen_data);
 
-        for link_idx in 0..galaw_model.links.len() {
+        for link_idx in 0..galaw_model.num_links {
             for row in 0..6 {
                 for col in 0..NUM_JOINTS {
                     assert_close(

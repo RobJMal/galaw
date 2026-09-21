@@ -29,7 +29,7 @@ fn candidate_target_links(galaw_model: &GalawModel<f64>) -> Vec<usize> {
         .map(|j| j.parent_link_idx)
         .collect();
 
-    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); galaw_model.links.len()];
+    let mut ancestors_by_link: Vec<Vec<usize>> = vec![Vec::new(); galaw_model.num_links];
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let mut ancestors = ancestors_by_link[joint.parent_link_idx].clone();
         if joint.cmd_idx.is_some() {
@@ -38,7 +38,7 @@ fn candidate_target_links(galaw_model: &GalawModel<f64>) -> Vec<usize> {
         ancestors_by_link[joint.child_link_idx] = ancestors;
     }
 
-    (0..galaw_model.links.len())
+    (0..galaw_model.num_links)
         .filter(|&link_idx| {
             !parent_indices.contains(&link_idx) && !ancestors_by_link[link_idx].is_empty()
         })
