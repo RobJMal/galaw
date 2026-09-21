@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-09-21
+
+### Breaking Changes
+
+- **Output-buffer interface** — `compute_fk`, `compute_link_jacobians`, `compute_link_jacobian`, and `compute_ik` no longer return allocated values. They now write into a caller-owned `GalawData<T>` created once via `model.create_galaw_data()`. Generated code uses `GeneratedGalawData<T, N, M>` in the same way.
+- `galaw::parser` and `galaw::utils` modules are now crate-private. Use the re-exported `galaw::load_urdf` instead of `galaw::parser::load_urdf`.
+- `GalawModel::ancestors_by_link` field is now crate-private (internal cache, not part of the public API).
+- `KinematicsError::OutLengthMismatch` removed — it was never constructed.
+
+### Added
+
+- **Generic float support** — all APIs are now generic over `T: RealField + Copy`, accepting both `f32` and `f64`. Type-parity tests verify IK convergence across both types.
+- **`GalawModel::num_links`** — convenience field alongside `num_actuated_joints`; use instead of `model.links.len()`.
+- **Parallelism examples** — `examples/parallel_fk_runtime.rs` and `examples/parallel_fk_generated.rs` show rayon-based batch FK with per-thread buffer reuse.
+
+### Performance
+
+- **Jacobian ~2.9× faster (runtime), ~2.3× faster (generated)** — ancestor lists are now precomputed at model load time rather than walked on every call. Jacobian is now ~22.6× faster than [`k`](https://crates.io/crates/k) (was ~7.7×) and generated is ~38.2× faster (was ~16.7×).
+- **Zero-allocation hot path** — FK, Jacobian, and IK no longer heap-allocate per call; all output is written into pre-allocated caller-owned buffers.
+- **Generated Jacobian** — fixed redundant computation in the emitted code.
+
 ## [0.2.0] - 2026-09-07
 
 ### Added
