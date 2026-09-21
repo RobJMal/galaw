@@ -41,10 +41,10 @@ fn bench_generated_jacobian<
         &joint_cmds_arr,
         |b, cmds| {
             let mut data = GeneratedGalawData::new();
+            let mut i = 0usize;
             b.iter(|| {
-                for cmd in cmds {
-                    generated_compute_link_jacobians(black_box(cmd), &mut data);
-                }
+                generated_compute_link_jacobians(black_box(&cmds[i % cmds.len()]), &mut data);
+                i += 1;
                 black_box(&data.link_jacobians);
             });
         },
@@ -71,9 +71,7 @@ fn bench_jacobian(c: &mut Criterion) {
             })
             .collect();
         let mut group = c.benchmark_group(format!("jacobian/{}", galaw_model.name));
-        group.throughput(criterion::Throughput::Elements(
-            (joint_cmds.len() * galaw_model.links.len()) as u64,
-        ));
+        group.throughput(criterion::Throughput::Elements(1));
 
         // ---- galaw-runtime ----
         group.bench_with_input(
@@ -81,12 +79,12 @@ fn bench_jacobian(c: &mut Criterion) {
             &joint_cmds,
             |b, cmds| {
                 let mut data = galaw_model.create_galaw_data();
+                let mut i = 0usize;
                 b.iter(|| {
-                    for cmd in cmds {
-                        galaw_model
-                            .compute_link_jacobians(black_box(cmd), &mut data)
-                            .unwrap();
-                    }
+                    galaw_model
+                        .compute_link_jacobians(black_box(&cmds[i % cmds.len()]), &mut data)
+                        .unwrap();
+                    i += 1;
                     black_box(&data.link_jacobians);
                 });
             },
@@ -119,15 +117,15 @@ fn bench_jacobian(c: &mut Criterion) {
             BenchmarkId::new("k", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
+                let mut i = 0usize;
                 b.iter(|| {
-                    for cmd in cmds {
-                        k_chain.set_joint_positions(black_box(cmd)).unwrap();
-                        k_chain.update_transforms();
-                        for link in &galaw_model.links {
-                            let node = k_chain.find_link(&link.name).unwrap();
-                            let serial = k::SerialChain::from_end(node);
-                            black_box(k::jacobian(&serial));
-                        }
+                    k_chain.set_joint_positions(black_box(&cmds[i % cmds.len()])).unwrap();
+                    i += 1;
+                    k_chain.update_transforms();
+                    for link in &galaw_model.links {
+                        let node = k_chain.find_link(&link.name).unwrap();
+                        let serial = k::SerialChain::from_end(node);
+                        black_box(k::jacobian(&serial));
                     }
                 });
             },
