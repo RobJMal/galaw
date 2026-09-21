@@ -134,7 +134,9 @@ fn bench_fk(c: &mut Criterion) {
                 let mut data = galaw_model.create_galaw_data();
                 let mut i = 0usize;
                 b.iter(|| {
-                    galaw_model.compute_fk(black_box(&cmds[i % cmds.len()]), &mut data).unwrap();
+                    galaw_model
+                        .compute_fk(black_box(&cmds[i % cmds.len()]), &mut data)
+                        .unwrap();
                     i += 1;
                     black_box(&data.link_poses);
                 });
@@ -177,7 +179,9 @@ fn bench_fk(c: &mut Criterion) {
             |b, cmds| {
                 let mut i = 0usize;
                 b.iter(|| {
-                    k_chain.set_joint_positions(black_box(&cmds[i % cmds.len()])).unwrap();
+                    k_chain
+                        .set_joint_positions(black_box(&cmds[i % cmds.len()]))
+                        .unwrap();
                     i += 1;
                     k_chain.update_transforms();
                 });

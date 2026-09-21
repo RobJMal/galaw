@@ -119,7 +119,9 @@ fn bench_jacobian(c: &mut Criterion) {
             |b, cmds| {
                 let mut i = 0usize;
                 b.iter(|| {
-                    k_chain.set_joint_positions(black_box(&cmds[i % cmds.len()])).unwrap();
+                    k_chain
+                        .set_joint_positions(black_box(&cmds[i % cmds.len()]))
+                        .unwrap();
                     i += 1;
                     k_chain.update_transforms();
                     for link in &galaw_model.links {

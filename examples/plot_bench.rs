@@ -112,7 +112,12 @@ fn robot_info(urdf_path: &str) -> Result<RobotInfo, Box<dyn Error>> {
 }
 
 /// Reads mean + 95% CI (ns per single call) from Criterion's `estimates.json`.
-fn stat(kind: KinematicFunction, robot_name: &str, impl_: &str, bench_id: u32) -> Result<Stat, Box<dyn Error>> {
+fn stat(
+    kind: KinematicFunction,
+    robot_name: &str,
+    impl_: &str,
+    bench_id: u32,
+) -> Result<Stat, Box<dyn Error>> {
     let group = format!("{}_{}", kind.prefix(), robot_name);
     let path = manifest_dir()
         .join("target/criterion")
@@ -326,7 +331,11 @@ fn render_kind(
         |x| x.round(),
     )?;
     let p1 = out.join(format!("{prefix}_scaling_ns_per_call.png"));
-    renderer.save_format(ImageFormat::Png, &latency, p1.to_str().ok_or("non-utf8 path")?)?;
+    renderer.save_format(
+        ImageFormat::Png,
+        &latency,
+        p1.to_str().ok_or("non-utf8 path")?,
+    )?;
     println!("wrote {}", p1.display());
 
     let mcps = |ns: f64| 1e9 / ns / 1e6;
@@ -351,7 +360,11 @@ fn render_kind(
 
 fn main() -> Result<(), Box<dyn Error>> {
     let kinds: Vec<KinematicFunction> = match env::args().nth(1).as_deref() {
-        None => vec![KinematicFunction::Fk, KinematicFunction::Ik, KinematicFunction::Jacobian],
+        None => vec![
+            KinematicFunction::Fk,
+            KinematicFunction::Ik,
+            KinematicFunction::Jacobian,
+        ],
         Some(s) => match KinematicFunction::from_str(s) {
             Some(k) => vec![k],
             None => {

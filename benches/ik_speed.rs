@@ -193,8 +193,7 @@ fn bench_ik(c: &mut Criterion) {
 
                     k_chain.set_joint_positions(black_box(init)).unwrap();
                     k_chain.update_transforms();
-                    let serial =
-                        k::SerialChain::from_end(k_chain.find_link(link_name).unwrap());
+                    let serial = k::SerialChain::from_end(k_chain.find_link(link_name).unwrap());
                     let _ = black_box(solver.solve(&serial, &pose));
                 });
             },
