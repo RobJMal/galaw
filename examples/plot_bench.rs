@@ -1,19 +1,23 @@
-//! Renders Jacobian benchmark charts from Criterion's JSON output using
-//! `charming` (Apache ECharts bindings). Reads each benchmark's `estimates.json`
-//! so the charts stay in sync with the latest `cargo bench --bench jacobian_speed` run.
+//! Renders FK, IK, and Jacobian benchmark charts from Criterion's JSON output
+//! using `charming` (Apache ECharts bindings). Reads each benchmark's
+//! `estimates.json` so charts stay in sync with the latest `cargo bench` run.
 //!
 //! Each chart is a line-over-DOF plot per implementation, showing:
-//!   * the mean per-call time/throughput (with the value printed as a label), and
+//!   * the mean per-call latency (with the value printed as a label), and
 //!   * a shaded 95% confidence-interval band (ECharts has no native error bars;
 //!     the band is drawn as a stacked area between the CI's lower and upper bounds).
 //!
-//! Usage (after `cargo bench --bench jacobian_speed`):
-//!     cargo run --release --example plot_jacobian_bench
+//! Usage (after running benches):
+//!     cargo run --release --example plot_bench              # all three
+//!     cargo run --release --example plot_bench -- fk
+//!     cargo run --release --example plot_bench -- ik
+//!     cargo run --release --example plot_bench -- jacobian
 //!
 //! Output PNGs land in docs/bench/. Requires dev-deps `charming` (feature
 //! "ssr-raster") and `serde_json`. The first build is slow: charming's `ssr`
 //! feature bundles a JS engine (deno_core) to render ECharts server-side.
 
+use std::env;
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
@@ -30,10 +34,6 @@ use charming::{Chart, ImageFormat, ImageRenderer};
 // Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
 
-/// Calls per timed iteration in benches/jacobian_speed.rs. Criterion's estimates
-/// are per iteration, so dividing by this converts to per single `compute_link_jacobians` call.
-const N_POSES: f64 = 100.0;
-
 const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
 
 /// Wong (2011) colorblind-safe triple: galaw-runtime=blue, galaw-generated=bluish green, k=orange.
@@ -42,22 +42,50 @@ const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
 // ----- FONT SIZES (tweak here — every chart text element is driven off these) -----
 const TITLE_FONT_SIZE: f64 = 38.0;
 const LEGEND_FONT_SIZE: f64 = 20.0;
-/// Shared by both axes' `name` (the "Robot [...]" / "ns per call" labels).
+/// Shared by both axes' `name` labels.
 const AXIS_NAME_FONT_SIZE: f64 = 22.0;
-/// Shared by both axes' tick labels (the numbers/categories along each axis).
+/// Shared by both axes' tick labels.
 const AXIS_TICK_FONT_SIZE: f64 = 19.0;
-
-/// Approx. rendered height (px) of one data-point label box at LABEL_FONT_SIZE
-/// (text line-height + the label's own padding/border) — used to stagger each
-/// series' label distance from its point by index, so two series' labels can
-/// never collide even if their points land at the same y-pixel. Scales to
-/// however many entries IMPLS has; no per-series manual tuning needed.
-/// Keep this in sync with LABEL_FONT_SIZE — it's sized for the box height
-/// *at that font size*, not computed from it.
+/// Keep in sync with the label box height at this font size.
 const LABEL_FONT_SIZE: f64 = 19.0;
 const LABEL_STAGGER_PX: f64 = 16.0;
 
-/// Mean and 95% CI bounds for a single benchmark, in ns per `compute_link_jacobians` call.
+#[derive(Clone, Copy)]
+enum KinematicFunction {
+    Fk,
+    Ik,
+    Jacobian,
+}
+
+impl KinematicFunction {
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "fk" => Some(Self::Fk),
+            "ik" => Some(Self::Ik),
+            "jacobian" => Some(Self::Jacobian),
+            _ => None,
+        }
+    }
+
+    /// Criterion group prefix and bench binary name (e.g. `fk` → `fk_speed`).
+    fn prefix(self) -> &'static str {
+        match self {
+            Self::Fk => "fk",
+            Self::Ik => "ik",
+            Self::Jacobian => "jacobian",
+        }
+    }
+
+    fn title_label(self) -> &'static str {
+        match self {
+            Self::Fk => "FK",
+            Self::Ik => "IK",
+            Self::Jacobian => "Jacobian",
+        }
+    }
+}
+
+/// Mean and 95% CI bounds for a single benchmark, in ns per call.
 struct Stat {
     mean: f64,
     lo: f64,
@@ -65,13 +93,11 @@ struct Stat {
 }
 
 struct RobotInfo {
-    name: String, // matches galaw_model.name, for the x-axis label
-    group: String,
-    bench_id: u32, // matches galaw_model.joints.len()
-    dof: u32,      // matches galaw_model.num_actuated_joints
+    name: String,
+    bench_id: u32, // matches galaw_model.joints.len(), used as BenchmarkId
+    dof: u32,      // matches galaw_model.num_actuated_joints, used for x-axis label
 }
 
-// ----- HELPER METHODS -----
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
@@ -80,25 +106,31 @@ fn robot_info(urdf_path: &str) -> Result<RobotInfo, Box<dyn Error>> {
     let model = load_urdf::<f64>(urdf_path)?;
     Ok(RobotInfo {
         name: model.name.clone(),
-        group: format!("jacobian_{}", model.name),
         bench_id: model.joints.len() as u32,
         dof: model.num_actuated_joints as u32,
     })
 }
 
-/// Reads mean + confidence interval (ns per call) from Criterion's estimates.json.
-fn stat(group: &str, impl_: &str, dof: u32) -> Result<Stat, Box<dyn Error>> {
+/// Reads mean + 95% CI (ns per single call) from Criterion's `estimates.json`.
+fn stat(
+    kind: KinematicFunction,
+    robot_name: &str,
+    impl_: &str,
+    bench_id: u32,
+) -> Result<Stat, Box<dyn Error>> {
+    let group = format!("{}_{}", kind.prefix(), robot_name);
     let path = manifest_dir()
         .join("target/criterion")
-        .join(group)
+        .join(&group)
         .join(impl_)
-        .join(dof.to_string())
+        .join(bench_id.to_string())
         .join("new/estimates.json");
 
     let text = fs::read_to_string(&path).map_err(|e| {
         format!(
-            "could not read {} (run `cargo bench --bench jacobian_speed` first): {e}",
-            path.display()
+            "could not read {} (run `cargo bench --bench {}_speed` first): {e}",
+            path.display(),
+            kind.prefix(),
         )
     })?;
     let v: serde_json::Value = serde_json::from_str(&text)?;
@@ -106,10 +138,11 @@ fn stat(group: &str, impl_: &str, dof: u32) -> Result<Stat, Box<dyn Error>> {
     let field = |ptr: &serde_json::Value, key: &str| -> Result<f64, Box<dyn Error>> {
         Ok(ptr[key]
             .as_f64()
-            .ok_or_else(|| format!("estimates.json: missing {key}"))?
-            / N_POSES)
+            .ok_or_else(|| format!("estimates.json: missing {key}"))?)
     };
 
+    // estimates.json reports ns per b.iter() iteration. Each iteration is now a
+    // single call (Throughput::Elements(1)), so no division needed.
     Ok(Stat {
         mean: field(mean, "point_estimate")?,
         lo: field(&mean["confidence_interval"], "lower_bound")?,
@@ -118,7 +151,11 @@ fn stat(group: &str, impl_: &str, dof: u32) -> Result<Stat, Box<dyn Error>> {
 }
 
 /// Builds a line chart over DOF with a mean line + labels and a CI band per impl.
+///
+/// `to_vals` maps a `Stat` (ns/call) into `(mean, lo, hi)` in the chart's own
+/// units — throughput inverts, so it also swaps lo/hi. `round` tidies labels.
 fn build_chart(
+    kind: KinematicFunction,
     robots: &[RobotInfo],
     title: &str,
     y_name: &str,
@@ -191,7 +228,7 @@ fn build_chart(
     for (&impl_, &color) in IMPLS.iter().zip(COLORS.iter()) {
         let (mut means, mut los, mut heights) = (Vec::new(), Vec::new(), Vec::new());
         for robot in robots {
-            let (m, lo, hi) = to_vals(&stat(&robot.group, impl_, robot.bench_id)?);
+            let (m, lo, hi) = to_vals(&stat(kind, &robot.name, impl_, robot.bench_id)?);
             means.push(round(m));
             los.push(lo);
             heights.push(hi - lo);
@@ -209,6 +246,8 @@ fn build_chart(
         });
     }
 
+    // Rank series by typical value so the label stagger pushes each series'
+    // label away from those below it, not into them.
     let mut rank_order: Vec<usize> = (0..all_series.len()).collect();
     rank_order.sort_by(|&a, &b| {
         all_series[a]
@@ -230,10 +269,10 @@ fn build_chart(
             heights,
             ..
         } = series;
-        let label_pos = LabelPosition::Top;
         let label_distance = 4.0 + stagger_rank[i] as f64 * LABEL_STAGGER_PX;
-
         let stack_id = format!("band_{impl_}");
+
+        // Invisible base line lifts the band's baseline to the CI lower bound.
         chart = chart.series(
             Line::new()
                 .stack(stack_id.clone())
@@ -241,6 +280,7 @@ fn build_chart(
                 .line_style(LineStyle::new().opacity(0.0))
                 .data(los),
         );
+        // Filled band spanning (upper − lower), i.e. the CI width, at 18% opacity.
         chart = chart.series(
             Line::new()
                 .stack(stack_id)
@@ -249,6 +289,7 @@ fn build_chart(
                 .area_style(AreaStyle::new().color(color).opacity(0.18))
                 .data(heights),
         );
+        // Mean line with per-point value labels.
         chart = chart.series(
             Line::new()
                 .name(impl_)
@@ -257,7 +298,7 @@ fn build_chart(
                 .label(
                     Label::new()
                         .show(true)
-                        .position(label_pos)
+                        .position(LabelPosition::Top)
                         .distance(label_distance)
                         .font_size(LABEL_FONT_SIZE)
                         .color(color)
@@ -272,7 +313,67 @@ fn build_chart(
     Ok(chart)
 }
 
+fn render_kind(
+    kind: KinematicFunction,
+    robots: &[RobotInfo],
+    out: &std::path::Path,
+    renderer: &mut ImageRenderer,
+) -> Result<(), Box<dyn Error>> {
+    let label = kind.title_label();
+    let prefix = kind.prefix();
+
+    let latency = build_chart(
+        kind,
+        robots,
+        &format!("{label} latency scaling (95% CI)"),
+        "ns per call (lower is better)",
+        |s| (s.mean, s.lo, s.hi),
+        |x| x.round(),
+    )?;
+    let p1 = out.join(format!("{prefix}_scaling_ns_per_call.png"));
+    renderer.save_format(
+        ImageFormat::Png,
+        &latency,
+        p1.to_str().ok_or("non-utf8 path")?,
+    )?;
+    println!("wrote {}", p1.display());
+
+    let mcps = |ns: f64| 1e9 / ns / 1e6;
+    let throughput = build_chart(
+        kind,
+        robots,
+        &format!("{label} throughput (95% CI)"),
+        "million calls/sec (higher is better)",
+        move |s| (mcps(s.mean), mcps(s.hi), mcps(s.lo)),
+        |x| (x * 100.0).round() / 100.0,
+    )?;
+    let p2 = out.join(format!("{prefix}_throughput_mcalls.png"));
+    renderer.save_format(
+        ImageFormat::Png,
+        &throughput,
+        p2.to_str().ok_or("non-utf8 path")?,
+    )?;
+    println!("wrote {}", p2.display());
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
+    let kinds: Vec<KinematicFunction> = match env::args().nth(1).as_deref() {
+        None => vec![
+            KinematicFunction::Fk,
+            KinematicFunction::Ik,
+            KinematicFunction::Jacobian,
+        ],
+        Some(s) => match KinematicFunction::from_str(s) {
+            Some(k) => vec![k],
+            None => {
+                eprintln!("unknown kind {s:?}; valid options: fk, ik, jacobian");
+                std::process::exit(1);
+            }
+        },
+    };
+
     let mut robots: Vec<RobotInfo> = BENCH_URDFS
         .iter()
         .map(|&p| robot_info(p))
@@ -283,36 +384,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&out)?;
     let mut renderer = ImageRenderer::new(1600, 900);
 
-    let latency = build_chart(
-        &robots,
-        "Jacobian latency scaling (95% CI)",
-        "ns per call (lower is better)",
-        |s| (s.mean, s.lo, s.hi),
-        |x| x.round(),
-    )?;
-    let p1 = out.join("jacobian_scaling_ns_per_call.png");
-    renderer.save_format(
-        ImageFormat::Png,
-        &latency,
-        p1.to_str().ok_or("non-utf8 path")?,
-    )?;
-    println!("wrote {}", p1.display());
-
-    let mcps = |ns: f64| 1e9 / ns / 1e6;
-    let throughput = build_chart(
-        &robots,
-        "Jacobian throughput (95% CI)",
-        "million calls/sec (higher is better)",
-        move |s| (mcps(s.mean), mcps(s.hi), mcps(s.lo)),
-        |x| (x * 100.0).round() / 100.0,
-    )?;
-    let p2 = out.join("jacobian_throughput_mcalls.png");
-    renderer.save_format(
-        ImageFormat::Png,
-        &throughput,
-        p2.to_str().ok_or("non-utf8 path")?,
-    )?;
-    println!("wrote {}", p2.display());
+    for kind in kinds {
+        render_kind(kind, &robots, &out, &mut renderer)?;
+    }
 
     Ok(())
 }

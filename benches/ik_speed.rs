@@ -92,17 +92,18 @@ fn bench_generated_ik<
         |b, trials| {
             let mut data = galaw_model.create_galaw_data();
             let mut gen_data = GeneratedGalawData::new();
+            let mut i = 0usize;
             b.iter(|| {
-                for (target, init) in trials {
-                    galaw_model.compute_fk(target, &mut data).unwrap();
-                    let pose = data.link_poses[link_idx];
-                    let _ = black_box(generated_compute_ik(
-                        link_idx,
-                        &pose,
-                        black_box(init),
-                        &mut gen_data,
-                    ));
-                }
+                let (target, init) = &trials[i % trials.len()];
+                i += 1;
+                galaw_model.compute_fk(target, &mut data).unwrap();
+                let pose = data.link_poses[link_idx];
+                let _ = black_box(generated_compute_ik(
+                    link_idx,
+                    &pose,
+                    black_box(init),
+                    &mut gen_data,
+                ));
             });
         },
     );
@@ -124,7 +125,7 @@ fn bench_ik(c: &mut Criterion) {
             })
             .collect();
         let mut group = c.benchmark_group(format!("ik/{}", galaw_model.name));
-        group.throughput(criterion::Throughput::Elements(trials.len() as u64));
+        group.throughput(criterion::Throughput::Elements(1));
 
         // ----- galaw-runtime -----
         group.bench_with_input(
@@ -132,17 +133,18 @@ fn bench_ik(c: &mut Criterion) {
             &trials,
             |b, trials| {
                 let mut data = galaw_model.create_galaw_data();
+                let mut i = 0usize;
                 b.iter(|| {
-                    for (target, init) in trials {
-                        galaw_model.compute_fk(target, &mut data).unwrap();
-                        let pose = data.link_poses[link_idx];
-                        let _ = black_box(galaw_model.compute_ik(
-                            link_idx,
-                            &pose,
-                            black_box(init),
-                            &mut data,
-                        ));
-                    }
+                    let (target, init) = &trials[i % trials.len()];
+                    i += 1;
+                    galaw_model.compute_fk(target, &mut data).unwrap();
+                    let pose = data.link_poses[link_idx];
+                    let _ = black_box(galaw_model.compute_ik(
+                        link_idx,
+                        &pose,
+                        black_box(init),
+                        &mut data,
+                    ));
                 });
             },
         );
@@ -177,22 +179,22 @@ fn bench_ik(c: &mut Criterion) {
             BenchmarkId::new("k", galaw_model.joints.len()),
             &trials,
             |b, trials| {
+                let mut i = 0usize;
                 b.iter(|| {
-                    for (target, init) in trials {
-                        k_chain.set_joint_positions(target).unwrap();
-                        k_chain.update_transforms();
-                        let pose = k_chain
-                            .find_link(link_name)
-                            .unwrap()
-                            .world_transform()
-                            .unwrap();
+                    let (target, init) = &trials[i % trials.len()];
+                    i += 1;
+                    k_chain.set_joint_positions(target).unwrap();
+                    k_chain.update_transforms();
+                    let pose = k_chain
+                        .find_link(link_name)
+                        .unwrap()
+                        .world_transform()
+                        .unwrap();
 
-                        k_chain.set_joint_positions(black_box(init)).unwrap();
-                        k_chain.update_transforms();
-                        let serial =
-                            k::SerialChain::from_end(k_chain.find_link(link_name).unwrap());
-                        let _ = black_box(solver.solve(&serial, &pose));
-                    }
+                    k_chain.set_joint_positions(black_box(init)).unwrap();
+                    k_chain.update_transforms();
+                    let serial = k::SerialChain::from_end(k_chain.find_link(link_name).unwrap());
+                    let _ = black_box(solver.solve(&serial, &pose));
                 });
             },
         );
