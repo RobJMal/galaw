@@ -53,7 +53,7 @@ fn main() {
     batch_cmds.par_iter().for_each(|cmds| {
         TL_DATA.with(|cell| {
             let mut data = cell.borrow_mut();
-            anymal_d::compute_fk(cmds, &mut *data);
+            anymal_d::compute_fk(cmds, &mut data);
             black_box(&data.link_poses);
         });
     });

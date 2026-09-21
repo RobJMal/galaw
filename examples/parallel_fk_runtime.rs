@@ -54,7 +54,7 @@ fn main() {
     // assigned to that thread.
     // Memory: num_threads × sizeof(GalawData)
     thread_local! {
-        static TL_DATA: RefCell<Option<GalawData<f64>>> = RefCell::new(None);
+        static TL_DATA: RefCell<Option<GalawData<f64>>> = const { RefCell::new(None) };
     }
 
     let par_tl_start = Instant::now();
