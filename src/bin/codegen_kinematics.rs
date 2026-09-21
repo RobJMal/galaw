@@ -104,8 +104,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("use crate::types::GeneratedGalawData;".to_string());
     out.push(format!(
         "/// Forward kinematics for `{urdf_path}`: {} joints → {} link poses.",
-        galaw_model.num_actuated_joints,
-        galaw_model.num_links,
+        galaw_model.num_actuated_joints, galaw_model.num_links,
     ));
     out.push("#[allow(non_snake_case)]".to_string());
     out.push("#[inline]".to_string());
