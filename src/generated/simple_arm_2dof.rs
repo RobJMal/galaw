@@ -7,29 +7,34 @@ use crate::types::GeneratedGalawData;
 #[allow(non_snake_case)]
 #[inline]
 #[rustfmt::skip]
-pub fn compute_fk(joint_cmds: &[f64; 2], data: &mut GeneratedGalawData<f64, 2, 3>) {
+fn compute_fk_impl(joint_cmds: &[f64; 2], poses: &mut [Isometry3<f64>; 3]) {
 let link_base_link = Isometry3::identity();
 let link_upper_arm = link_base_link * Translation3::new(0.0_f64, 0.0_f64, 0.1_f64) * { let (s, c) = (joint_cmds[0] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, 0.0_f64, s)) };
 let link_forearm = link_upper_arm * Translation3::new(0.0_f64, 0.0_f64, 0.9_f64) * { let (s, c) = (joint_cmds[1] * 0.5_f64).sin_cos(); UnitQuaternion::new_unchecked(Quaternion::new(c, 0.0_f64, s, 0.0_f64)) };
-data.link_poses[0] = link_base_link;
-data.link_poses[1] = link_upper_arm;
-data.link_poses[2] = link_forearm;
+poses[0] = link_base_link;
+poses[1] = link_upper_arm;
+poses[2] = link_forearm;
+}
+#[inline]
+pub fn compute_fk(joint_cmds: &[f64; 2], data: &mut GeneratedGalawData<f64, 2, 3>) {
+compute_fk_impl(joint_cmds, &mut data.link_poses);
 }
 use nalgebra::{SMatrix, Vector6};
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn compute_link_jacobians(joint_cmds: &[f64; 2], data: &mut GeneratedGalawData<f64, 2, 3>) {
-compute_fk(joint_cmds, data);
-let axis_world_0 = data.link_poses[1].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
-let axis_world_1 = data.link_poses[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
-data.link_jacobians[0].fill(0.0_f64);
+let mut poses = [Isometry3::identity(); 3];
+compute_fk_impl(joint_cmds, &mut poses);
+let axis_world_0 = poses[1].rotation * Vector3::new(0.0_f64, 0.0_f64, 1.0_f64);
+let axis_world_1 = poses[2].rotation * Vector3::new(0.0_f64, 1.0_f64, 0.0_f64);
 let mut jac_1 = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_0.cross(&(data.link_poses[1].translation.vector - data.link_poses[1].translation.vector)); let ang = axis_world_0; jac_1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_0.cross(&(poses[1].translation.vector - poses[1].translation.vector)); let ang = axis_world_0; jac_1.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[1] = jac_1;
 let mut jac_2 = SMatrix::<f64, 6, 2>::zeros();
-{ let lin = axis_world_0.cross(&(data.link_poses[2].translation.vector - data.link_poses[1].translation.vector)); let ang = axis_world_0; jac_2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
-{ let lin = axis_world_1.cross(&(data.link_poses[2].translation.vector - data.link_poses[2].translation.vector)); let ang = axis_world_1; jac_2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_0.cross(&(poses[2].translation.vector - poses[1].translation.vector)); let ang = axis_world_0; jac_2.set_column(0, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
+{ let lin = axis_world_1.cross(&(poses[2].translation.vector - poses[2].translation.vector)); let ang = axis_world_1; jac_2.set_column(1, &Vector6::new(lin.x, lin.y, lin.z, ang.x, ang.y, ang.z)); }
 data.link_jacobians[2] = jac_2;
+data.link_poses = poses;
 }
 use nalgebra::{SVector, Matrix6};
 use crate::error::KinematicsError;

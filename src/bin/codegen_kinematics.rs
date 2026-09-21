@@ -111,7 +111,7 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
     out.push("#[inline]".to_string());
     out.push("#[rustfmt::skip]".to_string());
     out.push(format!(
-        "pub fn compute_fk(joint_cmds: &[{ty}; {n}], data: &mut GeneratedGalawData<{ty}, {n}, {m}>) {{",
+        "fn compute_fk_impl(joint_cmds: &[{ty}; {n}], poses: &mut [Isometry3<{ty}>; {m}]) {{",
         ty = type_name,
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
@@ -199,8 +199,17 @@ fn generate_fk_fn_code<T: RealField + Copy + std::fmt::Debug>(
     }
 
     for (i, var_name) in link_vars_by_idx.into_iter().enumerate() {
-        out.push(format!("data.link_poses[{i}] = {};", var_name.unwrap()));
+        out.push(format!("poses[{i}] = {};", var_name.unwrap()));
     }
+    out.push("}".to_string());
+    out.push("#[inline]".to_string());
+    out.push(format!(
+        "pub fn compute_fk(joint_cmds: &[{ty}; {n}], data: &mut GeneratedGalawData<{ty}, {n}, {m}>) {{",
+        ty = type_name,
+        n = galaw_model.num_actuated_joints,
+        m = galaw_model.links.len(),
+    ));
+    out.push("compute_fk_impl(joint_cmds, &mut data.link_poses);".to_string());
     out.push("}".to_string());
 
     Ok(out)
@@ -221,7 +230,11 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         n = galaw_model.num_actuated_joints,
         m = galaw_model.links.len(),
     ));
-    out.push("compute_fk(joint_cmds, data);".to_string());
+    out.push(format!(
+        "let mut poses = [Isometry3::identity(); {}];",
+        galaw_model.links.len(),
+    ));
+    out.push("compute_fk_impl(joint_cmds, &mut poses);".to_string());
 
     for (joint_idx, joint) in galaw_model.joints.iter().enumerate() {
         let Some(_) = joint.cmd_idx else { continue };
@@ -231,7 +244,7 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
             .expect("actuated joint has an axis")
             .into_inner();
         out.push(format!(
-            "let axis_world_{joint_idx} = data.link_poses[{}].rotation * Vector3::new({}, {}, {});",
+            "let axis_world_{joint_idx} = poses[{}].rotation * Vector3::new({}, {}, {});",
             joint.child_link_idx,
             emit_scalar(axis.x, type_name),
             emit_scalar(axis.y, type_name),
@@ -250,9 +263,7 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
 
     for (link_idx, ancestors) in ancestors_by_link.iter().enumerate() {
         if ancestors.is_empty() {
-            out.push(format!(
-                "data.link_jacobians[{link_idx}].fill(0.0_{type_name});"
-            ));
+            continue;
         } else {
             let jac_var = format!("jac_{link_idx}");
             out.push(format!(
@@ -266,7 +277,7 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
                 let (lin_expr, ang_expr) = if joint.rot_axis.is_some() {
                     (
                         format!(
-                            "axis_world_{joint_idx}.cross(&(data.link_poses[{link_idx}].translation.vector - data.link_poses[{}].translation.vector))",
+                            "axis_world_{joint_idx}.cross(&(poses[{link_idx}].translation.vector - poses[{}].translation.vector))",
                             joint.child_link_idx
                         ),
                         format!("axis_world_{joint_idx}"),
@@ -286,6 +297,7 @@ fn generate_jacobian_fn_code<T: RealField + Copy + std::fmt::Debug>(
         }
     }
 
+    out.push("data.link_poses = poses;".to_string());
     out.push("}".to_string());
 
     Ok(out)
