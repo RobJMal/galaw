@@ -13,7 +13,7 @@ use rayon::prelude::*;
 // galaw
 use galaw::{generated::anymal_d, types::GeneratedGalawData};
 
-// anymal_d constants — baked into the generated code at codegen time.
+// anymal_d constants
 const NUM_JOINTS: usize = 14;
 const NUM_LINKS: usize = 96;
 const NUM_POSES: usize = 10_000;
@@ -26,7 +26,7 @@ fn main() {
     println!("Threads: {n_threads}");
     println!();
 
-    // Fixed-size array commands — no Vec, no heap allocation per pose.
+    // Fixed-size array commands
     let batch_cmds: Vec<[f64; NUM_JOINTS]> = (0..NUM_POSES)
         .map(|i| std::array::from_fn(|j| ((i + j) as f64 * 0.1).sin()))
         .collect();
