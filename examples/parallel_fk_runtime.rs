@@ -1,15 +1,17 @@
 //! Demonstrates usage of library with sequential vs. parallelized computing.
 //!
-//! Run with: `cargo run --release --example galaw_parallel`
+//! Run with: `cargo run --release --example parallel_fk_runtime`
 
+// Standard
 use std::cell::RefCell;
 use std::hint::black_box;
 use std::time::Instant;
 
+// Third-party
+use nalgebra::Isometry3;
 use rayon::prelude::*;
 
-use nalgebra::Isometry3;
-
+// galaw
 use galaw::{load_urdf, types::GalawData};
 
 const URDF: &str = "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf";
@@ -40,7 +42,7 @@ fn main() {
     black_box(&data.link_poses);
     let seq_time = seq_start.elapsed();
 
-    // ---- Parallel: thread-local buffers ----
+    // ---- Parallel (thread-local buffers) ----
     // One GalawData per OS thread, lazily created and reused for every pose
     // assigned to that thread.
     // Memory: num_threads × sizeof(GalawData)
@@ -59,45 +61,6 @@ fn main() {
     });
     let par_tl_time = par_tl_start.elapsed();
 
-    // ---- Parallel: thread-local + saved results ----
-    // Same thread-local scratch buffer as above, but copies link_poses out to a
-    // separate Vec after each FK call. Stores only poses (not jacobian/IK buffers),
-    // so memory is much smaller than per-pose GalawData.
-    // Memory: (num_threads × sizeof(GalawData)) + (NUM_POSES × n_links × sizeof(Isometry3))
-    let mut saved_poses: Vec<Vec<Isometry3<f64>>> =
-        vec![vec![Isometry3::identity(); n_links]; NUM_POSES];
-
-    let par_tl_save_start = Instant::now();
-    batch_cmds
-        .par_iter()
-        .zip(saved_poses.par_iter_mut())
-        .for_each(|(cmds, out)| {
-            TL_DATA.with(|cell| {
-                let mut borrow = cell.borrow_mut();
-                let data = borrow.get_or_insert_with(|| model.create_galaw_data());
-                model.compute_fk(cmds, data).unwrap();
-                out.copy_from_slice(&data.link_poses);
-            });
-        });
-    let par_tl_save_time = par_tl_save_start.elapsed();
-    black_box(&saved_poses);
-
-    // ---- Parallel: per-pose buffers ----
-    // One GalawData pre-allocated per pose. Results remain accessible after
-    // the loop, but memory cost is NUM_POSES × sizeof(GalawData).
-    let mut batch_data: Vec<GalawData<f64>> =
-        (0..NUM_POSES).map(|_| model.create_galaw_data()).collect();
-
-    let par_pp_start = Instant::now();
-    batch_cmds
-        .par_iter()
-        .zip(batch_data.par_iter_mut())
-        .for_each(|(cmds, data)| {
-            model.compute_fk(cmds, data).unwrap();
-            black_box(&data.link_poses);
-        });
-    let par_pp_time = par_pp_start.elapsed();
-
     // ---- Results ----
     let galaw_data_size_kb = {
         let poses = n_links * std::mem::size_of::<Isometry3<f64>>();
@@ -105,38 +68,16 @@ fn main() {
         let cmds = n_joints * std::mem::size_of::<f64>();
         (poses + jacs + cmds) / 1024
     };
-    let poses_only_kb = n_links * std::mem::size_of::<Isometry3<f64>>() / 1024;
 
     println!(
-        "Sequential:                  {:>8.2} ms  ({:.2} µs/pose)  results: discarded",
+        "Sequential:                  {:>8.2} ms  ({:.2} µs/pose)",
         seq_time.as_secs_f64() * 1e3,
         seq_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
     );
     println!(
-        "Parallel thread-local:       {:>8.2} ms  ({:.2} µs/pose)  results: discarded     [{}t × {} KB = {} KB]",
+        "Parallel thread-local:       {:>8.2} ms  ({:.2} µs/pose) [{} threads × {} KB = {} KB]",
         par_tl_time.as_secs_f64() * 1e3,
         par_tl_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
         n_threads, galaw_data_size_kb, n_threads * galaw_data_size_kb,
-    );
-    println!(
-        "Parallel thread-local+saved: {:>8.2} ms  ({:.2} µs/pose)  results: poses only   [{}t × {} KB scratch + {} poses × {} KB = {} MB]",
-        par_tl_save_time.as_secs_f64() * 1e3,
-        par_tl_save_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
-        n_threads, galaw_data_size_kb,
-        NUM_POSES, poses_only_kb, (n_threads * galaw_data_size_kb + NUM_POSES * poses_only_kb) / 1024,
-    );
-    println!(
-        "Parallel per-pose:           {:>8.2} ms  ({:.2} µs/pose)  results: full GalawData [{} poses × {} KB = {} MB]",
-        par_pp_time.as_secs_f64() * 1e3,
-        par_pp_time.as_secs_f64() * 1e6 / NUM_POSES as f64,
-        NUM_POSES, galaw_data_size_kb, NUM_POSES * galaw_data_size_kb / 1024,
-    );
-    println!();
-    println!(
-        "Speedup vs sequential — thread-local: {:.2}x  thread-local+saved: {:.2}x  per-pose: {:.2}x  (theoretical max: {}x)",
-        seq_time.as_secs_f64() / par_tl_time.as_secs_f64(),
-        seq_time.as_secs_f64() / par_tl_save_time.as_secs_f64(),
-        seq_time.as_secs_f64() / par_pp_time.as_secs_f64(),
-        n_threads,
     );
 }
