@@ -82,9 +82,8 @@ pub struct GalawModel<T> {
     pub num_actuated_joints: usize,
     /// Total number of links. Length of [`GalawData::link_poses`] and [`GalawData::link_jacobians`].
     pub num_links: usize,
-    /// For each link index, ordered actuated ancestor joint indices (into [`GalawModel::joints`]).
-    pub ancestors_by_link: Vec<Vec<usize>>,
-    /// For each link index, ordered joint indices (into [`GalawModel::joints`]) on the root-to-link path.
+    pub(crate) ancestors_by_link: Vec<Vec<usize>>,
+    #[doc(hidden)]
     pub chain_by_link: Vec<Vec<usize>>,
     /// Lower joint limit for each actuated joint, indexed by `cmd_idx`. Defaults to `T::zero()` if unset.
     pub joint_limit_lower: Vec<T>,

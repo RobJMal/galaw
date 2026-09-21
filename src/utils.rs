@@ -4,7 +4,7 @@ use crate::error::UrdfParseError;
 /// Parses and extracts values from a string
 ///
 /// Assumes that it contains 3 numeric values, raises errors otherwise.
-pub fn parse_vec3_str<T>(input_str: &str) -> Result<(T, T, T), UrdfParseError>
+pub(crate) fn parse_vec3_str<T>(input_str: &str) -> Result<(T, T, T), UrdfParseError>
 where
     T: std::str::FromStr<Err = std::num::ParseFloatError> + Copy,
 {
