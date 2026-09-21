@@ -142,6 +142,19 @@ cargo run --release --example plot_bench -- jacobian  # Jacobian only
 ![IK latency scaling](img/ik_scaling_ns_per_call.png)
 ![IK throughput](img/ik_throughput_mcalls.png)
 
+## Citation
+
+If you use `galaw` in your research, please cite it as:
+
+```bibtex
+@misc{malate2026galaw,
+  author       = {Malate, Robert Jomar},
+  title        = {galaw: A Rust-based kinematics library},
+  year         = {2026},
+  howpublished = {\url{https://github.com/RobJMal/galaw}},
+}
+```
+
 ## Attributions
 
 This repository incorporates robot descriptions (URDF files) from various open-source projects. Each is used in compliance with its original license:
