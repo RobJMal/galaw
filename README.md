@@ -118,7 +118,14 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 | Jacobian  | ~7.7×             | ~16.7×               |
 | IK        | ~4.9×             | ~10.0×               |
 
-Reproduce with `cargo bench` and then the corresponding plot example (e.g. `cargo run --release --example plot_fk_bench`).
+Reproduce with `cargo bench`, then plot with:
+
+```bash
+cargo run --release --example plot_bench           # all three
+cargo run --release --example plot_bench -- fk     # FK only
+cargo run --release --example plot_bench -- ik     # IK only
+cargo run --release --example plot_bench -- jacobian
+```
 
 ### Forward Kinematics
 

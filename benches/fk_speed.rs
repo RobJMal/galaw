@@ -78,10 +78,10 @@ fn bench_generated<
         &joint_cmds_arr,
         |b, cmds| {
             let mut data = GeneratedGalawData::new();
+            let mut i = 0usize;
             b.iter(|| {
-                for cmd in cmds {
-                    generated_compute_fk(black_box(cmd), &mut data);
-                }
+                generated_compute_fk(black_box(&cmds[i % cmds.len()]), &mut data);
+                i += 1;
                 black_box(&data.link_poses);
             });
         },
@@ -124,7 +124,7 @@ fn bench_fk(c: &mut Criterion) {
             .collect();
         // Group makes galaw vs k show up side-by-side
         let mut group = c.benchmark_group(format!("fk/{}", galaw_model.name));
-        group.throughput(criterion::Throughput::Elements(joint_cmds.len() as u64));
+        group.throughput(criterion::Throughput::Elements(1));
 
         // ----- galaw-runtime -----
         group.bench_with_input(
@@ -132,10 +132,12 @@ fn bench_fk(c: &mut Criterion) {
             &joint_cmds,
             |b, cmds| {
                 let mut data = galaw_model.create_galaw_data();
+                let mut i = 0usize;
                 b.iter(|| {
-                    for cmd in cmds {
-                        galaw_model.compute_fk(black_box(cmd), &mut data).unwrap();
-                    }
+                    galaw_model
+                        .compute_fk(black_box(&cmds[i % cmds.len()]), &mut data)
+                        .unwrap();
+                    i += 1;
                     black_box(&data.link_poses);
                 });
             },
@@ -175,11 +177,13 @@ fn bench_fk(c: &mut Criterion) {
             BenchmarkId::new("k", galaw_model.joints.len()),
             &joint_cmds,
             |b, cmds| {
+                let mut i = 0usize;
                 b.iter(|| {
-                    for cmd in cmds {
-                        k_chain.set_joint_positions(black_box(cmd)).unwrap();
-                        k_chain.update_transforms();
-                    }
+                    k_chain
+                        .set_joint_positions(black_box(&cmds[i % cmds.len()]))
+                        .unwrap();
+                    i += 1;
+                    k_chain.update_transforms();
                 });
             },
         );
