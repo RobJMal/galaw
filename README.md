@@ -114,9 +114,9 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 
 | Operation | galaw-runtime vs k | galaw-generated vs k |
 |-----------|-------------------|----------------------|
-| FK        | ~3.3×             | ~8.9×                |
-| Jacobian  | ~7.7×             | ~16.7×               |
-| IK        | ~4.9×             | ~10.0×               |
+| FK        | ~3.5×             | ~8.6×                |
+| Jacobian  | ~22.6×            | ~38.2×               |
+| IK        | ~5.3×             | ~10.7×               |
 
 Reproduce with `cargo bench`, then plot with:
 
