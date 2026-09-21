@@ -3,13 +3,14 @@ name = "galaw"
 version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
+authors = ["Robert Jomar Malate"]
 description = "Kinematics library for robotics, with a runtime API and an ahead-of-time code-generated API"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/RobJMal/galaw"
 readme = "README.md"
 keywords = ["robotics", "kinematics", "urdf", "control"]
 categories = ["science::robotics"]
-exclude = ["docs/", "img/"]
+exclude = ["docs/", "img/", ".github/"]
 
 [profile.release]
 lto = true
