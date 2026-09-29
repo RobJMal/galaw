@@ -2,8 +2,8 @@
 # Usage: codegen_all_urdfs.sh <type>
 #   <type>  Rust float type for generated code, e.g. f32 or f64
 #
-# Runs `codegen_kinematics` against every URDF under assets/urdf/, writing
-# generated code into src/generated/.
+# Runs `codegen_kinematics` against every URDF under crates/galaw/assets/urdf/,
+# writing generated code into crates/galaw/src/generated/.
 set -euo pipefail
 
 TYPE=${1:?'Usage: codegen_all_urdfs.sh <type>  (e.g. f32 or f64)'}
