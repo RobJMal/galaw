@@ -1,0 +1,55 @@
+[package]
+name = "galaw"
+version = "0.3.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Robert Jomar Malate"]
+description = "Kinematics library for robotics, with a runtime API and an ahead-of-time code-generated API"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/RobJMal/galaw"
+readme = "README.md"
+keywords = ["robotics", "kinematics", "urdf", "control"]
+categories = ["science::robotics"]
+
+[lib]
+# Without this, `cargo bench` also builds/runs the lib crate itself as an
+# implicit benchmark target via the plain libtest harness, which doesn't
+# understand criterion-specific flags like --save-baseline and errors out
+# before the real fk_speed bench (harness = false, below) even runs.
+bench = false
+
+[dependencies]
+derive_more = { workspace = true }
+nalgebra    = { workspace = true }
+roxmltree   = { workspace = true }
+thiserror   = { workspace = true }
+
+[dev-dependencies]
+charming    = { workspace = true }
+criterion   = { workspace = true }
+rand        = { workspace = true }
+rand_chacha = { workspace = true }
+serde_json  = { workspace = true }
+sysinfo     = { workspace = true }
+k           = { workspace = true }
+rayon       = { workspace = true }
+
+# Same reasoning as [lib] above: cargo bench also runs every binary target's
+# implicit test/bench harness by default. Declaring them explicitly (still at
+# their auto-discovered paths) is the only way to override that per-binary.
+[[bin]]
+name = "codegen_kinematics"
+path = "src/bin/codegen_kinematics.rs"
+bench = false
+
+[[bench]]
+name = "fk_speed"
+harness = false
+
+[[bench]]
+name = "jacobian_speed"
+harness = false
+
+[[bench]]
+name = "ik_speed"
+harness = false

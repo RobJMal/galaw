@@ -10,8 +10,8 @@ TYPE=${1:?'Usage: codegen_all_urdfs.sh <type>  (e.g. f32 or f64)'}
 
 cd "$(git rev-parse --show-toplevel)"
 
-URDF_DIR="assets/urdf"
-OUT_DIR="src/generated"
+URDF_DIR="crates/galaw/assets/urdf"
+OUT_DIR="crates/galaw/src/generated"
 
 # Reset to an empty stub so the build below can't fail on a stale
 # mod.rs/registry.rs referencing already-deleted per-robot files.
