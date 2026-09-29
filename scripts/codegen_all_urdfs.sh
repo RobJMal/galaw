@@ -2,16 +2,19 @@
 # Usage: codegen_all_urdfs.sh <type>
 #   <type>  Rust float type for generated code, e.g. f32 or f64
 #
-# Runs `codegen_kinematics` against every URDF under assets/urdf/, writing
-# generated code into src/generated/.
+# Runs `codegen_kinematics` against every URDF under crates/galaw/assets/urdf/,
+# writing generated code into crates/galaw/src/generated/.
 set -euo pipefail
 
 TYPE=${1:?'Usage: codegen_all_urdfs.sh <type>  (e.g. f32 or f64)'}
 
 cd "$(git rev-parse --show-toplevel)"
 
-URDF_DIR="assets/urdf"
-OUT_DIR="src/generated"
+URDF_DIR="crates/galaw/assets/urdf"
+OUT_DIR="crates/galaw/src/generated"
+# Strip this prefix when embedding URDF paths in generated code:
+# generated code runs with CWD = crate root (crates/galaw/), not the workspace root.
+URDF_EMBED_STRIP="crates/galaw/"
 
 # Reset to an empty stub so the build below can't fail on a stale
 # mod.rs/registry.rs referencing already-deleted per-robot files.
@@ -58,7 +61,7 @@ while IFS= read -r -d '' urdf; do
     if "$BIN" "$urdf" "$out" "$TYPE"; then
         ok_count=$((ok_count + 1))
         module_names+=("$name")
-        urdf_paths+=("$urdf")
+        urdf_paths+=("${urdf#$URDF_EMBED_STRIP}")
     else
         echo "    FAILED: $urdf"
         fail_count=$((fail_count + 1))

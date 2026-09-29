@@ -32,7 +32,7 @@ jobs:
       # criterion/charming/sysinfo (dev-only, used for benches/chart
       # generation) have newer MSRVs of their own; that's irrelevant to
       # what a consumer needs to build galaw itself.
-      - run: cargo check --lib
+      - run: cargo check -p galaw --lib
 
   fmt:
     name: fmt
