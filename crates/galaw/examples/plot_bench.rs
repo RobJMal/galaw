@@ -34,10 +34,10 @@ use charming::{Chart, ImageFormat, ImageRenderer};
 // Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
 
-const IMPLS: [&str; 3] = ["galaw-runtime", "galaw-generated", "k"];
+const IMPLS: [&str; 4] = ["galaw-runtime", "galaw-generated", "k", "pinocchio"];
 
-/// Wong (2011) colorblind-safe triple: galaw-runtime=blue, galaw-generated=bluish green, k=orange.
-const COLORS: [&str; 3] = ["#0072B2", "#009E73", "#E69F00"];
+/// Wong (2011) colorblind-safe palette: blue, bluish-green, orange, sky-blue.
+const COLORS: [&str; 4] = ["#0072B2", "#009E73", "#E69F00", "#56B4E9"];
 
 // ----- FONT SIZES (tweak here — every chart text element is driven off these) -----
 const TITLE_FONT_SIZE: f64 = 38.0;
@@ -103,7 +103,8 @@ fn manifest_dir() -> PathBuf {
 }
 
 fn robot_info(urdf_path: &str) -> Result<RobotInfo, Box<dyn Error>> {
-    let model = load_urdf::<f64>(urdf_path)?;
+    let abs = manifest_dir().join(urdf_path);
+    let model = load_urdf::<f64>(abs.to_str().ok_or("non-utf8 path")?)?;
     Ok(RobotInfo {
         name: model.name.clone(),
         bench_id: model.joints.len() as u32,
@@ -119,8 +120,10 @@ fn stat(
     bench_id: u32,
 ) -> Result<Stat, Box<dyn Error>> {
     let group = format!("{}_{}", kind.prefix(), robot_name);
+    // Criterion writes to the workspace-level target/, which is two levels up
+    // from this crate's CARGO_MANIFEST_DIR (crates/galaw/ → workspace root).
     let path = manifest_dir()
-        .join("target/criterion")
+        .join("../../target/criterion")
         .join(&group)
         .join(impl_)
         .join(bench_id.to_string())
@@ -175,14 +178,6 @@ fn build_chart(
                 .left("center")
                 .text_style(TextStyle::new().font_size(TITLE_FONT_SIZE)),
         )
-        .legend(
-            Legend::new()
-                .top("bottom")
-                .text_style(TextStyle::new().font_size(LEGEND_FONT_SIZE))
-                .item_gap(LEGEND_FONT_SIZE * 2.0)
-                .width("90%")
-                .data(IMPLS.to_vec()),
-        )
         .grid(
             Grid::new()
                 .left("4%")
@@ -227,11 +222,24 @@ fn build_chart(
     let mut all_series: Vec<SeriesData> = Vec::new();
     for (&impl_, &color) in IMPLS.iter().zip(COLORS.iter()) {
         let (mut means, mut los, mut heights) = (Vec::new(), Vec::new(), Vec::new());
+        let mut any_missing = false;
         for robot in robots {
-            let (m, lo, hi) = to_vals(&stat(kind, &robot.name, impl_, robot.bench_id)?);
-            means.push(round(m));
-            los.push(lo);
-            heights.push(hi - lo);
+            match stat(kind, &robot.name, impl_, robot.bench_id) {
+                Ok(s) => {
+                    let (m, lo, hi) = to_vals(&s);
+                    means.push(round(m));
+                    los.push(lo);
+                    heights.push(hi - lo);
+                }
+                Err(_) => {
+                    any_missing = true;
+                    break;
+                }
+            }
+        }
+        if any_missing {
+            eprintln!("skipping {impl_}: missing benchmark data (run with --features bench-pinocchio?)");
+            continue;
         }
         let mut sorted_means = means.clone();
         sorted_means.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -245,6 +253,17 @@ fn build_chart(
             typical,
         });
     }
+
+    // Add legend now that we know which implementations have data.
+    let legend_names: Vec<&str> = all_series.iter().map(|s| s.impl_).collect();
+    chart = chart.legend(
+        Legend::new()
+            .top("bottom")
+            .text_style(TextStyle::new().font_size(LEGEND_FONT_SIZE))
+            .item_gap(LEGEND_FONT_SIZE * 2.0)
+            .width("90%")
+            .data(legend_names),
+    );
 
     // Rank series by typical value so the label stagger pushes each series'
     // label away from those below it, not into them.
