@@ -187,6 +187,55 @@ fn bench_fk(c: &mut Criterion) {
             },
         );
 
+        // ----- pinocchio -----
+        #[cfg(feature = "bench-pinocchio")]
+        {
+            let mut pin_model = rs_pinocchio::Model::from_urdf(urdf_path, false)
+                .unwrap_or_else(|_| panic!("pinocchio: failed to load URDF {urdf_path}"));
+            // Frame IDs for all galaw links, collected once outside the timed region.
+            let pin_frame_ids: Vec<usize> = galaw_model
+                .links
+                .iter()
+                .map(|link| {
+                    pin_model.frame_id(&link.name).unwrap_or_else(|| {
+                        panic!("pinocchio: frame '{}' not found in {urdf_path}", link.name)
+                    })
+                })
+                .collect();
+            // Pre-convert to DVectors of size pin_model.nq(). Pinocchio's nq may
+            // exceed galaw's commanded joint count when the URDF has non-commanded
+            // joints (e.g. continuous joints without limits). Fill those with 0.
+            let pin_nq = pin_model.nq();
+            let pin_joint_cmds: Vec<nalgebra_latest::DVector<f64>> = joint_cmds
+                .iter()
+                .map(|c| {
+                    let mut q = nalgebra_latest::DVector::zeros(pin_nq);
+                    for (i, &v) in c.iter().enumerate().take(pin_nq) {
+                        q[i] = v;
+                    }
+                    q
+                })
+                .collect();
+
+            group.bench_with_input(
+                BenchmarkId::new("pinocchio", galaw_model.joints.len()),
+                &pin_joint_cmds,
+                |b, cmds| {
+                    let mut i = 0usize;
+                    b.iter(|| {
+                        pin_model
+                            .forward_kinematics(black_box(&cmds[i % cmds.len()]))
+                            .unwrap();
+                        pin_model.update_frame_placements();
+                        for &fid in &pin_frame_ids {
+                            black_box(pin_model.frame_placement(fid).unwrap());
+                        }
+                        i += 1;
+                    });
+                },
+            );
+        }
+
         group.finish();
     }
 }

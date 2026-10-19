@@ -133,6 +133,57 @@ fn bench_jacobian(c: &mut Criterion) {
             },
         );
 
+        // ---- pinocchio ----
+        #[cfg(feature = "bench-pinocchio")]
+        {
+            let mut pin_model = rs_pinocchio::Model::from_urdf(urdf_path, false)
+                .unwrap_or_else(|_| panic!("pinocchio: failed to load URDF {urdf_path}"));
+            let pin_frame_ids: Vec<usize> = galaw_model
+                .links
+                .iter()
+                .map(|link| {
+                    pin_model.frame_id(&link.name).unwrap_or_else(|| {
+                        panic!("pinocchio: frame '{}' not found in {urdf_path}", link.name)
+                    })
+                })
+                .collect();
+            let pin_nq = pin_model.nq();
+            let pin_joint_cmds: Vec<nalgebra_latest::DVector<f64>> = joint_cmds
+                .iter()
+                .map(|c| {
+                    let mut q = nalgebra_latest::DVector::zeros(pin_nq);
+                    for (i, &v) in c.iter().enumerate().take(pin_nq) {
+                        q[i] = v;
+                    }
+                    q
+                })
+                .collect();
+
+            group.bench_with_input(
+                BenchmarkId::new("pinocchio", galaw_model.joints.len()),
+                &pin_joint_cmds,
+                |b, cmds| {
+                    let mut i = 0usize;
+                    b.iter(|| {
+                        pin_model
+                            .compute_joint_jacobians(black_box(&cmds[i % cmds.len()]))
+                            .unwrap();
+                        for &fid in &pin_frame_ids {
+                            black_box(
+                                pin_model
+                                    .frame_jacobian(
+                                        fid,
+                                        rs_pinocchio::ReferenceFrame::LocalWorldAligned,
+                                    )
+                                    .unwrap(),
+                            );
+                        }
+                        i += 1;
+                    });
+                },
+            );
+        }
+
         group.finish();
     }
 }
