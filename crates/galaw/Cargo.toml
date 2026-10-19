@@ -18,11 +18,16 @@ categories = ["science::robotics"]
 # before the real fk_speed bench (harness = false, below) even runs.
 bench = false
 
+[features]
+bench-pinocchio = ["dep:rs-pinocchio", "dep:nalgebra-latest"]
+
 [dependencies]
-derive_more = { workspace = true }
-nalgebra    = { workspace = true }
-roxmltree   = { workspace = true }
-thiserror   = { workspace = true }
+derive_more     = { workspace = true }
+nalgebra        = { workspace = true }
+roxmltree       = { workspace = true }
+thiserror       = { workspace = true }
+rs-pinocchio    = { workspace = true, optional = true }
+nalgebra-latest = { workspace = true, optional = true }
 
 [dev-dependencies]
 charming    = { workspace = true }
