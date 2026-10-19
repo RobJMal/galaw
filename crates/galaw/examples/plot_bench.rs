@@ -238,7 +238,9 @@ fn build_chart(
             }
         }
         if any_missing {
-            eprintln!("skipping {impl_}: missing benchmark data (run with --features bench-pinocchio?)");
+            eprintln!(
+                "skipping {impl_}: missing benchmark data (run with --features bench-pinocchio?)"
+            );
             continue;
         }
         let mut sorted_means = means.clone();
