@@ -127,6 +127,17 @@ cargo run --release --example plot_bench -- ik        # IK only
 cargo run --release --example plot_bench -- jacobian  # Jacobian only
 ```
 
+### Benchmarking against Pinocchio
+
+The FK and Jacobian benchmarks can also include [Pinocchio](https://github.com/stack-of-tasks/pinocchio) as a comparison target via the [`rs-pinocchio`](https://crates.io/crates/rs-pinocchio) crate. This requires a system-installed Pinocchio 4.x (via the robotpkg apt repository) and the `bench-pinocchio` feature flag:
+
+```bash
+cargo bench --bench fk_speed       --features bench-pinocchio
+cargo bench --bench jacobian_speed --features bench-pinocchio
+```
+
+Full setup instructions (apt repository, environment variables, build notes): [`docs/pinocchio.md`](docs/pinocchio.md).
+
 ### Forward Kinematics
 
 ![FK latency scaling](img/fk_scaling_ns_per_call.png)
