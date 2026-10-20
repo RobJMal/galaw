@@ -3,7 +3,7 @@
 #
 # Builds the binaries if the build directory does not exist, then runs fk_bench
 # and jacobian_bench from the repo root. Results are written as Criterion-
-# compatible estimates.json files so plot_bench.rs picks them up automatically.
+# compatible estimates.json files so plot_bench.py picks them up automatically.
 #
 # Usage:
 #   scripts/bench_pinocchio_cpp.sh          # build if needed, then run
@@ -45,4 +45,4 @@ echo "==> Running jacobian_bench..."
 "$BUILD_DIR/jacobian_bench"
 
 echo ""
-echo "Done. Run 'cargo run --release --example plot_bench' to regenerate charts."
+echo "Done. Run 'python3 scripts/plot_bench.py' to regenerate charts."

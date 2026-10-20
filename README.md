@@ -121,10 +121,10 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 Reproduce with `cargo bench`, then plot with:
 
 ```bash
-cargo run --release --example plot_bench              # all three
-cargo run --release --example plot_bench -- fk        # FK only
-cargo run --release --example plot_bench -- ik        # IK only
-cargo run --release --example plot_bench -- jacobian  # Jacobian only
+python3 scripts/plot_bench.py        # all three
+python3 scripts/plot_bench.py fk     # FK only
+python3 scripts/plot_bench.py ik     # IK only
+python3 scripts/plot_bench.py jacobian  # Jacobian only
 ```
 
 ### Benchmarking against Pinocchio
