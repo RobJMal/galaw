@@ -9,8 +9,8 @@ Usage:
   python3 scripts/plot_bench.py [fk|ik|jacobian] [--plots LIST]
 
   --plots     comma-separated subset of:
-                speedup_vs_pinocchio-cpp  speedup vs. native C++ Pinocchio (FK/Jacobian)
-                speedup_vs_k             speedup vs. k (FK/Jacobian/IK)
+                speedup_vs_pinocchio_cpp  speedup vs. native C++ Pinocchio (FK/Jacobian)
+                speedup_vs_k_rust        speedup vs. k (Rust) (FK/Jacobian/IK)
                 grouped   absolute latency, grouped bars, log y
                 multiples one panel per robot, horizontal bars with exact values
                 table     markdown tables for the README (benchmark_results.md)
@@ -54,8 +54,8 @@ ROBOTS = [
 
 ALL_KINDS = ["fk", "jacobian", "ik"]
 KIND_TITLE = {"fk": "FK", "ik": "IK", "jacobian": "Jacobian"}
-ALL_PLOTS = ["speedup_vs_pinocchio-cpp", "speedup_vs_k", "grouped", "multiples", "table"]
-DEFAULT_PLOTS = ["speedup_vs_pinocchio-cpp", "speedup_vs_k", "grouped", "multiples", "table"]
+ALL_PLOTS = ["speedup_vs_pinocchio_cpp", "speedup_vs_k_rust", "grouped", "multiples", "table"]
+DEFAULT_PLOTS = ["speedup_vs_pinocchio_cpp", "speedup_vs_k_rust", "grouped", "multiples", "table"]
 
 NOTE = ("Mean time per call, single-threaded, 95% CI. "
         "rs-pinocchio is a Rust wrapper over Pinocchio; pinocchio-cpp is native C++.")
@@ -153,7 +153,7 @@ def finish(fig, title, stem, suffix, note=NOTE):
 
 # ------------------------------------------------------------------ plots ---
 
-def plot_speedup_vs(data, baseline_impl, suffix):
+def plot_speedup_vs(data, baseline_impl, stem, suffix):
     """Headline figure: speedup relative to a fixed baseline, one panel per kind
     that has data for that baseline.
 
@@ -189,7 +189,6 @@ def plot_speedup_vs(data, baseline_impl, suffix):
     axes[0][0].set_ylabel("Speedup (higher is better; dashed line = baseline)", fontsize=10)
     add_legend(fig, axes[0], ncol=2)
     fig.tight_layout(rect=(0, 0, 1, 0.9))
-    stem = f"speedup_vs_{baseline_impl}"
     finish(fig, f"galaw speedup vs {LABEL[baseline_impl]}", stem, suffix,
            note=NOTE + f" Baseline: {LABEL[baseline_impl]} (dashed line = 1×).")
 
@@ -305,10 +304,10 @@ def main():
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("rendering...")
-    if "speedup_vs_pinocchio-cpp" in plots:
-        plot_speedup_vs(data, "pinocchio-cpp", suffix)
-    if "speedup_vs_k" in plots:
-        plot_speedup_vs(data, "k", suffix)
+    if "speedup_vs_pinocchio_cpp" in plots:
+        plot_speedup_vs(data, "pinocchio-cpp", "speedup_vs_pinocchio_cpp", suffix)
+    if "speedup_vs_k_rust" in plots:
+        plot_speedup_vs(data, "k", "speedup_vs_k_rust", suffix)
     if "grouped" in plots:
         plot_grouped(data, suffix)
     if "multiples" in plots:
