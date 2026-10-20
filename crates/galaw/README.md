@@ -127,20 +127,21 @@ python3 scripts/plot_bench.py ik     # IK only
 python3 scripts/plot_bench.py jacobian  # Jacobian only
 ```
 
-### Forward Kinematics
+### Speedup vs C++ Pinocchio (FK and Jacobian)
 
-![FK latency scaling](img/fk_scaling_ns_per_call.png)
-![FK throughput](img/fk_throughput_mcalls.png)
+![Speedup vs C++ Pinocchio](docs/bench/speedup_vs_pinocchio_cpp.png)
 
-### Jacobian
+### Speedup vs k (Rust) (FK, Jacobian, IK)
 
-![Jacobian latency scaling](img/jacobian_scaling_ns_per_call.png)
-![Jacobian throughput](img/jacobian_throughput_mcalls.png)
+![Speedup vs k Rust](docs/bench/speedup_vs_k_rust.png)
 
-### Inverse Kinematics
+### Latency comparison
 
-![IK latency scaling](img/ik_scaling_ns_per_call.png)
-![IK throughput](img/ik_throughput_mcalls.png)
+![Latency comparison all robots](docs/bench/latency_comparison_all_robots.png)
+
+### Latency per robot
+
+![Latency per robot with values](docs/bench/latency_per_robot_with_values.png)
 
 ## Citation
 
