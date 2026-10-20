@@ -129,19 +129,19 @@ python3 scripts/plot_bench.py jacobian  # Jacobian only
 
 ### Speedup vs C++ Pinocchio (FK and Jacobian)
 
-![Speedup vs C++ Pinocchio](docs/bench/speedup_vs_pinocchio_cpp.png)
+![Speedup vs C++ Pinocchio](img/speedup_vs_pinocchio_cpp.png)
 
 ### Speedup vs k (Rust) (FK, Jacobian, IK)
 
-![Speedup vs k Rust](docs/bench/speedup_vs_k_rust.png)
+![Speedup vs k Rust](img/speedup_vs_k_rust.png)
 
 ### Latency comparison
 
-![Latency comparison all robots](docs/bench/latency_comparison_all_robots.png)
+![Latency comparison all robots](img/latency_comparison_all_robots.png)
 
 ### Latency per robot
 
-![Latency per robot with values](docs/bench/latency_per_robot_with_values.png)
+![Latency per robot with values](img/latency_per_robot_with_values.png)
 
 ## Citation
 
