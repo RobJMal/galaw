@@ -34,10 +34,13 @@ use charming::{Chart, ImageFormat, ImageRenderer};
 // Custom
 use galaw::{fixtures::BENCH_URDFS, load_urdf};
 
-const IMPLS: [&str; 4] = ["galaw-runtime", "galaw-generated", "k", "pinocchio"];
+const IMPLS: [&str; 5] = ["galaw-runtime", "galaw-generated", "k", "pinocchio", "pinocchio-cpp"];
 
-/// Wong (2011) colorblind-safe palette: blue, bluish-green, orange, sky-blue.
-const COLORS: [&str; 4] = ["#0072B2", "#009E73", "#E69F00", "#56B4E9"];
+/// Display labels for each implementation (same order as IMPLS).
+const LABELS: [&str; 5] = ["galaw-runtime", "galaw-generated", "k", "rs-pinocchio", "pinocchio-cpp"];
+
+/// Wong (2011) colorblind-safe palette: blue, bluish-green, orange, sky-blue, mauve.
+const COLORS: [&str; 5] = ["#0072B2", "#009E73", "#E69F00", "#56B4E9", "#CC79A7"];
 
 // ----- FONT SIZES (tweak here — every chart text element is driven off these) -----
 const TITLE_FONT_SIZE: f64 = 38.0;
@@ -48,7 +51,7 @@ const AXIS_NAME_FONT_SIZE: f64 = 22.0;
 const AXIS_TICK_FONT_SIZE: f64 = 19.0;
 /// Keep in sync with the label box height at this font size.
 const LABEL_FONT_SIZE: f64 = 19.0;
-const LABEL_STAGGER_PX: f64 = 16.0;
+const LABEL_STAGGER_PX: f64 = 20.0;
 
 #[derive(Clone, Copy)]
 enum KinematicFunction {
@@ -212,7 +215,8 @@ fn build_chart(
         );
 
     struct SeriesData {
-        impl_: &'static str,
+        impl_: &'static str,  // Criterion path key (directory name)
+        label: &'static str,  // display name in legend / series
         color: &'static str,
         means: Vec<f64>,
         los: Vec<f64>,
@@ -220,7 +224,7 @@ fn build_chart(
         typical: f64,
     }
     let mut all_series: Vec<SeriesData> = Vec::new();
-    for (&impl_, &color) in IMPLS.iter().zip(COLORS.iter()) {
+    for ((&impl_, &label), &color) in IMPLS.iter().zip(LABELS.iter()).zip(COLORS.iter()) {
         let (mut means, mut los, mut heights) = (Vec::new(), Vec::new(), Vec::new());
         let mut any_missing = false;
         for robot in robots {
@@ -248,6 +252,7 @@ fn build_chart(
         let typical = sorted_means[sorted_means.len() / 2];
         all_series.push(SeriesData {
             impl_,
+            label,
             color,
             means,
             los,
@@ -257,7 +262,7 @@ fn build_chart(
     }
 
     // Add legend now that we know which implementations have data.
-    let legend_names: Vec<&str> = all_series.iter().map(|s| s.impl_).collect();
+    let legend_names: Vec<&str> = all_series.iter().map(|s| s.label).collect();
     chart = chart.legend(
         Legend::new()
             .top("bottom")
@@ -284,6 +289,7 @@ fn build_chart(
     for (i, series) in all_series.into_iter().enumerate() {
         let SeriesData {
             impl_,
+            label,
             color,
             means,
             los,
@@ -294,11 +300,13 @@ fn build_chart(
         let stack_id = format!("band_{impl_}");
 
         // Invisible base line lifts the band's baseline to the CI lower bound.
+        // Both line and area must be fully transparent to avoid ghost fills.
         chart = chart.series(
             Line::new()
                 .stack(stack_id.clone())
                 .show_symbol(false)
                 .line_style(LineStyle::new().opacity(0.0))
+                .area_style(AreaStyle::new().opacity(0.0))
                 .data(los),
         );
         // Filled band spanning (upper − lower), i.e. the CI width, at 18% opacity.
@@ -313,7 +321,7 @@ fn build_chart(
         // Mean line with per-point value labels.
         chart = chart.series(
             Line::new()
-                .name(impl_)
+                .name(label)
                 .line_style(LineStyle::new().color(color).width(2.0))
                 .item_style(ItemStyle::new().color(color))
                 .label(
