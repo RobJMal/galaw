@@ -110,13 +110,22 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 
 ## Performance
 
-`galaw` outperforms [`k`](https://crates.io/crates/k) across all three operations (geometric mean across four robots). Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
+Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8). Geometric mean across four robots.
 
-| Operation | galaw-runtime vs k | galaw-generated vs k |
-|-----------|-------------------|----------------------|
-| FK        | ~3.5×             | ~8.6×                |
-| Jacobian  | ~22.6×            | ~38.2×               |
-| IK        | ~5.3×             | ~10.7×               |
+**vs k (Rust):**
+
+| Operation | galaw-runtime | galaw-generated |
+|-----------|--------------|-----------------|
+| FK        | ~3.5×        | ~8.1×           |
+| Jacobian  | ~22.6×       | ~41.8×          |
+| IK        | ~5.3×        | ~10.8×          |
+
+**vs C++ Pinocchio (Pinocchio has no native IK solver):**
+
+| Operation | galaw-runtime | galaw-generated |
+|-----------|--------------|-----------------|
+| FK        | ~1.3×        | ~3.0×           |
+| Jacobian  | ~1.1×        | ~2.0×           |
 
 Reproduce with `cargo bench`, then plot with:
 
