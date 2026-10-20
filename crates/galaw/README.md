@@ -110,37 +110,47 @@ Full runnable version: [`examples/galaw_generated.rs`](examples/galaw_generated.
 
 ## Performance
 
-`galaw` outperforms [`k`](https://crates.io/crates/k) across all three operations (geometric mean across four robots). Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8).
+Benchmarked on: Intel Core i7-10750H @ 2.60GHz (6C/12T, boost up to 5.0GHz), 16GB RAM, Ubuntu 22.04.5 LTS (kernel 6.8). Geometric mean across four robots.
 
-| Operation | galaw-runtime vs k | galaw-generated vs k |
-|-----------|-------------------|----------------------|
-| FK        | ~3.5×             | ~8.6×                |
-| Jacobian  | ~22.6×            | ~38.2×               |
-| IK        | ~5.3×             | ~10.7×               |
+**vs k (Rust):**
+
+| Operation | galaw-runtime | galaw-generated |
+|-----------|--------------|-----------------|
+| FK        | ~3.5×        | ~8.1×           |
+| Jacobian  | ~22.6×       | ~41.8×          |
+| IK        | ~5.3×        | ~10.8×          |
+
+**vs C++ Pinocchio (Pinocchio has no native IK solver):**
+
+| Operation | galaw-runtime | galaw-generated |
+|-----------|--------------|-----------------|
+| FK        | ~1.3×        | ~3.0×           |
+| Jacobian  | ~1.1×        | ~2.0×           |
 
 Reproduce with `cargo bench`, then plot with:
 
 ```bash
-cargo run --release --example plot_bench              # all three
-cargo run --release --example plot_bench -- fk        # FK only
-cargo run --release --example plot_bench -- ik        # IK only
-cargo run --release --example plot_bench -- jacobian  # Jacobian only
+python3 scripts/plot_bench.py        # all three
+python3 scripts/plot_bench.py fk     # FK only
+python3 scripts/plot_bench.py ik     # IK only
+python3 scripts/plot_bench.py jacobian  # Jacobian only
 ```
 
-### Forward Kinematics
+### Speedup vs C++ Pinocchio (FK and Jacobian)
 
-![FK latency scaling](img/fk_scaling_ns_per_call.png)
-![FK throughput](img/fk_throughput_mcalls.png)
+![Speedup vs C++ Pinocchio](img/speedup_vs_pinocchio_cpp.png)
 
-### Jacobian
+### Speedup vs k (Rust) (FK, Jacobian, IK)
 
-![Jacobian latency scaling](img/jacobian_scaling_ns_per_call.png)
-![Jacobian throughput](img/jacobian_throughput_mcalls.png)
+![Speedup vs k Rust](img/speedup_vs_k_rust.png)
 
-### Inverse Kinematics
+### Latency comparison
 
-![IK latency scaling](img/ik_scaling_ns_per_call.png)
-![IK throughput](img/ik_throughput_mcalls.png)
+![Latency comparison all robots](img/latency_comparison_all_robots.png)
+
+### Latency per robot
+
+![Latency per robot with values](img/latency_per_robot_with_values.png)
 
 ## Citation
 

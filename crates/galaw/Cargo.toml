@@ -30,11 +30,9 @@ rs-pinocchio    = { workspace = true, optional = true }
 nalgebra-latest = { workspace = true, optional = true }
 
 [dev-dependencies]
-charming    = { workspace = true }
 criterion   = { workspace = true }
 rand        = { workspace = true }
 rand_chacha = { workspace = true }
-serde_json  = { workspace = true }
 sysinfo     = { workspace = true }
 k           = { workspace = true }
 rayon       = { workspace = true }
