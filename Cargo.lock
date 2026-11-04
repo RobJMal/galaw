@@ -398,6 +398,8 @@ dependencies = [
  "rayon",
  "roxmltree",
  "rs-pinocchio",
+ "serde",
+ "serde_json",
  "sysinfo",
  "thiserror 2.0.19",
 ]

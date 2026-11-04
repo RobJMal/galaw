@@ -955,8 +955,30 @@ where
         .collect();
 
     match (parent_link_name, actuated.as_slice()) {
+        (None, []) => {
+            // Root body rigidly attached to the world.  Apply body_transform via a
+            // virtual world-root link only when the transform is non-identity
+            // (e.g. Spot: pos="0 0 0.75", Shadow Hand: quat="0 1 0 1").
+            let eps: T = nalgebra::convert(1e-10_f64);
+            let has_translation = body_transform.translation.vector.norm() > eps;
+            let has_rotation =
+                (T::one() - body_transform.rotation.quaternion().w.abs()) > eps;
+            if has_translation || has_rotation {
+                let world_root = format!("{body_name}__world_root");
+                let insert_at = links.len() - 1;
+                links.insert(insert_at, Link { name: world_root.clone() });
+                joints.push(mjcf_fixed_joint(
+                    &format!("world_to_{body_name}"),
+                    &world_root,
+                    &body_name,
+                    body_transform,
+                ));
+            }
+        }
         (None, _) => {
-            // Root body: no parent joint is needed regardless of joints present.
+            // Root body with actuated joints (free joints already filtered).
+            // Non-identity body_transform + actuated joints on the root body
+            // are not supported in the current model set.
         }
         (Some(parent), []) => {
             // No actuated joints → rigid attachment to parent.
