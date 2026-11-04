@@ -506,16 +506,30 @@ fn collect_default_classes(
 
 /// Returns the effective attributes for a `<joint>` node after applying class
 /// defaults and then overriding with the element's own explicit attributes.
+///
+/// Priority (lowest → highest):
+/// 1. `inherited_class` defaults (from the nearest ancestor body's `childclass`)
+/// 2. The joint's own `class` attribute defaults
+/// 3. The joint's explicit attributes
 fn effective_joint_attrs(
     jnode: roxmltree::Node<'_, '_>,
     defaults: &MjcfDefaults,
+    inherited_class: Option<&str>,
 ) -> HashMap<String, String> {
     let mut attrs: HashMap<String, String> = HashMap::new();
+    // Inherited class (lowest priority — set by an ancestor body's `childclass`)
+    if let Some(cls) = inherited_class {
+        if let Some(defs) = defaults.get(cls) {
+            attrs.extend(defs.iter().map(|(k, v)| (k.clone(), v.clone())));
+        }
+    }
+    // Joint's own explicit class (overrides inherited)
     if let Some(cls) = jnode.attribute("class") {
         if let Some(defs) = defaults.get(cls) {
             attrs.extend(defs.iter().map(|(k, v)| (k.clone(), v.clone())));
         }
     }
+    // Joint's own explicit attributes (highest priority)
     for attr in jnode.attributes() {
         attrs.insert(attr.name().to_string(), attr.value().to_string());
     }
@@ -631,7 +645,7 @@ fn apply_mjcf_euler<T: RealField + Copy>(a: T, b: T, c: T, seq: &str) -> UnitQua
             'z' | 'Z' => UnitQuaternion::from_axis_angle(&Vector3::z_axis(), ang),
             _ => UnitQuaternion::identity(),
         };
-        q = q * r;
+        q *= r;
     }
     q
 }
@@ -813,6 +827,7 @@ fn emit_multi_joint_body<T>(
     joints: &mut Vec<Joint<T>>,
     settings: &CompilerSettings,
     defaults: &MjcfDefaults,
+    inherited_class: Option<&str>,
 ) -> Result<(), MjcfParseError>
 where
     T: RealField + Copy + FromStr<Err = std::num::ParseFloatError>,
@@ -824,7 +839,7 @@ where
     }
 
     for (i, jnode) in joint_nodes.iter().enumerate() {
-        let attrs = effective_joint_attrs(*jnode, defaults);
+        let attrs = effective_joint_attrs(*jnode, defaults, inherited_class);
         let type_str = attrs.get("type").map(|s| s.as_str()).unwrap_or("hinge").to_string();
         if type_str == "free" {
             continue;
@@ -869,6 +884,7 @@ where
 /// Recursively processes an MJCF `<body>` node.
 ///
 /// `parent_link_name` is `None` only for direct children of `<worldbody>` (root bodies).
+/// `inherited_class` is the nearest ancestor body's `childclass` attribute, if any.
 #[allow(clippy::too_many_arguments)]
 fn visit_body<T>(
     node: roxmltree::Node<'_, '_>,
@@ -877,6 +893,7 @@ fn visit_body<T>(
     joints: &mut Vec<Joint<T>>,
     settings: &CompilerSettings,
     defaults: &MjcfDefaults,
+    inherited_class: Option<&str>,
 ) -> Result<(), MjcfParseError>
 where
     T: RealField + Copy + FromStr<Err = std::num::ParseFloatError>,
@@ -895,6 +912,9 @@ where
                 .unwrap_or_else(|| "worldbody child".to_string()),
         })?
         .to_string();
+
+    // `childclass` on this body overrides the inherited class for all descendants.
+    let child_class: Option<&str> = node.attribute("childclass").or(inherited_class);
 
     let body_transform = parse_mjcf_transform::<T>(node, settings, &body_name)?;
     links.push(Link { name: body_name.clone() });
@@ -949,7 +969,7 @@ where
         }
         (Some(parent), [jn]) => {
             // Single actuated joint → one joint from parent to this body.
-            let attrs = effective_joint_attrs(*jn, defaults);
+            let attrs = effective_joint_attrs(*jn, defaults, child_class);
             let type_str =
                 attrs.get("type").map(|s| s.as_str()).unwrap_or("hinge").to_string();
             let joint_name = attrs
@@ -1007,14 +1027,15 @@ where
                 joints,
                 settings,
                 defaults,
+                child_class,
             )?;
         }
     }
 
-    // Recurse into child bodies
+    // Recurse into child bodies, propagating the current class.
     for child in node.children() {
         if child.is_element() && child.tag_name().name() == "body" {
-            visit_body(child, Some(&body_name), links, joints, settings, defaults)?;
+            visit_body(child, Some(&body_name), links, joints, settings, defaults, child_class)?;
         }
     }
     Ok(())
@@ -1097,7 +1118,7 @@ where
 
     for child in worldbody.children() {
         if child.is_element() && child.tag_name().name() == "body" {
-            visit_body(child, None, &mut links, &mut joints, &settings, &defaults)?;
+            visit_body(child, None, &mut links, &mut joints, &settings, &defaults, None)?;
         }
     }
 

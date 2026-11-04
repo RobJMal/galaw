@@ -85,6 +85,79 @@ fn mjcf_basic_model_properties() {
     assert!(model.get_joint_idx("elbow_joint").is_some());
 }
 
+// ── Third-party model smoke tests ─────────────────────────────────────────────
+//
+// These tests load real Menagerie MJCFs and verify that:
+//   1. Parsing succeeds (no errors, all links/joints resolved)
+//   2. Expected model metadata is correct
+//   3. FK runs without panicking at all-zero joint config
+//
+// They do NOT compare against a reference URDF (no equivalent exists);
+// correctness of the kinematics is validated separately via the custom
+// fixtures above.
+
+/// Verifies that FK runs at all-zero joints and returns the right number of
+/// link poses.
+fn smoke_fk(model: &galaw::types::GalawModel<f64>) {
+    let cmds = vec![0.0_f64; model.num_actuated_joints];
+    let mut data = model.create_galaw_data();
+    model.compute_fk(&cmds, &mut data).unwrap();
+    assert_eq!(data.link_poses.len(), model.num_links);
+}
+
+#[test]
+fn mjcf_loads_spot() {
+    let model = load_mjcf::<f64>(
+        "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
+    )
+    .unwrap();
+    assert_eq!(model.name, "spot");
+    assert_eq!(model.num_actuated_joints, 12);
+    assert!(model.get_link_idx("body").is_some());
+    assert!(model.get_joint_idx("fl_hx").is_some());
+    smoke_fk(&model);
+}
+
+#[test]
+fn mjcf_loads_panda() {
+    let model = load_mjcf::<f64>(
+        "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
+    )
+    .unwrap();
+    assert_eq!(model.name, "panda");
+    assert_eq!(model.num_actuated_joints, 9);
+    assert!(model.get_link_idx("link0").is_some());
+    assert!(model.get_joint_idx("joint1").is_some());
+    assert!(model.get_joint_idx("finger_joint1").is_some());
+    smoke_fk(&model);
+}
+
+#[test]
+fn mjcf_loads_shadow_hand() {
+    let model = load_mjcf::<f64>(
+        "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
+    )
+    .unwrap();
+    assert_eq!(model.name, "right_shadow_hand");
+    assert_eq!(model.num_actuated_joints, 24);
+    assert!(model.get_link_idx("rh_forearm").is_some());
+    assert!(model.get_joint_idx("rh_WRJ1").is_some());
+    smoke_fk(&model);
+}
+
+#[test]
+fn mjcf_loads_g1() {
+    let model = load_mjcf::<f64>(
+        "assets/mjcf/third_party/Unitree_G1/g1.xml",
+    )
+    .unwrap();
+    assert_eq!(model.name, "g1_29dof_rev_1_0");
+    assert_eq!(model.num_actuated_joints, 29);
+    assert!(model.get_link_idx("pelvis").is_some());
+    assert!(model.get_joint_idx("left_hip_pitch_joint").is_some());
+    smoke_fk(&model);
+}
+
 /// Checks the flipped MJCF (joint declared after child body) resolves to the
 /// same parent/child link names as the standard ordering.
 #[test]
