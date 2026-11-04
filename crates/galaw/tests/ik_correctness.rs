@@ -12,7 +12,7 @@ use galaw::{
 };
 
 mod common;
-use common::{RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models, zero_joint_cmds};
+use common::{RNG_SEED, TestResult, load_model, random_joint_cmds, zero_joint_cmds};
 
 use crate::common::assert_galaw_transform_close;
 
@@ -127,7 +127,7 @@ fn assert_galaw_ik_correctness(
 /// Run IK check for each URDF.
 fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
     eprintln!("[urdf] {urdf_path}");
-    let (galaw_model, _) = setup_kinematic_models(urdf_path);
+    let galaw_model = load_model(urdf_path);
 
     let candidates = candidate_target_links(&galaw_model);
     assert!(
@@ -164,7 +164,7 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
 
 /// Compares a codegen'd `compute_ik` against the runtime `GalawModel::compute_ik`.
 fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
-    urdf_path: &str,
+    model_path: &str,
     generated_compute_ik: impl Fn(
         usize,
         &Isometry3<f64>,
@@ -172,12 +172,12 @@ fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usi
         &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
     ) -> Result<(), KinematicsError<f64>>,
 ) -> TestResult {
-    let (galaw_model, _) = setup_kinematic_models(urdf_path);
+    let galaw_model = load_model(model_path);
 
     let candidates = candidate_target_links(&galaw_model);
     assert!(
         !candidates.is_empty(),
-        "no valid IK target links found for {urdf_path}"
+        "no valid IK target links found for {model_path}"
     );
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     let mut data = galaw_model.create_galaw_data();

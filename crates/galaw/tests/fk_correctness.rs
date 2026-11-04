@@ -6,7 +6,7 @@ use rand_chacha::ChaCha8Rng;
 
 // Custom
 use galaw::{
-    load_urdf,
+    load_mjcf, load_urdf,
     types::{GalawModel, GeneratedGalawData},
 };
 
@@ -76,13 +76,17 @@ fn check_fk_for_urdf(urdf_path: &str) -> TestResult {
 /// (already checked against `k` above), so this only needs to confirm the
 /// generated code agrees with it.
 fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
-    urdf_path: &str,
+    model_path: &str,
     generated_compute_fk: impl Fn(
         &[f64; NUM_JOINTS],
         &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
     ),
 ) -> TestResult {
-    let galaw_model = load_urdf::<f64>(urdf_path).unwrap();
+    let galaw_model = if model_path.ends_with(".xml") {
+        load_mjcf::<f64>(model_path).unwrap()
+    } else {
+        load_urdf::<f64>(model_path).unwrap()
+    };
     let mut data = galaw_model.create_galaw_data();
     let mut gen_data = GeneratedGalawData::new();
 
