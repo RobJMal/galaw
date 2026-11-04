@@ -10,7 +10,10 @@ pub enum GalawError<T: std::fmt::Debug + std::fmt::Display + Copy> {
     /// A URDF file couldn't be read or parsed.
     #[error(transparent)]
     Parse(#[from] UrdfParseError),
-    /// A parsed URDF describes an invalid robot structure.
+    /// An MJCF file couldn't be read or parsed.
+    #[error(transparent)]
+    ParseMjcf(#[from] MjcfParseError),
+    /// A parsed robot file describes an invalid robot structure.
     #[error(transparent)]
     ModelTopology(#[from] ModelTopologyError),
     /// A kinematics computation failed.
@@ -116,6 +119,78 @@ pub enum UrdfParseError {
         #[source]
         source: std::num::ParseFloatError,
     },
+}
+
+/// Errors from reading and parsing an MJCF file.
+#[derive(Debug, thiserror::Error)]
+pub enum MjcfParseError {
+    /// The MJCF file couldn't be read from disk.
+    #[error("failed to read MJCF file '{path}'")]
+    Io {
+        /// Path of the file that failed to read.
+        path: String,
+        /// The underlying I/O error.
+        #[source]
+        source: std::io::Error,
+    },
+    /// The MJCF file's contents aren't valid XML.
+    #[error("failed to parse XML in MJCF file '{path}': {source}")]
+    XmlParse {
+        /// Path of the file that failed to parse.
+        path: String,
+        /// The underlying XML parse error.
+        #[source]
+        source: roxmltree::Error,
+    },
+    /// The `<mujoco>` root element is missing its `model` attribute.
+    #[error("missing 'model' attribute on <mujoco> tag")]
+    MissingAttributeModelName,
+    /// A `<body>` element is missing its `name` attribute.
+    #[error("missing 'name' attribute on <body> at path '{body_path}'")]
+    MissingAttributeBodyName {
+        /// XPath-like description of where the unnamed body appears.
+        body_path: String,
+    },
+    /// An attribute expected to hold a Vec3 didn't contain exactly 3 values.
+    #[error("expected 3 values, received {1} in '{0}'")]
+    InvalidVector3Len(String, usize),
+    /// An attribute expected to hold a Vec4 didn't contain exactly 4 values.
+    #[error("expected 4 values, received {1} in '{0}'")]
+    InvalidVector4Len(String, usize),
+    /// A body specifies more than one rotation format simultaneously.
+    #[error("body '{body}' specifies more than one rotation attribute (quat/euler/axisangle/xyaxes/zaxis)")]
+    MultipleRotationFormats {
+        /// Name of the body with conflicting rotation attributes.
+        body: String,
+    },
+    /// A joint's `type` isn't a recognised MJCF type.
+    #[error("unknown joint type '{found}' for joint '{joint}'")]
+    UnknownJointType {
+        /// The joint's name.
+        joint: String,
+        /// The unrecognised type value that was found.
+        found: String,
+    },
+    /// A joint type is recognised but not yet supported by galaw (e.g. `ball`).
+    #[error("joint '{joint}' has unsupported type '{joint_type}'")]
+    UnsupportedJointType {
+        /// The joint's name.
+        joint: String,
+        /// The unsupported type.
+        joint_type: String,
+    },
+    /// An attribute expected to hold a number couldn't be parsed as one.
+    #[error("invalid number '{value}'")]
+    InvalidNumberFormat {
+        /// The invalid value that was found.
+        value: String,
+        /// The underlying parse error.
+        #[source]
+        source: std::num::ParseFloatError,
+    },
+    /// An `<include>` element was encountered; this is not yet implemented.
+    #[error("<include> is not yet supported by the galaw MJCF parser")]
+    IncludeNotSupported,
 }
 
 /// Errors from validating a parsed URDF's link/joint structure.
