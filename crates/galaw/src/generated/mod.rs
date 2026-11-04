@@ -15,3 +15,11 @@ pub mod enlight_l;
 pub mod stretch4;
 #[rustfmt::skip]
 pub mod wuji_hand_v1_right;
+#[rustfmt::skip]
+pub mod spot;
+#[rustfmt::skip]
+pub mod panda;
+#[rustfmt::skip]
+pub mod right_hand;
+#[rustfmt::skip]
+pub mod g1;
