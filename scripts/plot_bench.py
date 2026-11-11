@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["matplotlib", "numpy"]
+# ///
 """
 Plot FK, IK, and Jacobian benchmark charts from Criterion's estimates.json.
 
@@ -17,7 +20,6 @@ Usage:
               default: speedup_vs_pinocchio-cpp,speedup_vs_k,grouped,multiples,table
 
 Output: docs/bench/*.png and docs/bench/benchmark_results.md
-Deps:   matplotlib, numpy
 """
 
 import argparse
