@@ -27,7 +27,10 @@ struct CompilerSettings {
 
 impl Default for CompilerSettings {
     fn default() -> Self {
-        Self { angle_in_degrees: true, eulerseq: "xyz".to_string() }
+        Self {
+            angle_in_degrees: true,
+            eulerseq: "xyz".to_string(),
+        }
     }
 }
 
@@ -120,10 +123,11 @@ where
 {
     s.split_whitespace()
         .map(|tok| {
-            tok.parse::<T>().map_err(|source| MjcfParseError::InvalidNumberFormat {
-                value: tok.to_string(),
-                source,
-            })
+            tok.parse::<T>()
+                .map_err(|source| MjcfParseError::InvalidNumberFormat {
+                    value: tok.to_string(),
+                    source,
+                })
         })
         .collect()
 }
@@ -142,7 +146,10 @@ where
     let translation = if let Some(s) = node.attribute("pos") {
         let v = parse_floats_mjcf::<T>(s)?;
         if v.len() != 3 {
-            return Err(MjcfParseError::InvalidVector3Len(format!("{} pos", name), v.len()));
+            return Err(MjcfParseError::InvalidVector3Len(
+                format!("{} pos", name),
+                v.len(),
+            ));
         }
         Translation3::new(v[0], v[1], v[2])
     } else {
@@ -154,19 +161,27 @@ where
         .filter(|&&a| node.attribute(a).is_some())
         .count();
     if rot_count > 1 {
-        return Err(MjcfParseError::MultipleRotationFormats { body: name.to_string() });
+        return Err(MjcfParseError::MultipleRotationFormats {
+            body: name.to_string(),
+        });
     }
 
     let rotation: UnitQuaternion<T> = if let Some(s) = node.attribute("quat") {
         let v = parse_floats_mjcf::<T>(s)?;
         if v.len() != 4 {
-            return Err(MjcfParseError::InvalidVector4Len(format!("{} quat", name), v.len()));
+            return Err(MjcfParseError::InvalidVector4Len(
+                format!("{} quat", name),
+                v.len(),
+            ));
         }
         UnitQuaternion::new_normalize(Quaternion::new(v[0], v[1], v[2], v[3]))
     } else if let Some(s) = node.attribute("euler") {
         let v = parse_floats_mjcf::<T>(s)?;
         if v.len() != 3 {
-            return Err(MjcfParseError::InvalidVector3Len(format!("{} euler", name), v.len()));
+            return Err(MjcfParseError::InvalidVector3Len(
+                format!("{} euler", name),
+                v.len(),
+            ));
         }
         let (a, b, c) = (
             settings.to_radians(v[0]),
@@ -201,7 +216,10 @@ where
     } else if let Some(s) = node.attribute("zaxis") {
         let v = parse_floats_mjcf::<T>(s)?;
         if v.len() != 3 {
-            return Err(MjcfParseError::InvalidVector3Len(format!("{} zaxis", name), v.len()));
+            return Err(MjcfParseError::InvalidVector3Len(
+                format!("{} zaxis", name),
+                v.len(),
+            ));
         }
         let z = Unit::new_normalize(Vector3::new(v[0], v[1], v[2]));
         UnitQuaternion::rotation_between_axis(&Vector3::z_axis(), &z).unwrap_or_else(|| {
@@ -320,7 +338,13 @@ where
             Some((lo, hi)) => (JointType::Revolute, Some(axis), None, Some(lo), Some(hi)),
             None => {
                 let two_pi: T = nalgebra::convert(2.0 * std::f64::consts::PI);
-                (JointType::Continuous, Some(axis), None, Some(-two_pi), Some(two_pi))
+                (
+                    JointType::Continuous,
+                    Some(axis),
+                    None,
+                    Some(-two_pi),
+                    Some(two_pi),
+                )
             }
         }
     } else {
@@ -329,7 +353,13 @@ where
             Some((lo, hi)) => (JointType::Prismatic, None, Some(axis), Some(lo), Some(hi)),
             None => {
                 let big: T = nalgebra::convert(1.0e6_f64);
-                (JointType::Prismatic, None, Some(axis), Some(-big), Some(big))
+                (
+                    JointType::Prismatic,
+                    None,
+                    Some(axis),
+                    Some(-big),
+                    Some(big),
+                )
             }
         }
     };
@@ -395,13 +425,24 @@ where
         body_transform * t_p,
     ));
 
-    let actuated =
-        build_actuated_joint(joint_name, type_str, attrs, Isometry3::identity(), &pre, &post, settings)?;
+    let actuated = build_actuated_joint(
+        joint_name,
+        type_str,
+        attrs,
+        Isometry3::identity(),
+        &pre,
+        &post,
+        settings,
+    )?;
     joints.push(actuated);
 
-    let t_neg_p =
-        Isometry3::from_parts(Translation3::from(-joint_pos), UnitQuaternion::identity());
-    joints.push(mjcf_fixed_joint(&format!("{}_post", joint_name), &post, body_link, t_neg_p));
+    let t_neg_p = Isometry3::from_parts(Translation3::from(-joint_pos), UnitQuaternion::identity());
+    joints.push(mjcf_fixed_joint(
+        &format!("{}_post", joint_name),
+        &post,
+        body_link,
+        t_neg_p,
+    ));
 
     Ok(())
 }
@@ -426,20 +467,28 @@ where
     T: RealField + Copy + FromStr<Err = std::num::ParseFloatError>,
 {
     let n = joint_nodes.len();
-    let virt: Vec<String> = (0..n - 1).map(|i| format!("{}__vj{}", body_link, i)).collect();
+    let virt: Vec<String> = (0..n - 1)
+        .map(|i| format!("{}__vj{}", body_link, i))
+        .collect();
     for v in &virt {
         links.push(Link { name: v.clone() });
     }
 
     for (i, jnode) in joint_nodes.iter().enumerate() {
         let attrs = effective_joint_attrs(*jnode, defaults, inherited_class);
-        let type_str = attrs.get("type").map(|s| s.as_str()).unwrap_or("hinge").to_string();
+        let type_str = attrs
+            .get("type")
+            .map(|s| s.as_str())
+            .unwrap_or("hinge")
+            .to_string();
         if type_str == "free" {
             continue;
         }
         if type_str == "ball" {
-            let jname =
-                attrs.get("name").cloned().unwrap_or_else(|| format!("{}_j{}", body_link, i));
+            let jname = attrs
+                .get("name")
+                .cloned()
+                .unwrap_or_else(|| format!("{}_j{}", body_link, i));
             return Err(MjcfParseError::UnsupportedJointType {
                 joint: jname,
                 joint_type: "ball".to_string(),
@@ -455,7 +504,10 @@ where
             (parent.to_string(), child.to_string(), body_transform)
         } else {
             let p = virt[i - 1].clone();
-            let c = virt.get(i).cloned().unwrap_or_else(|| body_link.to_string());
+            let c = virt
+                .get(i)
+                .cloned()
+                .unwrap_or_else(|| body_link.to_string());
             (p, c, Isometry3::identity())
         };
 
@@ -510,7 +562,9 @@ where
     let child_class: Option<&str> = node.attribute("childclass").or(inherited_class);
 
     let body_transform = parse_mjcf_transform::<T>(node, settings, &body_name)?;
-    links.push(Link { name: body_name.clone() });
+    links.push(Link {
+        name: body_name.clone(),
+    });
 
     // Collect direct <joint> children, excluding <freejoint>/<free>
     let all_joint_nodes: Vec<_> = node
@@ -549,12 +603,16 @@ where
             // (e.g. Spot: pos="0 0 0.75", Shadow Hand: quat="0 1 0 1").
             let eps: T = nalgebra::convert(1e-10_f64);
             let has_translation = body_transform.translation.vector.norm() > eps;
-            let has_rotation =
-                (T::one() - body_transform.rotation.quaternion().w.abs()) > eps;
+            let has_rotation = (T::one() - body_transform.rotation.quaternion().w.abs()) > eps;
             if has_translation || has_rotation {
                 let world_root = format!("{body_name}__world_root");
                 let insert_at = links.len() - 1;
-                links.insert(insert_at, Link { name: world_root.clone() });
+                links.insert(
+                    insert_at,
+                    Link {
+                        name: world_root.clone(),
+                    },
+                );
                 joints.push(mjcf_fixed_joint(
                     &format!("world_to_{body_name}"),
                     &world_root,
@@ -580,8 +638,11 @@ where
         (Some(parent), [jn]) => {
             // Single actuated joint → one joint from parent to this body.
             let attrs = effective_joint_attrs(*jn, defaults, child_class);
-            let type_str =
-                attrs.get("type").map(|s| s.as_str()).unwrap_or("hinge").to_string();
+            let type_str = attrs
+                .get("type")
+                .map(|s| s.as_str())
+                .unwrap_or("hinge")
+                .to_string();
             let joint_name = attrs
                 .get("name")
                 .cloned()
@@ -644,7 +705,15 @@ where
     // Recurse into child bodies, propagating the current class.
     for child in node.children() {
         if child.is_element() && child.tag_name().name() == "body" {
-            visit_body(child, Some(&body_name), links, joints, settings, defaults, child_class)?;
+            visit_body(
+                child,
+                Some(&body_name),
+                links,
+                joints,
+                settings,
+                defaults,
+                child_class,
+            )?;
         }
     }
     Ok(())
@@ -728,7 +797,15 @@ where
 
     for child in worldbody.children() {
         if child.is_element() && child.tag_name().name() == "body" {
-            visit_body(child, None, &mut links, &mut joints, &settings, &defaults, None)?;
+            visit_body(
+                child,
+                None,
+                &mut links,
+                &mut joints,
+                &settings,
+                &defaults,
+                None,
+            )?;
         }
     }
 

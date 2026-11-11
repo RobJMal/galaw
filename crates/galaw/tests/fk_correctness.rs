@@ -152,9 +152,8 @@ fn load_fixture(stem: &str) -> MujocoFixture {
              regenerate with: uv run scripts/generate_mujoco_fk_fixtures.py"
         )
     });
-    serde_json::from_str(&content).unwrap_or_else(|e| {
-        panic!("fixture JSON is malformed ({path}): {e}")
-    })
+    serde_json::from_str(&content)
+        .unwrap_or_else(|e| panic!("fixture JSON is malformed ({path}): {e}"))
 }
 
 fn to_isometry(pose: &LinkPose) -> Isometry3<f64> {
@@ -183,7 +182,11 @@ fn assert_pose_close(
         expected.translation.vector,
     );
 
-    let dot = (actual.rotation.quaternion().dot(expected.rotation.quaternion())).abs();
+    let dot = (actual
+        .rotation
+        .quaternion()
+        .dot(expected.rotation.quaternion()))
+    .abs();
     assert!(
         (dot - 1.0).abs() < MUJOCO_TOLERANCE,
         "config={config_name:?} link={link_name:?}: \
@@ -196,8 +199,8 @@ fn assert_pose_close(
 }
 
 fn check_mujoco_fk(mjcf_path: &str, fixture: &MujocoFixture) -> TestResult {
-    let model = load_mjcf::<f64>(mjcf_path)
-        .unwrap_or_else(|e| panic!("failed to load {mjcf_path}: {e}"));
+    let model =
+        load_mjcf::<f64>(mjcf_path).unwrap_or_else(|e| panic!("failed to load {mjcf_path}: {e}"));
 
     for config in &fixture.configs {
         // Build cmds in galaw's cmd_idx order from the fixture joint values.

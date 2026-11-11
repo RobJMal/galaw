@@ -158,7 +158,9 @@ pub enum MjcfParseError {
     #[error("expected 4 values, received {1} in '{0}'")]
     InvalidVector4Len(String, usize),
     /// A body specifies more than one rotation format simultaneously.
-    #[error("body '{body}' specifies more than one rotation attribute (quat/euler/axisangle/xyaxes/zaxis)")]
+    #[error(
+        "body '{body}' specifies more than one rotation attribute (quat/euler/axisangle/xyaxes/zaxis)"
+    )]
     MultipleRotationFormats {
         /// Name of the body with conflicting rotation attributes.
         body: String,

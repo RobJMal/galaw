@@ -104,7 +104,10 @@ fn resolve_joint_order<T: RealField + Copy>(
     let mut children_by_link: HashMap<usize, Vec<usize>> = HashMap::new();
     for (joint_idx, j) in joints.iter().enumerate() {
         let parent_idx = link_lookup[j.parent.as_str()];
-        children_by_link.entry(parent_idx).or_default().push(joint_idx);
+        children_by_link
+            .entry(parent_idx)
+            .or_default()
+            .push(joint_idx);
     }
 
     let child_names: HashSet<&str> = joints.iter().map(|j| j.child.as_str()).collect();
@@ -118,8 +121,10 @@ fn resolve_joint_order<T: RealField + Copy>(
         [single] => *single,
         [] => return Err(ModelTopologyError::MissingRootLink),
         _ => {
-            let names: Vec<String> =
-                root_candidates.iter().map(|&i| links[i].name.clone()).collect();
+            let names: Vec<String> = root_candidates
+                .iter()
+                .map(|&i| links[i].name.clone())
+                .collect();
             return Err(ModelTopologyError::MultipleRootLinks(names));
         }
     };
@@ -148,8 +153,11 @@ fn resolve_joint_order<T: RealField + Copy>(
         return Err(ModelTopologyError::DisconnectedJoints(disconnected_joints));
     }
 
-    let link_name_to_idx: HashMap<String, usize> =
-        links.iter().enumerate().map(|(i, l)| (l.name.clone(), i)).collect();
+    let link_name_to_idx: HashMap<String, usize> = links
+        .iter()
+        .enumerate()
+        .map(|(i, l)| (l.name.clone(), i))
+        .collect();
 
     let joint_name_to_idx: HashMap<String, usize> = ordered_joints
         .iter()
@@ -200,8 +208,8 @@ fn resolve_joint_order<T: RealField + Copy>(
 mod tests {
     use nalgebra::Isometry3;
 
-    use crate::types::{GalawModel, JointType, Link};
     use crate::error::ModelTopologyError;
+    use crate::types::{GalawModel, JointType, Link};
 
     use super::{load_mjcf, load_urdf};
 
@@ -325,9 +333,15 @@ mod tests {
         }
 
         let links = vec![
-            Link { name: "ROOT".to_string() },
-            Link { name: "A".to_string() },
-            Link { name: "B".to_string() },
+            Link {
+                name: "ROOT".to_string(),
+            },
+            Link {
+                name: "A".to_string(),
+            },
+            Link {
+                name: "B".to_string(),
+            },
         ];
         let joints = vec![
             joint("j1", "ROOT", "A"),
