@@ -195,6 +195,7 @@ macro_rules! jacobian_fd_tests {
 }
 
 jacobian_fd_tests! {
+    // Custom URDF robots
     simple_arm_2dof_fd  => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_2dof_flipped_fd => "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
     simple_arm_3dof_rrp_fd => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
@@ -243,11 +244,12 @@ macro_rules! jacobian_codegen_correctness_test {
 galaw::for_each_generated_robot!(jacobian_codegen_correctness_test);
 
 jacobian_correctness_tests! {
+    // Custom URDF robots
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_2dof_flipped => "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
     simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
 
-    // Third-party robots
+    // Third-party URDF robots
     flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
     anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
     wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",

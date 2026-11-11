@@ -96,14 +96,15 @@ macro_rules! fk_correctness_tests {
 }
 
 fk_correctness_tests! {
+    // Custom URDF robots
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
-    simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",   // Tests revolute and prismatic
+    simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
 
-    // Third-party robots
-    flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",  // Tests revolute and fixed
-    anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",     // Tests revolute and fixed
-    wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",  // Tests revolute and fixed
-    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",     // Tests continuous, prismatic, revolute, fixed
+    // Third-party URDF robots
+    flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
+    anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
+    wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",
+    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",
 }
 
 // =============================================================================
