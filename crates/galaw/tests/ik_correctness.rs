@@ -127,7 +127,7 @@ fn assert_galaw_ik_correctness(
 /// Run IK check for each URDF.
 fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
     eprintln!("[urdf] {urdf_path}");
-    let galaw_model = load_model(urdf_path);
+    let galaw_model = load_model::<f64>(urdf_path);
 
     let candidates = candidate_target_links(&galaw_model);
     assert!(
@@ -172,7 +172,7 @@ fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usi
         &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
     ) -> Result<(), KinematicsError<f64>>,
 ) -> TestResult {
-    let galaw_model = load_model(model_path);
+    let galaw_model = load_model::<f64>(model_path);
 
     let candidates = candidate_target_links(&galaw_model);
     assert!(

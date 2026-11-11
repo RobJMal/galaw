@@ -116,7 +116,7 @@ fn asssert_galaw_jacobian_matches_k(
 /// Runs correctness check of Jacobians with finite-difference method.
 /// Works with both URDF and MJCF models.
 fn check_jacobian_matches_fd(model_path: &str) -> TestResult {
-    let galaw_model = load_model(model_path);
+    let galaw_model = load_model::<f64>(model_path);
 
     assert_galaw_jacobian_matches_finite_difference(&galaw_model, &zero_joint_cmds(&galaw_model))?;
 
@@ -137,7 +137,7 @@ fn check_generated_jacobian_matches_runtime<const NUM_JOINTS: usize, const NUM_L
         &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
     ),
 ) -> TestResult {
-    let galaw_model = load_model(model_path);
+    let galaw_model = load_model::<f64>(model_path);
 
     let mut data = galaw_model.create_galaw_data();
     let mut gen_data = GeneratedGalawData::new();
