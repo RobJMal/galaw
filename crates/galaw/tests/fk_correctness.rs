@@ -347,19 +347,6 @@ fn smoke_fk(model: &GalawModel<f64>) {
 }
 
 #[test]
-fn mjcf_basic_model_properties() {
-    let model = load_mjcf::<f64>("assets/mjcf/custom/simple_arm_2dof.xml").unwrap();
-    assert_eq!(model.name, "simple_arm_2dof");
-    assert_eq!(model.num_actuated_joints, 2);
-    assert_eq!(model.num_links, 3);
-    assert!(model.get_link_idx("base_link").is_some());
-    assert!(model.get_link_idx("upper_arm").is_some());
-    assert!(model.get_link_idx("forearm").is_some());
-    assert!(model.get_joint_idx("shoulder_joint").is_some());
-    assert!(model.get_joint_idx("elbow_joint").is_some());
-}
-
-#[test]
 fn mjcf_loads_spot() {
     let model = load_mjcf::<f64>(
         "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
@@ -410,29 +397,6 @@ fn mjcf_loads_g1() {
     assert!(model.get_link_idx("pelvis").is_some());
     assert!(model.get_joint_idx("left_hip_pitch_joint").is_some());
     smoke_fk(&model);
-}
-
-/// Checks the flipped MJCF (joint declared after child body) resolves to the
-/// same parent/child link names as the standard ordering.
-#[test]
-fn mjcf_joint_resolution_independent_of_declaration_order() {
-    let normal = load_mjcf::<f64>("assets/mjcf/custom/simple_arm_2dof.xml").unwrap();
-    let flipped = load_mjcf::<f64>("assets/mjcf/custom/simple_arm_2dof_flipped.xml").unwrap();
-
-    for joint_name in ["shoulder_joint", "elbow_joint"] {
-        let nj = normal.joints.iter().find(|j| j.name == joint_name).unwrap();
-        let fj = flipped.joints.iter().find(|j| j.name == joint_name).unwrap();
-        assert_eq!(
-            normal.links[nj.parent_link_idx].name,
-            flipped.links[fj.parent_link_idx].name,
-            "joint {joint_name}: parent link name differs between normal and flipped"
-        );
-        assert_eq!(
-            normal.links[nj.child_link_idx].name,
-            flipped.links[fj.child_link_idx].name,
-            "joint {joint_name}: child link name differs between normal and flipped"
-        );
-    }
 }
 
 // =============================================================================

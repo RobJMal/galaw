@@ -203,14 +203,15 @@ mod tests {
     use crate::types::{GalawModel, JointType, Link};
     use crate::error::ModelTopologyError;
 
-    use super::load_urdf;
+    use super::{load_mjcf, load_urdf};
+
+    // ---- URDF ----
 
     /// get_link_idx must resolve to the right link, for every link, in
     /// both file orderings — guards against index/link mappings drifting
-    /// out of sync (not needed to catch today's bug, but the same bug
-    /// class as the joint resolution issue below).
+    /// out of sync.
     #[test]
-    fn link_lookup_is_self_consistent() {
+    fn urdf_link_lookup_is_self_consistent() {
         for path in [
             "assets/urdf/custom/simple_arm_2dof.urdf",
             "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
@@ -232,7 +233,7 @@ mod tests {
     /// Same robot, links/joints in a different file order — resolved
     /// parent/child link names must match regardless.
     #[test]
-    fn joint_resolution_is_independent_of_file_order() {
+    fn urdf_joint_resolution_is_independent_of_file_order() {
         let original = load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof.urdf").unwrap();
         let flipped = load_urdf::<f64>("assets/urdf/custom/simple_arm_2dof_flipped.urdf").unwrap();
 
@@ -252,6 +253,50 @@ mod tests {
                 parent_child_names(&original, joint_name),
                 parent_child_names(&flipped, joint_name),
                 "joint {joint_name} resolved to a different parent/child link depending on file order"
+            );
+        }
+    }
+
+    // ---- MJCF ----
+
+    /// MJCF parser reports the right model name, joint/link counts, and
+    /// index lookups — no FK involved, purely parser output validation.
+    #[test]
+    fn mjcf_basic_model_properties() {
+        let model = load_mjcf::<f64>("assets/mjcf/custom/simple_arm_2dof.xml").unwrap();
+        assert_eq!(model.name, "simple_arm_2dof");
+        assert_eq!(model.num_actuated_joints, 2);
+        assert_eq!(model.num_links, 3);
+        assert!(model.get_link_idx("base_link").is_some());
+        assert!(model.get_link_idx("upper_arm").is_some());
+        assert!(model.get_link_idx("forearm").is_some());
+        assert!(model.get_joint_idx("shoulder_joint").is_some());
+        assert!(model.get_joint_idx("elbow_joint").is_some());
+    }
+
+    /// Flipped MJCF (joint declared after child body) resolves to the
+    /// same parent/child link names as the standard ordering.
+    #[test]
+    fn mjcf_joint_resolution_is_independent_of_declaration_order() {
+        let normal = load_mjcf::<f64>("assets/mjcf/custom/simple_arm_2dof.xml").unwrap();
+        let flipped = load_mjcf::<f64>("assets/mjcf/custom/simple_arm_2dof_flipped.xml").unwrap();
+
+        fn parent_child_names<T: nalgebra::RealField + Copy>(
+            model: &GalawModel<T>,
+            joint_name: &str,
+        ) -> (String, String) {
+            let joint = model.joints.iter().find(|j| j.name == joint_name).unwrap();
+            (
+                model.links[joint.parent_link_idx].name.clone(),
+                model.links[joint.child_link_idx].name.clone(),
+            )
+        }
+
+        for joint_name in ["shoulder_joint", "elbow_joint"] {
+            assert_eq!(
+                parent_child_names(&normal, joint_name),
+                parent_child_names(&flipped, joint_name),
+                "joint {joint_name}: parent/child link differs between normal and flipped MJCF"
             );
         }
     }
