@@ -157,6 +157,9 @@ pub enum MjcfParseError {
     /// An attribute expected to hold a Vec4 didn't contain exactly 4 values.
     #[error("expected 4 values, received {1} in '{0}'")]
     InvalidVector4Len(String, usize),
+    /// An attribute expected to hold 6 values (e.g. `xyaxes`) didn't.
+    #[error("expected 6 values, received {1} in '{0}'")]
+    InvalidVector6Len(String, usize),
     /// A body specifies more than one rotation format simultaneously.
     #[error(
         "body '{body}' specifies more than one rotation attribute (quat/euler/axisangle/xyaxes/zaxis)"

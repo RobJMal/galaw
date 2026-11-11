@@ -202,8 +202,8 @@ where
     } else if let Some(s) = node.attribute("xyaxes") {
         let v = parse_floats_mjcf::<T>(s)?;
         if v.len() != 6 {
-            return Err(MjcfParseError::InvalidVector4Len(
-                format!("{} xyaxes (expected 6 values)", name),
+            return Err(MjcfParseError::InvalidVector6Len(
+                format!("{} xyaxes", name),
                 v.len(),
             ));
         }
@@ -756,7 +756,10 @@ where
     })?;
 
     let root = doc.root_element(); // <mujoco>
-    let model_name = root.attribute("model").unwrap_or("").to_string();
+    let model_name = root
+        .attribute("model")
+        .ok_or(MjcfParseError::MissingAttributeModelName)?
+        .to_string();
 
     let mut settings = CompilerSettings::default();
     if let Some(compiler) = root.children().find(|n| n.tag_name().name() == "compiler") {
