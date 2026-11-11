@@ -231,40 +231,23 @@ fn check_mujoco_fk(mjcf_path: &str, fixture: &MujocoFixture) -> TestResult {
     Ok(())
 }
 
-#[test]
-fn mjcf_mujoco_fk_spot() -> TestResult {
-    let fixture = load_fixture("spot");
-    check_mujoco_fk(
-        "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
-        &fixture,
-    )
+macro_rules! mujoco_fk_tests {
+    ($($name:ident => ($fixture:expr, $path:expr)),* $(,)?) => {
+        $(
+            #[test]
+            fn $name() -> TestResult {
+                let fixture = load_fixture($fixture);
+                check_mujoco_fk($path, &fixture)
+            }
+        )*
+    };
 }
 
-#[test]
-fn mjcf_mujoco_fk_panda() -> TestResult {
-    let fixture = load_fixture("panda");
-    check_mujoco_fk(
-        "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
-        &fixture,
-    )
-}
-
-#[test]
-fn mjcf_mujoco_fk_right_shadow_hand() -> TestResult {
-    let fixture = load_fixture("right_shadow_hand");
-    check_mujoco_fk(
-        "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
-        &fixture,
-    )
-}
-
-#[test]
-fn mjcf_mujoco_fk_g1() -> TestResult {
-    let fixture = load_fixture("g1");
-    check_mujoco_fk(
-        "assets/mjcf/third_party/Unitree_G1/g1.xml",
-        &fixture,
-    )
+mujoco_fk_tests! {
+    mjcf_mujoco_fk_spot         => ("spot",              "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml"),
+    mjcf_mujoco_fk_panda        => ("panda",             "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml"),
+    mjcf_mujoco_fk_shadow_hand  => ("right_shadow_hand", "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml"),
+    mjcf_mujoco_fk_g1           => ("g1",                "assets/mjcf/third_party/Unitree_G1/g1.xml"),
 }
 
 // =============================================================================
@@ -317,20 +300,20 @@ fn check_mjcf_matches_urdf(urdf_path: &str, mjcf_path: &str) -> TestResult {
     Ok(())
 }
 
-#[test]
-fn mjcf_fk_matches_urdf_simple_arm_2dof() -> TestResult {
-    check_mjcf_matches_urdf(
-        "assets/urdf/custom/simple_arm_2dof.urdf",
-        "assets/mjcf/custom/simple_arm_2dof.xml",
-    )
+macro_rules! mjcf_urdf_cross_check_tests {
+    ($($name:ident => ($urdf:expr, $mjcf:expr)),* $(,)?) => {
+        $(
+            #[test]
+            fn $name() -> TestResult {
+                check_mjcf_matches_urdf($urdf, $mjcf)
+            }
+        )*
+    };
 }
 
-#[test]
-fn mjcf_fk_matches_urdf_simple_arm_2dof_flipped() -> TestResult {
-    check_mjcf_matches_urdf(
-        "assets/urdf/custom/simple_arm_2dof.urdf",
-        "assets/mjcf/custom/simple_arm_2dof_flipped.xml",
-    )
+mjcf_urdf_cross_check_tests! {
+    mjcf_fk_matches_urdf_simple_arm_2dof         => ("assets/urdf/custom/simple_arm_2dof.urdf", "assets/mjcf/custom/simple_arm_2dof.xml"),
+    mjcf_fk_matches_urdf_simple_arm_2dof_flipped => ("assets/urdf/custom/simple_arm_2dof.urdf", "assets/mjcf/custom/simple_arm_2dof_flipped.xml"),
 }
 
 // =============================================================================
@@ -346,57 +329,27 @@ fn smoke_fk(model: &GalawModel<f64>) {
     assert_eq!(data.link_poses.len(), model.num_links);
 }
 
-#[test]
-fn mjcf_loads_spot() {
-    let model = load_mjcf::<f64>(
-        "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
-    )
-    .unwrap();
-    assert_eq!(model.name, "spot");
-    assert_eq!(model.num_actuated_joints, 12);
-    assert!(model.get_link_idx("body").is_some());
-    assert!(model.get_joint_idx("fl_hx").is_some());
-    smoke_fk(&model);
+macro_rules! mjcf_smoke_tests {
+    ($($name:ident => ($path:expr, model_name: $model_name:expr, num_joints: $nj:expr, link: $link:expr, joint: $joint:expr)),* $(,)?) => {
+        $(
+            #[test]
+            fn $name() {
+                let model = load_mjcf::<f64>($path).unwrap();
+                assert_eq!(model.name, $model_name);
+                assert_eq!(model.num_actuated_joints, $nj);
+                assert!(model.get_link_idx($link).is_some());
+                assert!(model.get_joint_idx($joint).is_some());
+                smoke_fk(&model);
+            }
+        )*
+    };
 }
 
-#[test]
-fn mjcf_loads_panda() {
-    let model = load_mjcf::<f64>(
-        "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
-    )
-    .unwrap();
-    assert_eq!(model.name, "panda");
-    assert_eq!(model.num_actuated_joints, 9);
-    assert!(model.get_link_idx("link0").is_some());
-    assert!(model.get_joint_idx("joint1").is_some());
-    assert!(model.get_joint_idx("finger_joint1").is_some());
-    smoke_fk(&model);
-}
-
-#[test]
-fn mjcf_loads_shadow_hand() {
-    let model = load_mjcf::<f64>(
-        "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
-    )
-    .unwrap();
-    assert_eq!(model.name, "right_shadow_hand");
-    assert_eq!(model.num_actuated_joints, 24);
-    assert!(model.get_link_idx("rh_forearm").is_some());
-    assert!(model.get_joint_idx("rh_WRJ1").is_some());
-    smoke_fk(&model);
-}
-
-#[test]
-fn mjcf_loads_g1() {
-    let model = load_mjcf::<f64>(
-        "assets/mjcf/third_party/Unitree_G1/g1.xml",
-    )
-    .unwrap();
-    assert_eq!(model.name, "g1_29dof_rev_1_0");
-    assert_eq!(model.num_actuated_joints, 29);
-    assert!(model.get_link_idx("pelvis").is_some());
-    assert!(model.get_joint_idx("left_hip_pitch_joint").is_some());
-    smoke_fk(&model);
+mjcf_smoke_tests! {
+    mjcf_loads_spot        => ("assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",       model_name: "spot",               num_joints: 12, link: "body",       joint: "fl_hx"),
+    mjcf_loads_panda       => ("assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",        model_name: "panda",              num_joints: 9,  link: "link0",      joint: "joint1"),
+    mjcf_loads_shadow_hand => ("assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",     model_name: "right_shadow_hand",  num_joints: 24, link: "rh_forearm", joint: "rh_WRJ1"),
+    mjcf_loads_g1          => ("assets/mjcf/third_party/Unitree_G1/g1.xml",                    model_name: "g1_29dof_rev_1_0",  num_joints: 29, link: "pelvis",     joint: "left_hip_pitch_joint"),
 }
 
 // =============================================================================
