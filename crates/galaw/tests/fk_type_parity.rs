@@ -10,7 +10,7 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 mod common;
-use common::{load_model, RNG_SEED, TestResult};
+use common::{RNG_SEED, TestResult, load_model};
 
 const NUM_POSES: usize = 128;
 // f32 has ~7 significant decimal digits; allow for accumulated floating-point

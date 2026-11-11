@@ -15,7 +15,7 @@ use rand_chacha::ChaCha8Rng;
 use galaw::{error::KinematicsError, types::GalawModel};
 
 mod common;
-use common::{load_model, RNG_SEED, TestResult};
+use common::{RNG_SEED, TestResult, load_model};
 
 const NUM_POSES: usize = 128;
 const MAX_PERTURBATION: f32 = 0.5;
@@ -68,7 +68,10 @@ fn check_ik_f32_parity(model_path: &str) -> TestResult {
     let mut data_f32 = model_f32.create_galaw_data();
 
     let candidates = candidate_target_links(&model_f32);
-    assert!(!candidates.is_empty(), "no valid IK targets in {model_path}");
+    assert!(
+        !candidates.is_empty(),
+        "no valid IK targets in {model_path}"
+    );
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
 

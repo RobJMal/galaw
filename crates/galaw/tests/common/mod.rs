@@ -64,7 +64,10 @@ pub fn assert_galaw_transform_close(a: &Isometry3<f64>, b: &Isometry3<f64>, test
 /// Loads a GalawModel from a URDF (.urdf) or MJCF (.xml) file.
 pub fn load_model<T>(path: &str) -> GalawModel<T>
 where
-    T: nalgebra::RealField + Copy + std::str::FromStr<Err = std::num::ParseFloatError> + std::fmt::Display,
+    T: nalgebra::RealField
+        + Copy
+        + std::str::FromStr<Err = std::num::ParseFloatError>
+        + std::fmt::Display,
 {
     if path.ends_with(".xml") {
         load_mjcf::<T>(path).unwrap()
