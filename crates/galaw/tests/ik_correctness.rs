@@ -12,7 +12,7 @@ use galaw::{
 };
 
 mod common;
-use common::{RNG_SEED, TestResult, random_joint_cmds, setup_kinematic_models, zero_joint_cmds};
+use common::{RNG_SEED, TestResult, load_model, random_joint_cmds, zero_joint_cmds};
 
 use crate::common::assert_galaw_transform_close;
 
@@ -124,15 +124,15 @@ fn assert_galaw_ik_correctness(
     Ok(())
 }
 
-/// Run IK check for each URDF.
-fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
-    eprintln!("[urdf] {urdf_path}");
-    let (galaw_model, _) = setup_kinematic_models(urdf_path);
+/// Run IK correctness check for a single model.
+fn check_ik(model_path: &str) -> TestResult {
+    eprintln!("[model] {model_path}");
+    let galaw_model = load_model::<f64>(model_path);
 
     let candidates = candidate_target_links(&galaw_model);
     assert!(
         !candidates.is_empty(),
-        "no valid IK target links found for {urdf_path}"
+        "no valid IK target links found for {model_path}"
     );
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
 
@@ -164,7 +164,7 @@ fn check_ik_for_urdf(urdf_path: &str) -> TestResult {
 
 /// Compares a codegen'd `compute_ik` against the runtime `GalawModel::compute_ik`.
 fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
-    urdf_path: &str,
+    model_path: &str,
     generated_compute_ik: impl Fn(
         usize,
         &Isometry3<f64>,
@@ -172,12 +172,12 @@ fn check_generated_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usi
         &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
     ) -> Result<(), KinematicsError<f64>>,
 ) -> TestResult {
-    let (galaw_model, _) = setup_kinematic_models(urdf_path);
+    let galaw_model = load_model::<f64>(model_path);
 
     let candidates = candidate_target_links(&galaw_model);
     assert!(
         !candidates.is_empty(),
-        "no valid IK target links found for {urdf_path}"
+        "no valid IK target links found for {model_path}"
     );
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
     let mut data = galaw_model.create_galaw_data();
@@ -235,25 +235,32 @@ macro_rules! ik_codegen_correctness_test {
 }
 galaw::for_each_generated_robot!(ik_codegen_correctness_test);
 
-/// Generates one `#[test]` per URDF.
+/// Generates one `#[test]` per model.
 macro_rules! ik_correctness_tests {
     ($($name:ident => $path:expr),* $(,)?) => {
         $(
             #[test]
             fn $name() -> TestResult {
-                check_ik_for_urdf($path)
+                check_ik($path)
             }
         )*
     };
 }
 
 ik_correctness_tests! {
+    // Custom URDF robots
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
-    simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",   // Tests revolute and prismatic
+    simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
 
-    // Third-party robots
-    flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",  // Tests revolute and fixed
-    anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",     // Tests revolute and fixed
-    wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",  // Tests revolute and fixed
-    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",     // Tests continuous, prismatic, revolute, fixed
+    // Third-party URDF robots
+    flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
+    anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
+    wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",
+    stretch4 => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",
+
+    // Third-party MJCF robots
+    spot_mjcf          => "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
+    panda_mjcf         => "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
+    shadow_hand_mjcf   => "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
+    g1_mjcf            => "assets/mjcf/third_party/Unitree_G1/g1.xml",
 }

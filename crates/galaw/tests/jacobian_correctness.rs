@@ -9,7 +9,8 @@ use galaw::types::{GalawModel, GeneratedGalawData};
 
 mod common;
 use common::{
-    RNG_SEED, TestResult, assert_close, random_joint_cmds, setup_kinematic_models, zero_joint_cmds,
+    RNG_SEED, TestResult, assert_close, load_model, random_joint_cmds, setup_kinematic_models,
+    zero_joint_cmds,
 };
 
 // ---- CONSTANTS ----
@@ -112,9 +113,10 @@ fn asssert_galaw_jacobian_matches_k(
     Ok(())
 }
 
-/// Runs correctness check of Jacobians with finite-difference method
-fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
-    let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
+/// Runs correctness check of Jacobians with finite-difference method.
+/// Works with both URDF and MJCF models.
+fn check_jacobian_matches_fd(model_path: &str) -> TestResult {
+    let galaw_model = load_model::<f64>(model_path);
 
     assert_galaw_jacobian_matches_finite_difference(&galaw_model, &zero_joint_cmds(&galaw_model))?;
 
@@ -129,13 +131,13 @@ fn check_jacobian_matches_fd_for_urdf(urdf_path: &str) -> TestResult {
 
 /// Runs correctness check generated `compute_link_jacobians` against the runtime version.
 fn check_generated_jacobian_matches_runtime<const NUM_JOINTS: usize, const NUM_LINKS: usize>(
-    urdf_path: &str,
+    model_path: &str,
     generated_compute_link_jacobians: impl Fn(
         &[f64; NUM_JOINTS],
         &mut GeneratedGalawData<f64, NUM_JOINTS, NUM_LINKS>,
     ),
 ) -> TestResult {
-    let galaw_model = galaw::load_urdf::<f64>(urdf_path)?;
+    let galaw_model = load_model::<f64>(model_path);
 
     let mut data = galaw_model.create_galaw_data();
     let mut gen_data = GeneratedGalawData::new();
@@ -186,20 +188,29 @@ macro_rules! jacobian_fd_tests {
         $(
             #[test]
             fn $name() -> TestResult {
-                check_jacobian_matches_fd_for_urdf($path)
+                check_jacobian_matches_fd($path)
             }
         )*
     };
 }
 
 jacobian_fd_tests! {
+    // Custom URDF robots
     simple_arm_2dof_fd  => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_2dof_flipped_fd => "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
     simple_arm_3dof_rrp_fd => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
+
+    // Third-party URDF robots
     flexiv_enlight_l_fd => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
     anymal_d_fd => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
     wuji_hand_v1_right_fd => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",
     stretch4_fd => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",
+
+    // Third-party MJCF robots
+    spot_fd        => "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
+    panda_fd       => "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
+    shadow_hand_fd => "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
+    g1_fd          => "assets/mjcf/third_party/Unitree_G1/g1.xml",
 }
 
 /// Generates Jacobian calculation comparison test (k v galaw)
@@ -233,11 +244,12 @@ macro_rules! jacobian_codegen_correctness_test {
 galaw::for_each_generated_robot!(jacobian_codegen_correctness_test);
 
 jacobian_correctness_tests! {
+    // Custom URDF robots
     simple_arm_2dof  => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_2dof_flipped => "assets/urdf/custom/simple_arm_2dof_flipped.urdf",
     simple_arm_3dof_rrp => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
 
-    // Third-party robots
+    // Third-party URDF robots
     flexiv_enlight_l => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
     anymal_d => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
     wuji_hand_v1_right => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",

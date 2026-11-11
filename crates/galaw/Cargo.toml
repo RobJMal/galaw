@@ -10,6 +10,7 @@ repository = "https://github.com/RobJMal/galaw"
 readme = "README.md"
 keywords = ["robotics", "kinematics", "urdf", "control"]
 categories = ["science::robotics"]
+exclude = ["tests/fixtures/"]
 
 [lib]
 # Without this, `cargo bench` also builds/runs the lib crate itself as an
@@ -36,6 +37,8 @@ rand_chacha = { workspace = true }
 sysinfo     = { workspace = true }
 k           = { workspace = true }
 rayon       = { workspace = true }
+serde       = { workspace = true }
+serde_json  = { workspace = true }
 
 # Same reasoning as [lib] above: cargo bench also runs every binary target's
 # implicit test/bench harness by default. Declaring them explicitly (still at

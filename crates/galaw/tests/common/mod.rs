@@ -8,7 +8,7 @@ use rand::RngExt;
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{load_urdf, types::GalawModel};
+use galaw::{load_mjcf, load_urdf, types::GalawModel};
 
 // ---- TYPES ----
 pub type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -59,6 +59,21 @@ pub fn assert_galaw_k_transform_close(
 pub fn assert_galaw_transform_close(a: &Isometry3<f64>, b: &Isometry3<f64>, test_tolerance: &f64) {
     assert_position3d_close(&a.translation, &b.translation, test_tolerance);
     assert_orientation_close(&a.rotation, &b.rotation, test_tolerance);
+}
+
+/// Loads a GalawModel from a URDF (.urdf) or MJCF (.xml) file.
+pub fn load_model<T>(path: &str) -> GalawModel<T>
+where
+    T: nalgebra::RealField
+        + Copy
+        + std::str::FromStr<Err = std::num::ParseFloatError>
+        + std::fmt::Display,
+{
+    if path.ends_with(".xml") {
+        load_mjcf::<T>(path).unwrap()
+    } else {
+        load_urdf::<T>(path).unwrap()
+    }
 }
 
 /// Sets up the different kinematics model for testing.

@@ -178,6 +178,7 @@ If you use `galaw` in your research, please cite it as:
 
 ## Attributions
 
+### URDFs
 This repository incorporates robot descriptions (URDF files) from various open-source projects. Each is used in compliance with its original license:
 
 > **Note:** these robots' visual/collision mesh files (STL/DAE geometry) have been removed from this repo since `galaw` only parses a URDF's kinematic structure. The URDF files still reference `meshes/...` paths for compatibility with other tools. If the actual mesh geometry is needed, get it from the original project linked below.
@@ -197,3 +198,21 @@ This repository incorporates robot descriptions (URDF files) from various open-s
 
 
 Copies of the original licenses and any accompanying `NOTICE` files are preserved in the root directory or alongside the respective robot package folders.
+
+### MJCFs
+This repository also incorporates robot descriptions (MJCF files) from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie). Each is used in compliance with its original license:
+
+> **Note:** visual/collision mesh files referenced by these MJCFs are not included. `galaw` only parses the kinematic structure (bodies, joints, transforms). If mesh geometry is needed, obtain it from the original MuJoCo Menagerie repository.
+
+* **Spot (Boston Dynamics)** – Taken from [MuJoCo Menagerie `boston_dynamics_spot`](https://github.com/google-deepmind/mujoco_menagerie/tree/main/boston_dynamics_spot). Licensed under the **BSD 3-Clause License** (Copyright © 2021 Clearpath Robotics Inc.).
+  * *Local Changes:* None; file taken as-is. Mesh assets not included (see note above).
+  * *License Copy:* Located at `assets/mjcf/third_party/Boston-Dynamics_Spot/LICENSE`
+* **Panda (Franka Emika)** – Taken from [MuJoCo Menagerie `franka_emika_panda`](https://github.com/google-deepmind/mujoco_menagerie/tree/main/franka_emika_panda). Licensed under the **Apache License 2.0**.
+  * *Local Changes:* None; file taken as-is. Mesh assets not included (see note above).
+  * *License Copy:* Located at `assets/mjcf/third_party/Franka-Emika_Panda/LICENSE`
+* **Shadow Hand E3M5 (Shadow Robot)** – Taken from [MuJoCo Menagerie `shadow_hand`](https://github.com/google-deepmind/mujoco_menagerie/tree/main/shadow_hand). Licensed under the **Apache License 2.0** (Copyright © 2022 Shadow Robot Company Ltd).
+  * *Local Changes:* None; file taken as-is. Mesh assets not included (see note above).
+  * *License Copy:* Located at `assets/mjcf/third_party/Shadow-Robot_Hand/LICENSE`
+* **G1 (Unitree Robotics)** – Taken from [MuJoCo Menagerie `unitree_g1`](https://github.com/google-deepmind/mujoco_menagerie/tree/main/unitree_g1). Licensed under the **BSD 3-Clause License** (Copyright © 2016–2023 HangZhou YuShu TECHNOLOGY CO.,LTD. / Unitree Robotics).
+  * *Local Changes:* None; file taken as-is. Mesh assets not included (see note above).
+  * *License Copy:* Located at `assets/mjcf/third_party/Unitree_G1/LICENSE`

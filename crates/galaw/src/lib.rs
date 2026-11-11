@@ -39,5 +39,7 @@ pub(crate) mod parser;
 pub mod types;
 pub(crate) mod utils;
 
+/// Parses an MJCF file at `path` into a [`types::GalawModel`].
+pub use parser::load_mjcf;
 /// Parses a URDF file at `path` into a [`types::GalawModel`].
 pub use parser::load_urdf;
