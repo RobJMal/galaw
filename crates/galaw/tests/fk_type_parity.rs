@@ -9,20 +9,17 @@
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-// Custom
-use galaw::load_urdf;
-
 mod common;
-use common::{RNG_SEED, TestResult};
+use common::{load_model, RNG_SEED, TestResult};
 
 const NUM_POSES: usize = 128;
 // f32 has ~7 significant decimal digits; allow for accumulated floating-point
 // error across a joint chain (typically <1e-4 for robot arms ~1 m in scale).
 const PARITY_TOLERANCE: f64 = 1e-4;
 
-fn check_fk_f32_f64_parity(urdf_path: &str) -> TestResult {
-    let model_f32 = load_urdf::<f32>(urdf_path)?;
-    let model_f64 = load_urdf::<f64>(urdf_path)?;
+fn check_fk_f32_f64_parity(model_path: &str) -> TestResult {
+    let model_f32 = load_model::<f32>(model_path);
+    let model_f64 = load_model::<f64>(model_path);
 
     let mut data_f64 = model_f64.create_galaw_data();
     let mut data_f32 = model_f32.create_galaw_data();
@@ -97,10 +94,19 @@ macro_rules! parity_tests {
 }
 
 parity_tests! {
+    // Custom URDF robots
     simple_arm_2dof        => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_3dof_rrp    => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
+
+    // Third-party URDF robots
     flexiv_enlight_l       => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
     anymal_d               => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
     wuji_hand_v1_right     => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",
     stretch4               => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",
+
+    // Third-party MJCF robots
+    spot_mjcf              => "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
+    panda_mjcf             => "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
+    shadow_hand_mjcf       => "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
+    g1_mjcf                => "assets/mjcf/third_party/Unitree_G1/g1.xml",
 }

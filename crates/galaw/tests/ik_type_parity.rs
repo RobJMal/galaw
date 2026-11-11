@@ -12,10 +12,10 @@ use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 // Custom
-use galaw::{error::KinematicsError, load_urdf, types::GalawModel};
+use galaw::{error::KinematicsError, types::GalawModel};
 
 mod common;
-use common::{RNG_SEED, TestResult};
+use common::{load_model, RNG_SEED, TestResult};
 
 const NUM_POSES: usize = 128;
 const MAX_PERTURBATION: f32 = 0.5;
@@ -59,16 +59,16 @@ fn candidate_target_links<T>(model: &GalawModel<T>) -> Vec<usize> {
         .collect()
 }
 
-fn check_ik_f32_parity(urdf_path: &str) -> TestResult {
+fn check_ik_f32_parity(model_path: &str) -> TestResult {
     // Use f64 model only for generating target joint commands (via its limits).
     // Everything else — target pose, IK, FK — runs in f32.
-    let model_f32 = load_urdf::<f32>(urdf_path)?;
-    let model_f64 = load_urdf::<f64>(urdf_path)?;
+    let model_f32 = load_model::<f32>(model_path);
+    let model_f64 = load_model::<f64>(model_path);
     let mut data_f64 = model_f64.create_galaw_data();
     let mut data_f32 = model_f32.create_galaw_data();
 
     let candidates = candidate_target_links(&model_f32);
-    assert!(!candidates.is_empty(), "no valid IK targets in {urdf_path}");
+    assert!(!candidates.is_empty(), "no valid IK targets in {model_path}");
 
     let mut rng = ChaCha8Rng::seed_from_u64(RNG_SEED);
 
@@ -175,10 +175,19 @@ macro_rules! parity_tests {
 }
 
 parity_tests! {
+    // Custom URDF robots
     simple_arm_2dof        => "assets/urdf/custom/simple_arm_2dof.urdf",
     simple_arm_3dof_rrp    => "assets/urdf/custom/simple-arm_3dof_rrp.urdf",
+
+    // Third-party URDF robots
     flexiv_enlight_l       => "assets/urdf/third_party/Flexiv_Enlight-L/Enlight-L.urdf",
     anymal_d               => "assets/urdf/third_party/ANYbotics_ANYmal-D/ANYmal-D.urdf",
     wuji_hand_v1_right     => "assets/urdf/third_party/Wuji-Technology_Wuji-Hand/Wuji-Hand-v1_right.urdf",
     stretch4               => "assets/urdf/third_party/Hello-Robot_Stretch4/Stretch4.urdf",
+
+    // Third-party MJCF robots
+    spot_mjcf              => "assets/mjcf/third_party/Boston-Dynamics_Spot/spot.xml",
+    panda_mjcf             => "assets/mjcf/third_party/Franka-Emika_Panda/panda.xml",
+    shadow_hand_mjcf       => "assets/mjcf/third_party/Shadow-Robot_Hand/right_hand.xml",
+    g1_mjcf                => "assets/mjcf/third_party/Unitree_G1/g1.xml",
 }
